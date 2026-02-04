@@ -1,0 +1,26 @@
+<!-- Contenedor principal sin sombra ni bordes, ya que el padre los provee -->
+<div class="w-full overflow-hidden">
+  <div class="w-full overflow-x-auto">
+    <table class="w-full">
+      <!-- Cabecera de la tabla -->
+      <thead>
+        <tr class="text-sm font-semibold tracking-wide text-left text-gray-100 uppercase border-b border-gray-600 bg-gray-800">
+          <th *ngFor="let col of columns" class="px-4 py-3">{{ col.label }}</th>
+        </tr>
+      </thead>
+      <!-- Cuerpo de la tabla -->
+      <tbody class="bg-white divide-y divide-gray-200">
+        <!-- Se añade 'odd:bg-gray-50' para el efecto cebra -->
+        <tr *ngFor="let item of data" class="text-gray-700 hover:bg-gray-100 odd:bg-gray-50 transition-colors duration-200">
+          <td *ngFor="let col of columns" class="px-4 py-3 text-sm">
+            {{ item[col.key] }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <!-- Mensaje a mostrar cuando no hay datos -->
+  <div *ngIf="!data || data.length === 0" class="flex justify-center items-center p-8 bg-white border-t">
+    <p class="text-gray-500">No hay datos disponibles para mostrar.</p>
+  </div>
+</div>
