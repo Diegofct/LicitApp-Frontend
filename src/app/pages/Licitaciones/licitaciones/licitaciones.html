@@ -3,12 +3,6 @@
 
   <!-- Contenedor que envuelve la tabla y la paginación para un estilo unificado -->
   <div class="w-full overflow-hidden rounded-lg shadow-md">
-    
-    <!-- Componente de la Tabla -->
-    <app-modern-table
-      [columns]="columnasLicitaciones"
-      [data]="datosLicitaciones">
-    </app-modern-table>
 
     <!-- Componente de Paginación -->
     <app-pagination
@@ -16,6 +10,19 @@
       [totalPages]="totalPages"
       (pageChange)="onPageChange($event)">
     </app-pagination>
-    
+
+    <!-- Componente de la Tabla -->
+    <app-modern-table
+      [columns]="columnasLicitaciones"
+      [data]="datosLicitaciones">
+    </app-modern-table>
+
+    <!-- Componente de Paginación inferior -->
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalPages]="totalPages"
+      (pageChange)="onPageChange($event)">
+    </app-pagination>
+
   </div>
 </div>

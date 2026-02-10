@@ -10,8 +10,39 @@ import { CommonModule } from '@angular/common';
 export class Pagination {
   @Input() currentPage: number = 1;
   @Input() totalPages: number = 1;
+  @Input() maxPagesToShow: number = 5; // Nuevo input para controlar el número de páginas visibles
 
   @Output() pageChange = new EventEmitter<number>();
+
+  /**
+   * Genera un array de números de página para mostrar en la paginación.
+   * Se centra en la página actual, mostrando un número equitativo de páginas antes y después.
+   */
+  get visiblePages(): number[] {
+    const pages: number[] = [];
+    const halfPagesToShow = Math.floor(this.maxPagesToShow / 2);
+
+    let startPage = Math.max(1, this.currentPage - halfPagesToShow);
+    let endPage = Math.min(this.totalPages, this.currentPage + halfPagesToShow);
+
+    // Ajustar si estamos cerca del principio
+    if (endPage - startPage + 1 < this.maxPagesToShow) {
+      endPage = Math.min(this.totalPages, startPage + this.maxPagesToShow - 1);
+      startPage = Math.max(1, endPage - this.maxPagesToShow + 1);
+    }
+
+    // Ajustar si estamos cerca del final
+    if (endPage - startPage + 1 < this.maxPagesToShow) {
+      startPage = Math.max(1, this.totalPages - this.maxPagesToShow + 1);
+      endPage = this.totalPages;
+    }
+
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
 
   /**
    * Navega a una página específica.

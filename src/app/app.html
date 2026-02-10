@@ -1,6 +1,6 @@
 <div class="flex h-screen bg-gray-100 font-roboto">
-  <app-sidebar></app-sidebar>
-  <main class="flex-1 overflow-y-auto">
+  <app-sidebar (sidebarToggled)="onSidebarToggle($event)"></app-sidebar>
+  <main class="flex-1 overflow-y-auto transition-all duration-300">
     <router-outlet></router-outlet>
   </main>
 </div>

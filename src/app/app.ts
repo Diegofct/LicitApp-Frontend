@@ -10,4 +10,9 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
 })
 export class App {
   protected readonly title = signal('licitapp-frontend');
+  isSidebarOpen: boolean = true; // Initialize to true, assuming sidebar is open by default
+
+  onSidebarToggle(isOpen: boolean) {
+    this.isSidebarOpen = isOpen;
+  }
 }
