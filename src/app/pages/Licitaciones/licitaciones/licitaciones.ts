@@ -17,24 +17,22 @@ export class Licitaciones implements OnInit {
   // --- CONFIGURACIÓN DE LA TABLA ---
   columnasLicitaciones: TableColumn[] = [
     { key: 'idDelProceso', label: 'ID Proceso' },
-    { key: 'objeto', label: 'Objeto', width: '300px' }, // Ejemplo de ancho
     { key: 'entidad', label: 'Entidad' },
-    { key: 'estado', label: 'Estado' },
-    { key: 'cuantia', label: 'Cuantía', type: 'currency' },
+    { key: 'objeto', label: 'Objeto', width: '300px' },
     { key: 'ubicacion', label: 'Ubicación' },
+    { key: 'cuantia', label: 'Cuantía', type: 'currency' },
+    { key: 'fechaPublicacion', label: 'Fecha Pub.', type: 'date' },
+    { key: 'estado', label: 'Estado' },
     { key: 'modalidad', label: 'Modalidad' },
     { key: 'numero', label: 'Número Proceso' },
-    { key: 'fechaPublicacion', label: 'Fecha Pub.', type: 'date' },
     { key: 'urlSecop', label: 'URL', type: 'link' },
   ];
 
   // --- ESTADO DE LA PAGINACIÓN ---
   currentPage: number = 1;
   pageSize: number = 10;
-  // TODO: Para una paginación completa, el backend debería devolver el total de elementos y páginas.
-  // Sin esa información, no podemos mostrar "Página X de Y".
-  totalPages: number = 1; // Se asume al menos una página.
-  totalElements: number = 0; // No se puede determinar desde la API actual.
+  totalPages: number = 1;
+  totalElements: number = 0;
 
   // --- DATOS ---
   datosLicitaciones: Licitacion[] = [];
@@ -43,12 +41,7 @@ export class Licitaciones implements OnInit {
     this.loadLicitaciones();
   }
 
-  /**
-   * Carga los datos para la página actual desde el backend.
-   */
   loadLicitaciones(): void {
-    // NOTA: El paginador de Spring Data es basado en 0, pero es común
-    // que en el UI se muestre basado en 1. Se resta 1 para la llamada a la API.
     const apiPage = this.currentPage - 1;
 
     this.licitacionesService
@@ -76,14 +69,5 @@ export class Licitaciones implements OnInit {
   onPageChange(newPage: number): void {
     this.currentPage = newPage;
     this.loadLicitaciones();
-  }
-
-  /**
-   * Función de seguimiento para `*ngFor` para mejorar el rendimiento.
-   * @param index El índice del elemento.
-   * @param item La licitación.
-   */
-  trackById(index: number, item: Licitacion): string {
-    return item.idDelProceso;
   }
 }

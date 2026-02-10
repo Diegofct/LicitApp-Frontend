@@ -18,11 +18,7 @@ export class LicitacionesService {
    * @param size El número de registros por página.
    * @returns Un Observable que emite un objeto de respuesta paginada.
    */
-  obtenerLicitacionesObraPublica(
-    page: number,
-    size: number
-  ):
- Observable<PaginatedResponse<Licitacion>> {
+  obtenerLicitacionesObraPublica(page: number,size: number): Observable<PaginatedResponse<Licitacion>> {
     const params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());

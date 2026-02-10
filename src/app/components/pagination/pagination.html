@@ -1,32 +1,53 @@
-<!-- Solo muestra la paginación si hay más de una página -->
-<div *ngIf="totalPages > 1" class="flex items-center justify-between px-4 py-3 bg-white border-t">
-  
-  <!-- Información de la página actual -->
-  <span class="text-sm text-gray-700">
-    Página <span class="font-semibold">{{ currentPage }}</span> de <span class="font-semibold">{{ totalPages }}</span>
-  </span>
-
-  <!-- Controles de navegación -->
-  <div class="inline-flex items-center space-x-2">
-    <button 
-      (click)="previousPage()"
-      [disabled]="currentPage === 1"
-      class="flex items-center justify-center px-3 h-8 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">
-      <svg class="w-3.5 h-3.5 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5H1m0 0l4 4M1 5l4-4"/>
-      </svg>
-      Anterior
-    </button>
-
-    <button 
-      (click)="nextPage()"
-      [disabled]="currentPage === totalPages"
-      class="flex items-center justify-center px-3 h-8 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">
-      Siguiente
-      <svg class="w-3.5 h-3.5 ml-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
-      </svg>
-    </button>
+<div *ngIf="totalPages > 1" class="flex flex-col sm:flex-row items-center justify-between p-4 bg-white border-t border-gray-200">
+  <!-- Información de la página actual y total de elementos -->
+  <div class="flex-grow text-center sm:text-left mb-3 sm:mb-0">
+    <span class="text-sm text-gray-700">
+      Página
+      <span class="font-semibold text-gray-900">{{ currentPage }}</span> de
+      <span class="font-semibold text-gray-900">{{ totalPages }}</span>
+      <!-- Opcional: Podríamos añadir el total de elementos aquí si se pasa como Input -->
+    </span>
   </div>
 
+  <!-- Controles de navegación -->
+  <nav class="flex-shrink-0 relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+    <!-- Botón Anterior -->
+    <button
+      (click)="previousPage()"
+      [disabled]="currentPage === 1"
+      class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+    >
+      <span class="sr-only">Anterior</span>
+      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+      </svg>
+    </button>
+
+    <!-- Botones de Números de Página -->
+    <ng-container *ngFor="let page of visiblePages">
+      <button
+        (click)="goToPage(page)"
+        [ngClass]="{
+          'z-10 bg-blue-50 border-blue-500 text-blue-600': page === currentPage,
+          'bg-white border-gray-300 text-gray-700 hover:bg-gray-50': page !== currentPage
+        }"
+        class="relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-colors duration-200"
+      >
+        {{ page }}
+      </button>
+    </ng-container>
+
+    <!-- Botón Siguiente -->
+    <button
+      (click)="nextPage()"
+      [disabled]="currentPage === totalPages"
+      class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+    >
+      <span class="sr-only">Siguiente</span>
+      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+      </svg>
+    </button>
+  </nav>
 </div>
+
