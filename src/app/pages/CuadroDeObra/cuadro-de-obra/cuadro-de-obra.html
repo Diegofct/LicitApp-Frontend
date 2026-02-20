@@ -1,0 +1,83 @@
+<div class="p-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">Cuadro de Obra</h1>
+      <p class="text-gray-600 dark:text-gray-400">Gestión de licitaciones por presentar y presentadas.</p>
+    </div>
+    <button
+      type="button"
+      class="cursor-pointer inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm"
+    >
+      <i class="bx bx-plus me-2 text-lg"></i>
+      Agregar Proceso
+    </button>
+  </div>
+
+  <app-tabs
+    [tabs]="tabs"
+    [activeTabId]="activeTabId()"
+    (tabChange)="onTabChange($event)"
+    class="mb-6"
+  ></app-tabs>
+
+  <div class="mt-6">
+    <!-- Contenedor que envuelve la tabla y la paginación -->
+    <div class="w-full overflow-hidden rounded-lg shadow-md bg-white relative">
+
+      @if (loading()) {
+        <div class="absolute inset-0 bg-white/60 z-10 flex items-center justify-center backdrop-blur-[1px]">
+          <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p class="mt-2 text-blue-600 font-medium">Cargando datos...</p>
+          </div>
+        </div>
+      }
+
+      <!-- Paginación Superior -->
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [totalElements]="totalElements()"
+        (pageChange)="onPageChange($event)">
+      </app-pagination>
+
+      <div [class.opacity-50]="loading()" class="transition-opacity duration-200">
+        <app-modern-table
+          [columns]="columnasCuadro"
+          [data]="datos()"
+          (actionClicked)="onActionClicked($event)"
+        ></app-modern-table>
+      </div>
+
+      <!-- Paginación Inferior -->
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [totalElements]="totalElements()"
+        (pageChange)="onPageChange($event)">
+      </app-pagination>
+
+    </div>
+  </div>
+
+  <!-- Modal de Edición -->
+  @if (showEditModal() && selectedItem()) {
+    <app-edit-cuadro-modal
+      [item]="selectedItem()!"
+      (close)="showEditModal.set(false)"
+      (saved)="onEditSaved()">
+    </app-edit-cuadro-modal>
+  }
+
+  <!-- Modal de Confirmación de Eliminación -->
+  @if (showDeleteConfirm()) {
+    <app-confirm-modal
+      title="Eliminar Proceso"
+      message="¿Estás seguro de que deseas eliminar este proceso del Cuadro de Obra? Esta acción no se puede deshacer."
+      confirmText="Sí, eliminar"
+      cancelText="Cancelar"
+      (confirm)="confirmDeletion()"
+      (cancel)="showDeleteConfirm.set(false)">
+    </app-confirm-modal>
+  }
+</div>

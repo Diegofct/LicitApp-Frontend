@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, Inject, PLATFORM_ID, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, HostListener, Inject, PLATFORM_ID, Output, EventEmitter, signal, ChangeDetectionStrategy } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
@@ -8,10 +8,11 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SidebarComponent implements OnInit {
   @Output() sidebarToggled = new EventEmitter<boolean>();
-  open = true;
+  open = signal(true);
   private isBrowser: boolean;
 
   constructor(@Inject(PLATFORM_ID) private platformId: object) {
@@ -21,27 +22,27 @@ export class SidebarComponent implements OnInit {
   ngOnInit() {
     if (this.isBrowser) {
       this.checkScreenWidth();
-      this.sidebarToggled.emit(this.open); // Emit initial state
+      this.sidebarToggled.emit(this.open()); 
     }
   }
 
   @HostListener('window:resize', ['$event'])
   onResize(event?: Event) {
-    const previousOpenState = this.open;
+    const previousOpenState = this.open();
     this.checkScreenWidth();
-    if (this.open !== previousOpenState) { // Only emit if state actually changed
-      this.sidebarToggled.emit(this.open);
+    if (this.open() !== previousOpenState) { 
+      this.sidebarToggled.emit(this.open());
     }
   }
 
   private checkScreenWidth() {
     if (this.isBrowser) {
-      this.open = window.innerWidth > 768;
+      this.open.set(window.innerWidth > 768);
     }
   }
 
   toggle() {
-    this.open = !this.open;
-    this.sidebarToggled.emit(this.open);
+    this.open.update(v => !v);
+    this.sidebarToggled.emit(this.open());
   }
 }
