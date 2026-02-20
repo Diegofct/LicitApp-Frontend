@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 export class Pagination {
   @Input() currentPage: number = 1;
   @Input() totalPages: number = 1;
+  @Input() totalElements: number = 0;
   @Input() maxPagesToShow: number = 5; // Nuevo input para controlar el número de páginas visibles
 
   @Output() pageChange = new EventEmitter<number>();

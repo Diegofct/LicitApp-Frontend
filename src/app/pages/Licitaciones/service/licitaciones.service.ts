@@ -14,14 +14,16 @@ export class LicitacionesService {
 
   /**
    * Obtiene una lista paginada de licitaciones de obra pública desde el backend.
-   * @param page El número de página a solicitar (basado en 1).
+   * @param page El número de página a solicitar (basado en 0).
    * @param size El número de registros por página.
    * @returns Un Observable que emite un objeto de respuesta paginada.
    */
-  obtenerLicitacionesObraPublica(page: number,size: number): Observable<PaginatedResponse<Licitacion>> {
+  obtenerLicitacionesObraPublica(page: number, size: number): Observable<PaginatedResponse<Licitacion>> {
     const params = new HttpParams()
       .set('page', page.toString())
-      .set('size', size.toString());
+      .set('size', size.toString())
+      .set('sort', 'fechaPublicacion,desc')
+      .append('sort', 'id,desc'); // Ordenamiento secundario para asegurar estabilidad en la paginación
 
     return this.http.get<PaginatedResponse<Licitacion>>(this.apiUrl, { params });
   }

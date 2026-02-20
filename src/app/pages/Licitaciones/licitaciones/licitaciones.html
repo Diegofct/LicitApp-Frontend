@@ -2,27 +2,49 @@
   <h1 class="text-2xl font-bold text-gray-800 mb-6">Listado de Licitaciones</h1>
 
   <!-- Contenedor que envuelve la tabla y la paginación para un estilo unificado -->
-  <div class="w-full overflow-hidden rounded-lg shadow-md">
+  <div class="w-full overflow-hidden rounded-lg shadow-md bg-white relative">
+    
+    @if (loading()) {
+      <div class="absolute inset-0 bg-white/60 z-10 flex items-center justify-center backdrop-blur-[1px]">
+        <div class="flex flex-col items-center">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p class="mt-2 text-blue-600 font-medium">Cargando datos...</p>
+        </div>
+      </div>
+    }
 
     <!-- Componente de Paginación -->
     <app-pagination
-      [currentPage]="currentPage"
-      [totalPages]="totalPages"
+      [currentPage]="currentPage()"
+      [totalPages]="totalPages()"
       (pageChange)="onPageChange($event)">
     </app-pagination>
 
     <!-- Componente de la Tabla -->
-    <app-modern-table
-      [columns]="columnasLicitaciones"
-      [data]="datosLicitaciones">
-    </app-modern-table>
+    <div [class.opacity-50]="loading()" class="transition-opacity duration-200">
+      <app-modern-table
+        [columns]="columnasLicitaciones"
+        [data]="datosLicitaciones()"
+        (actionClicked)="onActionClicked($event)"
+      ></app-modern-table>
+    </div>
+    
 
     <!-- Componente de Paginación inferior -->
     <app-pagination
-      [currentPage]="currentPage"
-      [totalPages]="totalPages"
+      [currentPage]="currentPage()"
+      [totalPages]="totalPages()"
       (pageChange)="onPageChange($event)">
     </app-pagination>
 
   </div>
+
+  <!-- Modal para añadir al Cuadro de Obra -->
+  @if (showModal() && selectedLicitacion()) {
+    <app-add-to-cuadro-modal
+      [licitacion]="selectedLicitacion()!"
+      (close)="showModal.set(false)"
+      (saved)="onModalSaved($event)">
+    </app-add-to-cuadro-modal>
+  }
 </div>

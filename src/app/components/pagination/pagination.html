@@ -2,10 +2,12 @@
   <!-- Información de la página actual y total de elementos -->
   <div class="flex-grow text-center sm:text-left mb-3 sm:mb-0">
     <span class="text-sm text-gray-700">
-      Página
+      Mostrando página
       <span class="font-semibold text-gray-900">{{ currentPage }}</span> de
       <span class="font-semibold text-gray-900">{{ totalPages }}</span>
-      <!-- Opcional: Podríamos añadir el total de elementos aquí si se pasa como Input -->
+      <span *ngIf="totalElements > 0">
+        (<span class="font-semibold text-gray-900">{{ totalElements }}</span> registros totales)
+      </span>
     </span>
   </div>
 
