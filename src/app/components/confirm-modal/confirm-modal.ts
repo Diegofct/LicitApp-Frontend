@@ -14,14 +14,14 @@ import { CommonModule } from '@angular/common';
           </div>
           <h3 class="text-xl font-bold text-center text-gray-900 mb-2">{{ title }}</h3>
           <p class="text-sm text-center text-gray-500 mb-6">{{ message }}</p>
-          
+
           <div class="flex flex-col sm:flex-row gap-3">
-            <button (click)="cancel.emit()" 
-              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+            <button (click)="cancel.emit()"
+              class="cursor-pointer flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
               {{ cancelText }}
             </button>
-            <button (click)="confirm.emit()" 
-              class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-md">
+            <button (click)="confirm.emit()"
+              class="cursor-pointer flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-md">
               {{ confirmText }}
             </button>
           </div>

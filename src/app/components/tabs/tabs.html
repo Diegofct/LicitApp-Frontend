@@ -1,21 +1,27 @@
 <div class="border-b border-gray-200 dark:border-gray-700">
-  <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
-    <li *ngFor="let tab of tabs" class="me-2">
-      <button
-        type="button"
-        (click)="selectTab(tab.id)"
-        [ngClass]="{
-          'text-blue-600 border-b-2 border-blue-600 active dark:text-blue-500 dark:border-blue-500': activeTabId === tab.id,
-          'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300': activeTabId !== tab.id
-        }"
-        class="cursor-pointer inline-flex items-center justify-center p-4 border-b-2 rounded-t-lg group transition-all duration-200"
-      >
-        <i *ngIf="tab.icon" [class]="tab.icon" class="w-4 h-4 me-2" [ngClass]="{
-          'text-blue-600 dark:text-blue-500': activeTabId === tab.id,
-          'text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-300': activeTabId !== tab.id
-        }"></i>
-        {{ tab.label }}
-      </button>
-    </li>
+  <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400" role="tablist">
+    @for (tab of tabs; track tab.id) {
+      <li class="me-2" role="presentation">
+        <button
+          type="button"
+          (click)="selectTab(tab.id)"
+          role="tab"
+          [attr.aria-selected]="activeTabId === tab.id"
+          [ngClass]="{
+            'text-blue-600 border-b-2 border-blue-600 active dark:text-blue-500 dark:border-blue-500': activeTabId === tab.id,
+            'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300': activeTabId !== tab.id
+          }"
+          class="cursor-pointer inline-flex items-center justify-center p-4 border-b-2 rounded-t-lg group transition-all duration-200"
+        >
+          @if (tab.icon) {
+            <i [class]="tab.icon" class="w-4 h-4 me-2" [ngClass]="{
+              'text-blue-600 dark:text-blue-500': activeTabId === tab.id,
+              'text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-300': activeTabId !== tab.id
+            }"></i>
+          }
+          {{ tab.label }}
+        </button>
+      </li>
+    }
   </ul>
 </div>

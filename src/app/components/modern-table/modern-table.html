@@ -6,44 +6,61 @@
       <!-- Cabecera de la tabla -->
       <thead class="bg-gray-50">
         <tr>
-          <th *ngFor="let col of columns"
+          @for (col of columns; track col.key) {
+            <th
               [style.width]="col.width"
+              [style.min-width]="col.width"
               scope="col"
               class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            {{ col.label }}
-          </th>
+              {{ col.label }}
+            </th>
+          }
         </tr>
       </thead>
       <!-- Cuerpo de la tabla -->
       <tbody class="bg-white divide-y divide-gray-200">
-        <ng-container *ngIf="data && data.length > 0; else noDataTabletDesktop">
-          <tr *ngFor="let item of data; trackBy: trackByFn"
-              class="hover:bg-gray-50 transition-colors duration-150">
-            <td *ngFor="let col of columns"
-                [style.width]="col.width"
-                class="px-6 py-4 whitespace-normal text-sm text-gray-900">
-              <ng-container [ngSwitch]="col.type">
-                <a *ngSwitchCase="'link'"
-                   [href]="isLink(getValue(item, col)!) ? (getValue(item, col)!) : '#'"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   class="text-blue-600 hover:text-blue-800 visited:text-purple-600">
-                  {{ getValue(item, col) }}
-                </a>
-                <button *ngSwitchCase="'action'"
-                   (click)="onActionClick(col, item)"
-                   class="cursor-pointer inline-flex items-center p-2 text-green-600 hover:bg-blue-50 rounded-full transition-all duration-200">
-                  <i *ngIf="col.actionIcon" [class]="col.actionIcon" class="text-xl"></i>
-                  <span *ngIf="!col.actionIcon">Acción</span>
-                </button>
-                <span *ngSwitchDefault>
-                  {{ getValue(item, col) }}
-                </span>
-              </ng-container>
-            </td>
-          </tr>
-        </ng-container>
-        <ng-template #noDataTabletDesktop>
+        @if (data && data.length > 0) {
+          @for (item of data; track trackByFn($index, item)) {
+            <tr class="hover:bg-gray-50 transition-colors duration-150">
+              @for (col of columns; track col.key) {
+                <td
+                  [style.width]="col.width"
+                  [style.min-width]="col.width"
+                  class="px-6 py-4 whitespace-normal text-sm text-gray-900 text-justify leading-relaxed">
+                  @switch (col.type) {
+                    @case ('link') {
+                      <a
+                        [href]="isLink(getValue(item, col)!) ? (getValue(item, col)!) : '#'"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-blue-600 hover:text-blue-800 visited:text-purple-600">
+                        {{ getValue(item, col) }}
+                      </a>
+                    }
+                    @case ('action') {
+                      <button
+                        (click)="onActionClick(col, item)"
+                        type="button"
+                        [aria-label]="col.label || 'Acción'"
+                        class="cursor-pointer inline-flex items-center p-2 text-green-600 hover:bg-blue-50 rounded-full transition-all duration-200">
+                        @if (col.actionIcon) {
+                          <i [class]="col.actionIcon" class="text-xl"></i>
+                        } @else {
+                          <span>Acción</span>
+                        }
+                      </button>
+                    }
+                    @default {
+                      <span>
+                        {{ getValue(item, col) }}
+                      </span>
+                    }
+                  }
+                </td>
+              }
+            </tr>
+          }
+        } @else {
           <tr>
             <td [attr.colspan]="columns.length"
                 class="px-6 py-4 text-center text-sm text-gray-500 bg-white">
@@ -56,9 +73,8 @@
               </div>
             </td>
           </tr>
-        </ng-template>
+        }
       </tbody>
     </table>
   </div>
-
 </div>

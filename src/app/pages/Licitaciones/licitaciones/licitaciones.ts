@@ -20,17 +20,17 @@ export class Licitaciones implements OnInit {
 
   // --- CONFIGURACIÓN DE LA TABLA ---
   columnasLicitaciones: TableColumn[] = [
-    { key: 'idDelProceso', label: 'ID Proceso' },
-    { key: 'entidad', label: 'Entidad' },
-    { key: 'objeto', label: 'Objeto', width: '300px' },
-    { key: 'ubicacion', label: 'Ubicación' },
-    { key: 'cuantia', label: 'Cuantía', type: 'currency' },
-    { key: 'fechaPublicacion', label: 'Fecha Pub.', type: 'date' },
-    { key: 'estado', label: 'Estado' },
-    { key: 'modalidad', label: 'Modalidad' },
-    { key: 'numero', label: 'Número Proceso' },
-    { key: 'urlSecop', label: 'URL', type: 'link' },
-    { key: 'acciones', label: 'Acciones', type: 'action', actionIcon: 'bx bx-plus-circle' },
+    { key: 'idDelProceso', label: 'ID Proceso', width: '180px' },
+    { key: 'entidad', label: 'Entidad', width: '250px' },
+    { key: 'objeto', label: 'Objeto', width: '450px' },
+    { key: 'ubicacion', label: 'Ubicación', width: '200px' },
+    { key: 'cuantia', label: 'Cuantía', type: 'currency', width: '150px' },
+    { key: 'fechaPublicacion', label: 'Fecha Pub.', type: 'date', width: '150px' },
+    { key: 'estado', label: 'Estado', width: '150px' },
+    { key: 'modalidad', label: 'Modalidad', width: '200px' },
+    { key: 'numero', label: 'Número Proceso', width: '180px' },
+    { key: 'urlSecop', label: 'URL', type: 'link', width: '100px' },
+    { key: 'acciones', label: 'Acciones', type: 'action', actionIcon: 'bx bx-plus-circle', width: '100px' },
   ];
 
   // --- ESTADO DE LA PAGINACIÓN CON SIGNALS ---
