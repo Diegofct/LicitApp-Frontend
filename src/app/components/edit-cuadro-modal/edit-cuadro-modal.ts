@@ -26,27 +26,20 @@ export class EditCuadroModal implements OnInit {
   }
 
   private initForm(): void {
-    // Si la fechaCierre viene del backend, suele ser un string ISO. 
-    // Para datetime-local necesitamos formato "YYYY-MM-DDTHH:MM"
-    let formattedDate = '';
-    if (this.item.fechaCierre) {
-      const date = new Date(this.item.fechaCierre);
-      if (!isNaN(date.getTime())) {
-         formattedDate = date.toISOString().slice(0, 16);
-      }
-    }
+    const formattedCierre = this.formatDateForInput(this.item.fechaCierre);
+    const formattedPublicacion = this.formatDateForInput(this.item.fechaPublicacion);
 
     this.form = this.fb.group({
       id: [this.item.id],
       numeroProceso: [this.item.numeroProceso, Validators.required],
       entidadContratante: [this.item.entidadContratante, Validators.required],
       descripcionObjeto: [this.item.descripcionObjeto, Validators.required],
-      estadoProceso: [this.item.estadoProceso],
-      fechaPublicacion: [this.item.fechaPublicacion],
-      departamento: [this.item.departamento],
-      municipio: [this.item.municipio],
+      estadoProceso: [this.item.estadoProceso, Validators.required],
+      fechaPublicacion: [formattedPublicacion, Validators.required],
+      departamento: [this.item.departamento, Validators.required],
+      municipio: [this.item.municipio, Validators.required],
       monto: [this.item.monto, [Validators.required, Validators.min(0)]],
-      fechaCierre: [formattedDate, Validators.required],
+      fechaCierre: [formattedCierre, Validators.required],
       valorSMMLV: [this.item.valorSMMLV, [Validators.required]],
       tipoProyecto: [this.item.tipoProyecto, Validators.required],
       experiencia: [this.item.experiencia, Validators.required],
@@ -57,52 +50,39 @@ export class EditCuadroModal implements OnInit {
     });
   }
 
+  private formatDateForInput(dateStr: string | undefined): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return !isNaN(date.getTime()) ? date.toISOString().slice(0, 16) : '';
+  }
+
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    // 1. Clonamos los datos para no afectar al formulario
+    this.loading = true;
     const formData = { ...this.form.value };
-    
-    // 2. Aseguramos que la fechaCierre tenga segundos (:00) si le falta para que el backend la acepte
-    if (formData.fechaCierre && formData.fechaCierre.length === 16) {
-      formData.fechaCierre += ':00';
-    }
 
-    // 3. Verificar si el estado ha cambiado para usar el nuevo endpoint de PATCH
-    const estadoHaCambiado = formData.cuadroDeObraEstado !== this.item.cuadroDeObraEstado;
+    // Asegurar formato ISO con segundos para ambas fechas
+    ['fechaCierre', 'fechaPublicacion'].forEach((field) => {
+      if (formData[field] && typeof formData[field] === 'string' && formData[field].length === 16) {
+        formData[field] += ':00';
+      }
+    });
 
-    // Preparamos los datos para el PUT (eliminamos el ID del body para evitar conflictos con la URL en el backend)
-    const { id, ...dataToUpdate } = formData;
-
-    // Si el estado cambió, primero actualizamos el estado y luego el resto de datos
-    if (estadoHaCambiado) {
-      this.cuadroService.actualizarEstado(this.item.id, formData.cuadroDeObraEstado).subscribe({
-        next: () => {
-          this.procederConActualizacionGeneral(dataToUpdate);
-        },
-        error: (err) => {
-          this.manejarError(err, 'error al cambiar el estado');
-        }
-      });
-    } else {
-      this.procederConActualizacionGeneral(dataToUpdate);
-    }
-  }
-
-  private procederConActualizacionGeneral(data: any): void {
-    this.cuadroService.actualizarCuadroDeObra(this.item.id, data).subscribe({
-      next: (response) => {
-        console.log('Actualización completa exitosa:', response);
+    // Realizamos una única actualización atómica con todos los datos.
+    // Esto evita problemas de campos obligatorios faltantes y es más eficiente.
+    this.cuadroService.actualizarCuadroDeObra(this.item.id, formData).subscribe({
+      next: () => {
         this.loading = false;
         this.saved.emit();
         this.close.emit();
       },
       error: (err) => {
-        this.manejarError(err, 'error en la actualización general');
-      }
+        this.manejarError(err, 'en la actualización de datos');
+      },
     });
   }
 

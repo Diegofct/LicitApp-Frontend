@@ -15,5 +15,5 @@ export interface CuadroDeObraItem {
   plazo: string;
   anticipo: string;
   observacion?: string;
-  cuadroDeObraEstado: 'POR_PRESENTAR' | 'PRESENTADA';
+  cuadroDeObraEstado: 'POR_PRESENTAR' | 'PRESENTADO' | 'ADJUDICADO' | 'NO_ADJUDICADO' | 'CANCELADO';
 }

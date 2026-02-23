@@ -7,11 +7,12 @@ import { CuadroDeObraService } from '../service/cuadro-de-obra.service';
 import { CuadroDeObraItem } from '../interface/cuadro-de-obra';
 import { EditCuadroModal } from '../../../components/edit-cuadro-modal/edit-cuadro-modal';
 import { ConfirmModal } from '../../../components/confirm-modal/confirm-modal';
+import { AddProcesoModal } from '../../../components/add-proceso-modal/add-proceso-modal';
 
 @Component({
   selector: 'app-cuadro-de-obra',
   standalone: true,
-  imports: [CommonModule, Tabs, ModernTable, Pagination, EditCuadroModal, ConfirmModal],
+  imports: [CommonModule, Tabs, ModernTable, Pagination, EditCuadroModal, ConfirmModal, AddProcesoModal],
   templateUrl: './cuadro-de-obra.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -29,20 +30,20 @@ export class CuadroDeObra implements OnInit {
   columnasCuadro: TableColumn[] = [
     { key: 'entidadContratante', label: 'Entidad', width: '200px' },
     { key: 'numeroProceso', label: 'N° Proceso', width: '150px' },
-    { key: 'descripcionObjeto', label: 'Objeto', width: '300px' },
-    { key: 'estadoProceso', label: 'Estado Proceso', width: '300px' },
-    { key: 'fechaPublicacion', label: 'Fecha Publicación', width: '300px' },
-    { key: 'fechaCierre', label: 'Fecha Cierre', type: 'date' },
-    { key: 'monto', label: 'Presupuesto', type: 'currency' },
-    { key: 'valorSMMLV', label: 'Valor SMMLV' },
-    { key: 'tipoProyecto', label: 'Tipo Proyecto' },
-    { key: 'departamento', label: 'Departamento' },
-    { key: 'municipio', label: 'Municipio' },
-    { key: 'experiencia', label: 'Experiencia' },
-    { key: 'plazo', label: 'Plazo' },
-    { key: 'anticipo', label: 'Anticipo' },
-    { key: 'observacion', label: 'Observaciones' },
-    { key: 'cuadroDeObraEstado', label: 'Estado' },
+    { key: 'descripcionObjeto', label: 'Objeto', width: '450px' },
+    { key: 'estadoProceso', label: 'Estado Proceso', width: '250px' },
+    { key: 'fechaPublicacion', label: 'Fecha Publicación', width: '200px' },
+    { key: 'fechaCierre', label: 'Fecha Cierre', type: 'date', width: '150px' },
+    { key: 'monto', label: 'Presupuesto', type: 'currency', width: '150px' },
+    { key: 'valorSMMLV', label: 'Valor SMMLV', width: '120px' },
+    { key: 'tipoProyecto', label: 'Tipo Proyecto', width: '150px' },
+    { key: 'departamento', label: 'Departamento', width: '150px' },
+    { key: 'municipio', label: 'Municipio', width: '150px' },
+    { key: 'experiencia', label: 'Experiencia', width: '400px' },
+    { key: 'plazo', label: 'Plazo', width: '120px' },
+    { key: 'anticipo', label: 'Anticipo', width: '120px' },
+    { key: 'observacion', label: 'Observaciones', width: '350px' },
+    { key: 'cuadroDeObraEstado', label: 'Estado', width: '150px' },
     { key: 'editar', label: '', type: 'action', actionIcon: 'bx bx-edit text-blue-600' },
     { key: 'eliminar', label: '', type: 'action', actionIcon: 'bx bx-trash text-red-600' },
   ];
@@ -55,8 +56,9 @@ export class CuadroDeObra implements OnInit {
   loading = signal(false);
 
   datos = signal<CuadroDeObraItem[]>([]);
-  
+
   // --- ESTADO DE LOS MODALS ---
+  showAddModal = signal(false);
   showEditModal = signal(false);
   showDeleteConfirm = signal(false);
   selectedItem = signal<CuadroDeObraItem | null>(null);
@@ -70,29 +72,23 @@ export class CuadroDeObra implements OnInit {
     const apiPage = this.currentPage() - 1;
     this.datos.set([]);
 
-    this.cuadroDeObraService
-      .obtenerCuadroDeObra(apiPage, this.pageSize(), this.activeTabId())
-      .subscribe({
-        next: (response) => {
-          // Filtrado de seguridad mejorado para permitir ambas formas de string si fuese necesario
-          const estadoEsperado = this.activeTabId() === 'por-presentar' ? 'POR_PRESENTAR' : 'PRESENTADA';
-          
-          const filteredContent = response.content.filter(item => {
-            const estadoActual = item.cuadroDeObraEstado?.toUpperCase();
-            return estadoActual === estadoEsperado;
+        this.cuadroDeObraService
+          .obtenerCuadroDeObra(apiPage, this.pageSize(), this.activeTabId())
+          .subscribe({
+            next: (response) => {
+              // Delegamos el filtrado totalmente al backend para evitar discrepancias
+              this.datos.set(response.content);
+              this.totalPages.set(response.totalPages);
+              this.totalElements.set(response.totalElements);
+              this.loading.set(false);
+            },
+            error: (err) => {
+              console.error('Error al obtener el cuadro de obra:', err);
+              this.datos.set([]);
+              this.loading.set(false);
+            },
           });
-          
-          this.datos.set(filteredContent);
-          this.totalPages.set(response.totalPages);
-          this.totalElements.set(response.totalElements);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          console.error('Error al obtener el cuadro de obra:', err);
-          this.datos.set([]);
-          this.loading.set(false);
-        },
-      });
+    
   }
 
   onTabChange(tabId: string): void {

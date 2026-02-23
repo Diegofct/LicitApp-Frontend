@@ -20,14 +20,12 @@ export class CuadroDeObraService {
    * @returns Un Observable con la respuesta paginada.
    */
   obtenerCuadroDeObra(page: number, size: number, tab: string): Observable<PaginatedResponse<CuadroDeObraItem>> {
-    const estadoFiltrado = tab === 'por-presentar' ? 'POR_PRESENTAR' : 'PRESENTADA';
-    
     const params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString())
-      .set('cuadroDeObraEstado', estadoFiltrado)
+      .set('vista', tab) // Cambiado a 'vista' para coincidir con @RequestParam en Java
       .set('sort', 'fechaCierre,asc')
-      .append('sort', 'id,desc'); // Mayor estabilidad en la paginación
+      .append('sort', 'id,desc');
 
     return this.http.get<PaginatedResponse<CuadroDeObraItem>>(this.apiUrl, { params });
   }
@@ -43,10 +41,10 @@ export class CuadroDeObraService {
   /**
    * Actualiza únicamente el estado de un registro en el cuadro de obra.
    * @param id ID del registro.
-   * @param nuevoEstado El nuevo estado ('POR_PRESENTAR' o 'PRESENTADA').
+   * @param nuevoEstado El nuevo estado.
    */
   actualizarEstado(id: number, nuevoEstado: string): Observable<CuadroDeObraItem> {
-    return this.http.patch<CuadroDeObraItem>(`${this.apiUrl}/${id}/estado`, { estado: nuevoEstado });
+    return this.http.patch<CuadroDeObraItem>(`${this.apiUrl}/${id}/estado`, { cuadroDeObraEstado: nuevoEstado });
   }
 
   /**
