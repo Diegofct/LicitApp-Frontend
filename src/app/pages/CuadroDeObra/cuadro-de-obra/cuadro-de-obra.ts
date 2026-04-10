@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Tab, Tabs } from '../../../components/tabs/tabs';
 import { ModernTable, TableColumn } from '../../../components/modern-table/modern-table';
@@ -8,11 +8,23 @@ import { CuadroDeObraItem } from '../interface/cuadro-de-obra';
 import { EditCuadroModal } from '../../../components/edit-cuadro-modal/edit-cuadro-modal';
 import { ConfirmModal } from '../../../components/confirm-modal/confirm-modal';
 import { AddProcesoModal } from '../../../components/add-proceso-modal/add-proceso-modal';
+import { RequisitoLicitacionModal } from '../../../components/requisito-licitacion-modal/requisito-licitacion-modal';
+import { AnalizarPliegoModal } from '../../../components/analizar-pliego-modal/analizar-pliego-modal';
 
 @Component({
   selector: 'app-cuadro-de-obra',
   standalone: true,
-  imports: [CommonModule, Tabs, ModernTable, Pagination, EditCuadroModal, ConfirmModal, AddProcesoModal],
+  imports: [
+    CommonModule,
+    Tabs,
+    ModernTable,
+    Pagination,
+    EditCuadroModal,
+    ConfirmModal,
+    AddProcesoModal,
+    RequisitoLicitacionModal,
+    AnalizarPliegoModal,
+  ],
   templateUrl: './cuadro-de-obra.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -26,14 +38,13 @@ export class CuadroDeObra implements OnInit {
 
   activeTabId = signal('por-presentar');
 
-  // ... (columnas igual)
-  columnasCuadro: TableColumn[] = [
+  baseColumnas: TableColumn[] = [
     { key: 'entidadContratante', label: 'Entidad', width: '200px' },
     { key: 'numeroProceso', label: 'N° Proceso', width: '150px' },
     { key: 'descripcionObjeto', label: 'Objeto', width: '450px' },
     { key: 'estadoProceso', label: 'Estado Proceso', width: '250px' },
-    { key: 'fechaPublicacion', label: 'Fecha Publicación', width: '200px' },
-    { key: 'fechaCierre', label: 'Fecha Cierre', type: 'date', width: '150px' },
+    { key: 'fechaPublicacion', label: 'Fecha Publicación', type: 'date', width: '200px' },
+    { key: 'fechaCierre', label: 'Fecha Cierre', type: 'datetime', width: '200px' },
     { key: 'monto', label: 'Presupuesto', type: 'currency', width: '150px' },
     { key: 'valorSMMLV', label: 'Valor SMMLV', width: '120px' },
     { key: 'tipoProyecto', label: 'Tipo Proyecto', width: '150px' },
@@ -43,10 +54,30 @@ export class CuadroDeObra implements OnInit {
     { key: 'plazo', label: 'Plazo', width: '120px' },
     { key: 'anticipo', label: 'Anticipo', width: '120px' },
     { key: 'observacion', label: 'Observaciones', width: '350px' },
-    { key: 'cuadroDeObraEstado', label: 'Estado', width: '150px' },
-    { key: 'editar', label: '', type: 'action', actionIcon: 'bx bx-edit text-blue-600' },
-    { key: 'eliminar', label: '', type: 'action', actionIcon: 'bx bx-trash text-red-600' },
+    { key: 'cuadroDeObraEstado', label: 'Estado', type: 'badge', width: '150px' },
+    { key: 'requisitos', label: '', type: 'action', actionIcon: 'bx bx-list-check text-green-600' },
   ];
+
+  columnasCuadro = computed(() => {
+    const cols = [...this.baseColumnas];
+    
+    // Agregar acción de análisis solo en la pestaña "Por Presentar"
+    if (this.activeTabId() === 'por-presentar') {
+      cols.push({ 
+        key: 'analizar', 
+        label: '', 
+        type: 'action', 
+        actionIcon: 'bx bx-bot text-purple-600',
+        width: '50px'
+      });
+    }
+
+    cols.push(
+      { key: 'editar', label: '', type: 'action', actionIcon: 'bx bx-edit text-blue-600' },
+      { key: 'eliminar', label: '', type: 'action', actionIcon: 'bx bx-trash text-red-600' }
+    );
+    return cols;
+  });
 
   // --- ESTADO DE LA PAGINACIÓN CON SIGNALS ---
   currentPage = signal(1);
@@ -61,6 +92,8 @@ export class CuadroDeObra implements OnInit {
   showAddModal = signal(false);
   showEditModal = signal(false);
   showDeleteConfirm = signal(false);
+  showRequisitosModal = signal(false);
+  showAnalizarModal = signal(false);
   selectedItem = signal<CuadroDeObraItem | null>(null);
 
   ngOnInit(): void {
@@ -72,23 +105,20 @@ export class CuadroDeObra implements OnInit {
     const apiPage = this.currentPage() - 1;
     this.datos.set([]);
 
-        this.cuadroDeObraService
-          .obtenerCuadroDeObra(apiPage, this.pageSize(), this.activeTabId())
-          .subscribe({
-            next: (response) => {
-              // Delegamos el filtrado totalmente al backend para evitar discrepancias
-              this.datos.set(response.content);
-              this.totalPages.set(response.totalPages);
-              this.totalElements.set(response.totalElements);
-              this.loading.set(false);
-            },
-            error: (err) => {
-              console.error('Error al obtener el cuadro de obra:', err);
-              this.datos.set([]);
-              this.loading.set(false);
-            },
-          });
-    
+    this.cuadroDeObraService.obtenerCuadroDeObra(apiPage, this.pageSize(), this.activeTabId()).subscribe({
+      next: (response) => {
+        // Delegamos el filtrado totalmente al backend para evitar discrepancias
+        this.datos.set(response.content);
+        this.totalPages.set(response.totalPages);
+        this.totalElements.set(response.totalElements);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error al obtener el cuadro de obra:', err);
+        this.datos.set([]);
+        this.loading.set(false);
+      },
+    });
   }
 
   onTabChange(tabId: string): void {
@@ -111,6 +141,10 @@ export class CuadroDeObra implements OnInit {
       this.showEditModal.set(true);
     } else if (event.column.key === 'eliminar') {
       this.showDeleteConfirm.set(true);
+    } else if (event.column.key === 'requisitos') {
+      this.showRequisitosModal.set(true);
+    } else if (event.column.key === 'analizar') {
+      this.showAnalizarModal.set(true);
     }
   }
 
@@ -130,7 +164,7 @@ export class CuadroDeObra implements OnInit {
         console.error('Error al eliminar el registro:', err);
         this.loading.set(false);
         alert('Hubo un error al intentar eliminar el registro.');
-      }
+      },
     });
   }
 

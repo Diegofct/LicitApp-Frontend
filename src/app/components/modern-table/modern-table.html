@@ -1,7 +1,7 @@
 <!-- Contenedor principal para la tabla, adaptado para responsividad -->
 <div class="w-full">
-  <!-- Vista de Tabla para pantallas medianas y grandes -->
-  <div class="overflow-x-auto hidden md:block rounded-lg shadow">
+  <!-- Vista de Tabla (Con scroll horizontal para móviles) -->
+  <div class="overflow-x-auto rounded-lg shadow">
     <table class="min-w-full divide-y divide-gray-200">
       <!-- Cabecera de la tabla -->
       <thead class="bg-gray-50">
@@ -37,6 +37,14 @@
                         {{ getValue(item, col) }}
                       </a>
                     }
+                    @case ('badge') {
+                      <span
+                        [class]="getBadgeClasses(getValue(item, col)!)"
+                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide shadow-sm">
+                        <span class="w-2 h-2 rounded-full mr-2 opacity-75" [class]="getBadgeClasses(getValue(item, col)!).replace('bg-', 'bg-').split(' ')[0]"></span>
+                        {{ formatStatus(getValue(item, col)!) }}
+                      </span>
+                    }
                     @case ('action') {
                       <button
                         (click)="onActionClick(col, item)"
@@ -60,7 +68,7 @@
               }
             </tr>
           }
-        } @else {
+        } @else if (showEmptyState) {
           <tr>
             <td [attr.colspan]="columns.length"
                 class="px-6 py-4 text-center text-sm text-gray-500 bg-white">

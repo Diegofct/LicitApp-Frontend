@@ -1,0 +1,173 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+  <div class="w-full max-w-2xl bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+          <i class="bx bx-list-check text-2xl"></i>
+        </div>
+        <h2 class="text-xl font-bold text-gray-800">Requisitos de Licitación</h2>
+      </div>
+      <button (click)="close.emit()" class="text-gray-400 hover:text-gray-600 transition-colors">
+        <i class="bx bx-x text-3xl"></i>
+      </button>
+    </div>
+
+    <!-- Formulario -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="p-6 max-h-[75vh] overflow-y-auto">
+
+      <!-- Sección: Experiencia -->
+      <div class="mb-8">
+        <h3 class="flex items-center gap-2 text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4">
+          <i class="bx bx-briefcase"></i>
+          Experiencia Requerida
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">General</label>
+            <textarea formControlName="general"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+              rows="2"
+              placeholder="Describa la experiencia general requerida"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Específica 1</label>
+            <textarea formControlName="especifica1"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+              rows="2"
+              placeholder="Describa la experiencia específica 1"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Específica 2</label>
+            <textarea formControlName="especifica2"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+              rows="2"
+              placeholder="Describa la experiencia específica 2"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Secundaria</label>
+            <textarea formControlName="secundaria"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+              rows="2"
+              placeholder="Describa la experiencia secundaria"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección: Capacidad Técnica y Capital de Trabajo -->
+      <div class="mb-8">
+        <h3 class="flex items-center gap-2 text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4">
+          <i class="bx bx-stats"></i>
+          Capacidad Técnica y Capital de Trabajo
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nº Contratos</label>
+            <input type="number" formControlName="contrato"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              placeholder="1">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Capital Trabajo (Proceso)</label>
+            <input type="number" formControlName="ctProceso"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              placeholder="0.00">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Patrimonio Requerido</label>
+            <input type="number" formControlName="patrimonio"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              placeholder="0.00">
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección: Indicadores Financieros de Capacidad y Organización -->
+      <div class="mb-8 p-4 bg-gray-50 rounded-xl border border-gray-100">
+        <h3 class="flex items-center gap-2 text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-4">
+          <i class="bx bx-calculator"></i>
+          Indicadores Financieros de Capacidad y Organización
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Índice de Liquidez</label>
+            <input type="number" formControlName="liquidez" step="0.01"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+              placeholder="≥ 1.0">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nivel de Endeudamiento</label>
+            <input type="number" formControlName="endeudamiento" step="0.01"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+              placeholder="≤ 0.7">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Razón Cobertura Interés</label>
+            <input type="number" formControlName="razonCoberturaInteres" step="0.01"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+              placeholder="≥ 1.0">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Rentabilidad Patrimonio</label>
+            <input type="number" formControlName="rentabilidadPatrimonio" step="0.01"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+              placeholder="0.00">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Rentabilidad Activo</label>
+            <input type="number" formControlName="rentabilidadActivo" step="0.01"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+              placeholder="0.00">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Valor n (Meses)</label>
+            <input type="number" formControlName="n" step="0.1"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+              placeholder="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección: Capacidad Residual -->
+      <div class="mb-2">
+        <h3 class="flex items-center gap-2 text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4">
+          <i class="bx bx-pie-chart-alt-2"></i>
+          Capacidad Residual y Anticipo
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">K Residual del Proceso</label>
+            <input type="number" formControlName="kresidualProceso"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              placeholder="0.00">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">% de Anticipo</label>
+            <div class="relative">
+              <input type="number" formControlName="poeAnticipo"
+                class="w-full px-4 py-2 pr-8 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                placeholder="0">
+              <span class="absolute right-3 top-2 text-gray-400">%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </form>
+
+    <!-- Footer Actions -->
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+      <button (click)="close.emit()" type="button"
+        class="cursor-pointer px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
+        Cancelar
+      </button>
+      <button (click)="onSubmit()" [disabled]="form.invalid || loading"
+        class="cursor-pointer flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-lg shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+        @if (loading) {
+          <i class="bx bx-loader-alt animate-spin"></i>
+        }
+        <span>{{ loading ? 'Guardando...' : 'Guardar Requisitos' }}</span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,237 @@
+<div class="p-4 sm:p-6 md:p-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Análisis de Cumplimiento</h1>
+    <p class="text-gray-500 mt-2">Evalúa empresas frente a los requisitos de licitaciones activas.</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- LADO IZQUIERDO: CONFIGURACIÓN -->
+    <div class="lg:col-span-1 space-y-6">
+      <!-- PASO 1: SELECCIÓN DE PROCESO -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 font-bold text-sm">1</span>
+          <h2 class="text-lg font-bold text-gray-800">Seleccionar Proceso</h2>
+        </div>
+
+        <div class="space-y-4">
+          <select
+            (change)="onProcesoChange($event)"
+            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all text-sm"
+          >
+            <option value="">Seleccione un proceso...</option>
+            @for (proceso of procesos(); track proceso.id) {
+              <option [value]="proceso.id">
+                {{ proceso.numeroProceso }} - {{ proceso.entidadContratante | slice:0:30 }}...
+              </option>
+            }
+          </select>
+
+          @if (hasRequisitos() === false) {
+            <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl flex gap-3">
+              <i class="bx bx-error text-amber-500 text-xl"></i>
+              <p class="text-xs text-amber-800 leading-relaxed">
+                <strong>Atención:</strong> Este proceso no tiene requisitos configurados. Por favor, agréguelos en el Cuadro de Obra antes de continuar.
+              </p>
+            </div>
+          } @else if (hasRequisitos() === true) {
+            <div class="p-3 bg-green-50 border border-green-200 rounded-xl flex items-center gap-2">
+              <i class="bx bx-check-circle text-green-500"></i>
+              <span class="text-xs text-green-800 font-medium">Requisitos verificados correctamente.</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- PASO 3: ACCIÓN -->
+      <button
+        (click)="analizar()"
+        [disabled]="loadingAnalisis() || !hasRequisitos() || selectedEmpresasIds().size === 0"
+        class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+      >
+        @if (loadingAnalisis()) {
+          <i class="bx bx-loader-alt animate-spin text-xl"></i>
+          Analizando...
+        } @else {
+          <i class="bx bx-radar text-xl"></i>
+          Ejecutar Análisis
+        }
+      </button>
+    </div>
+
+    <!-- LADO DERECHO: EMPRESAS Y RESULTADOS -->
+    <div class="lg:col-span-2 space-y-8">
+
+      <!-- PASO 2: SELECCIÓN DE EMPRESAS -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 font-bold text-sm">2</span>
+            <h2 class="text-lg font-bold text-gray-800">Seleccionar Empresas</h2>
+          </div>
+          <span class="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold text-gray-500">
+            {{ selectedEmpresasIds().size }} Seleccionadas
+          </span>
+        </div>
+
+        <div class="max-h-[400px] overflow-y-auto">
+          <table class="w-full text-sm text-left">
+            <thead class="text-xs text-gray-400 uppercase bg-gray-50/50 sticky top-0 backdrop-blur-sm">
+              <tr>
+                <th class="px-6 py-4">
+                  <input
+                    type="checkbox"
+                    (change)="toggleAllEmpresas($event)"
+                    [checked]="selectedEmpresasIds().size === empresas().length && empresas().length > 0"
+                    class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  >
+                </th>
+                <th class="px-6 py-4 font-medium">Empresa</th>
+                <th class="px-6 py-4 font-medium">NIT</th>
+                <th class="px-6 py-4 font-medium">Tamaño</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              @for (empresa of empresas(); track empresa.id) {
+                <tr
+                  (click)="toggleEmpresa(empresa.id)"
+                  class="hover:bg-indigo-50/30 cursor-pointer transition-colors"
+                  [class.bg-indigo-50/10]="isEmpresaSelected(empresa.id)"
+                >
+                  <td class="px-6 py-4">
+                    <input
+                      type="checkbox"
+                      [checked]="isEmpresaSelected(empresa.id)"
+                      class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    >
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="font-bold text-gray-700">{{ empresa.razonSocial }}</div>
+                  </td>
+                  <td class="px-6 py-4 text-gray-500">{{ empresa.nit }}</td>
+                  <td class="px-6 py-4">
+                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
+                      [ngClass]="{
+                        'bg-blue-100 text-blue-700': empresa.tamanoEmpresa === 'GRANDE',
+                        'bg-purple-100 text-purple-700': empresa.tamanoEmpresa === 'MEDIANA',
+                        'bg-amber-100 text-amber-700': empresa.tamanoEmpresa === 'PEQUEÑA',
+                        'bg-emerald-100 text-emerald-700': empresa.tamanoEmpresa === 'MICROEMPRESA'
+                      }">
+                      {{ empresa.tamanoEmpresa }}
+                    </span>
+                  </td>
+                </tr>
+              }
+              @if (empresas().length === 0 && !loadingEmpresas()) {
+                <tr>
+                  <td colspan="4" class="px-6 py-12 text-center text-gray-400 italic">No hay empresas registradas.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RESULTADOS -->
+      @if (resultados().length > 0) {
+        <div class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <i class="bx bx-line-chart text-2xl text-indigo-600"></i>
+            Resultados del Análisis
+          </h3>
+
+          <div class="grid grid-cols-1 gap-6">
+            @for (res of resultados(); track $index) {
+              <div class="bg-white rounded-2xl shadow-md border-l-4 overflow-hidden"
+                [class.border-l-emerald-500]="res.cumpleGlobal"
+                [class.border-l-red-500]="!res.cumpleGlobal">
+
+                <!-- Header del Resultado -->
+                <div class="p-6 flex flex-wrap justify-between items-center gap-4 bg-gray-50/50">
+                  <div>
+                    <h4 class="text-lg font-black text-gray-800">
+                      {{ getEmpresaNombre(res.empresaId) }}
+                    </h4>
+                    <p class="text-xs text-gray-500 font-medium mt-1">Participación: {{ res.tipoParticipacion }}</p>
+                  </div>
+                  <div class="flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm"
+                    [ngClass]="{
+                      'bg-emerald-100 text-emerald-700': res.cumpleGlobal,
+                      'bg-red-100 text-red-700': !res.cumpleGlobal
+                    }">
+                    <i class="bx" [class.bx-check-circle]="res.cumpleGlobal" [class.bx-x-circle]="!res.cumpleGlobal"></i>
+                    {{ res.cumpleGlobal ? 'CUMPLE GLOBALMENTE' : 'NO CUMPLE' }}
+                  </div>
+                </div>
+
+                <!-- Detalle de Indicadores -->
+                <div class="p-6">
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                      <thead class="text-gray-400 font-bold uppercase border-b border-gray-100">
+                        <tr>
+                          <th class="pb-3">Indicador / Requisito</th>
+                          <th class="pb-3">Requerido</th>
+                          <th class="pb-3">Obtenido</th>
+                          <th class="pb-3 text-center">Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-50">
+                        @for (det of res.detalles; track $index) {
+                          <tr>
+                            <td class="py-4">
+                              <div class="font-bold text-gray-700">{{ det.indicador }}</div>
+                              @if (det.observacion) {
+                                <div class="text-[10px] text-gray-400 mt-0.5 italic">{{ det.observacion }}</div>
+                              }
+                            </td>
+                            <td class="py-4 text-gray-600 font-medium">{{ det.valorRequerido }}</td>
+                            <td class="py-4 font-bold text-gray-800">{{ det.valorObtenido }}</td>
+                            <td class="py-4 text-center">
+                              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full"
+                                [ngClass]="{
+                                  'bg-emerald-100 text-emerald-600': det.cumple,
+                                  'bg-red-100 text-red-600': !det.cumple
+                                }">
+                                <i class="bx" [class.bx-check]="det.cumple" [class.bx-x]="!det.cumple"></i>
+                              </span>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <!-- Sugerencias -->
+                  @if (res.sugerencias && res.sugerencias.length > 0) {
+                    <div class="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                      <h5 class="text-xs font-black text-indigo-900 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <i class="bx bxs-magic-wand"></i> Sugerencias de Consorcio
+                      </h5>
+                      <div class="flex flex-wrap gap-2">
+                        @for (sug of res.sugerencias; track sug.empresaId) {
+                          <div class="px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-indigo-700 shadow-sm">
+                            {{ sug.razonSocial }}
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      } @else if (!loadingAnalisis() && selectedProcesoId() && hasRequisitos() === true) {
+        <div class="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100">
+          <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-4">
+            <i class="bx bx-search-alt-2 text-4xl text-indigo-300"></i>
+          </div>
+          <h4 class="text-lg font-bold text-gray-400">Listo para analizar</h4>
+          <p class="text-sm text-gray-300">Seleccione las empresas y presione el botón para ver resultados.</p>
+        </div>
+      }
+    </div>
+  </div>
+</div>

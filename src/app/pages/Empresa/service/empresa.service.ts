@@ -1,0 +1,61 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { Empresa, IndicadoresFinancieros } from '../interface/empresa';
+import { PaginatedResponse } from '../../Licitaciones/interface/paginated-response';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class EmpresaService {
+  private readonly apiUrl = 'http://localhost:8080/api/v1/empresas';
+  private readonly http = inject(HttpClient);
+
+  /**
+   * Obtiene la lista completa de empresas registradas.
+   */
+  listarEmpresas(): Observable<Empresa[]> {
+    return this.http.get<Empresa[]>(this.apiUrl);
+  }
+
+  /**
+   * Busca una empresa específica por su número de identificación tributaria (NIT).
+   * @param nit El NIT de la empresa a buscar.
+   */
+  obtenerEmpresaPorNit(nit: string): Observable<Empresa> {
+    return this.http.get<Empresa>(`${this.apiUrl}/${nit}`);
+  }
+
+  /**
+   * Registra una nueva empresa en el sistema.
+   * @param empresa El objeto de tipo Empresa con toda la información necesaria.
+   */
+  crearEmpresa(empresa: Empresa): Observable<Empresa> {
+    return this.http.post<Empresa>(this.apiUrl, empresa);
+  }
+
+  /**
+   * Actualiza la información de una empresa existente.
+   * @param nit El NIT de la empresa a actualizar.
+   * @param empresa Los nuevos datos de la empresa.
+   */
+  actualizarEmpresa(nit: string, empresa: Empresa): Observable<Empresa> {
+    return this.http.put<Empresa>(`${this.apiUrl}/${nit}`, empresa);
+  }
+
+  /**
+   * Elimina una empresa del sistema.
+   * @param nit El NIT de la empresa a eliminar.
+   */
+  eliminarEmpresa(nit: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${nit}`);
+  }
+
+  /**
+   * Calcula los indicadores financieros enviando los valores absolutos al backend.
+   * @param indicadores Valores absolutos (activoCorriente, etc).
+   */
+  calcularIndicadores(indicadores: Partial<IndicadoresFinancieros>): Observable<IndicadoresFinancieros> {
+    return this.http.post<IndicadoresFinancieros>(`${this.apiUrl}/calcular-indicadores`, indicadores);
+  }
+}

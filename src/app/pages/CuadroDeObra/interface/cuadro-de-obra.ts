@@ -17,3 +17,26 @@ export interface CuadroDeObraItem {
   observacion?: string;
   cuadroDeObraEstado: 'POR_PRESENTAR' | 'PRESENTADO' | 'ADJUDICADO' | 'NO_ADJUDICADO' | 'CANCELADO';
 }
+
+export interface RequisitoLicitacion {
+  id?: number;
+  // Experiencia
+  general: string;
+  especifica1: string;
+  especifica2: string;
+  secundaria: string;
+  // Capacidad Técnica
+  contrato: number;
+  // Indicadores Financieros
+  ctProceso: number;
+  patrimonio: number;
+  n: number;
+  liquidez: number;
+  endeudamiento: number;
+  razonCoberturaInteres: number;
+  rentabilidadPatrimonio: number;
+  rentabilidadActivo: number;
+  // Capacidad Residual
+  kresidualProceso: number;
+  poeAnticipo: number;
+}

@@ -44,7 +44,7 @@
 
       <div [class.opacity-50]="loading()" class="transition-opacity duration-200">
         <app-modern-table
-          [columns]="columnasCuadro"
+          [columns]="columnasCuadro()"
           [data]="datos()"
           (actionClicked)="onActionClicked($event)"
         ></app-modern-table>
@@ -68,6 +68,24 @@
       (close)="showEditModal.set(false)"
       (saved)="onEditSaved()">
     </app-edit-cuadro-modal>
+  }
+
+  <!-- Modal de Requisitos -->
+  @if (showRequisitosModal() && selectedItem()) {
+    <app-requisito-licitacion-modal
+      [cuadroObraId]="selectedItem()!.id"
+      (close)="showRequisitosModal.set(false)"
+      (saved)="loadCuadroDeObra()">
+    </app-requisito-licitacion-modal>
+  }
+
+  <!-- Modal de Análisis de Pliego con IA -->
+  @if (showAnalizarModal() && selectedItem()) {
+    <app-analizar-pliego-modal
+      [cuadroObraId]="selectedItem()!.id"
+      (close)="showAnalizarModal.set(false)"
+      (saved)="loadCuadroDeObra()">
+    </app-analizar-pliego-modal>
   }
 
   <!-- Modal de Confirmación de Eliminación -->

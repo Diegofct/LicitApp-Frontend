@@ -1,13 +1,12 @@
 import { Component, Input, PipeTransform, Output, EventEmitter } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 
-// Definimos tipos genéricos para que la tabla sea más robusta y reutilizable
 export interface TableColumn {
-  key: string; // La clave del objeto de datos (ej: 'id_licitacion')
-  label: string; // Lo que se muestra en la cabecera (ej: 'ID Licitación')
-  type?: 'text' | 'date' | 'currency' | 'link' | 'action'; // Tipo de dato para formateo
-  width?: string; // Ancho opcional de la columna (ej: '150px', '20%')
-  actionIcon?: string; // Icono para la acción (si el tipo es 'action')
+  key: string;
+  label: string;
+  type?: 'text' | 'date' | 'datetime' | 'currency' | 'link' | 'action' | 'badge';
+  width?: string;
+  actionIcon?: string;
 }
 
 export type TableData = { [key: string]: any };
@@ -16,7 +15,7 @@ export type TableData = { [key: string]: any };
   selector: 'app-modern-table',
   standalone: true,
   imports: [CommonModule],
-  providers: [CurrencyPipe, DatePipe], // Proveemos los pipes aquí
+  providers: [CurrencyPipe, DatePipe],
   templateUrl: './modern-table.html',
 })
 export class ModernTable {
@@ -29,6 +28,12 @@ export class ModernTable {
    * Los datos que se mostrarán en las filas de la tabla.
    */
   @Input() data: TableData[] = [];
+
+  /**
+   * Indica si se debe mostrar el mensaje predeterminado de "No se encontraron registros".
+   * Por defecto es true.
+   */
+  @Input() showEmptyState: boolean = true;
 
   /**
    * Emite el objeto de la fila cuando se hace clic en una acción.
@@ -55,18 +60,42 @@ export class ModernTable {
 
     switch (column.type) {
       case 'currency':
-        // Asumiendo moneda COP (Pesos Colombianos) y un formato común.
-        // Ajusta 'COP' y 'symbol-narrow' según tus necesidades.
         return this.currencyPipe.transform(value, 'COP', 'symbol-narrow', '1.0-0');
       case 'date':
-        // Formato de fecha común. Ajusta 'shortDate' según tus necesidades.
         return this.datePipe.transform(value, 'dd/MM/yyyy');
+      case 'datetime':
+        return this.datePipe.transform(value, 'dd/MM/yyyy HH:mm');
       case 'link':
-        // Para enlaces, devolvemos el valor tal cual, el template lo convertirá a <a>
         return value;
       default:
         return value;
     }
+  }
+
+  getBadgeClasses(value: string): string {
+    if (!value) return '';
+
+    const val = value.toUpperCase();
+
+    if (val.includes('POR_PRESENTAR') || val.includes('PENDIENTE')) {
+      return 'bg-blue-100 text-blue-700 border border-blue-200';
+    } else if (val.includes('PRESENTADO') || val.includes('COMPLETADO')) {
+      return 'bg-green-100 text-green-700 border border-green-200';
+    } else if (val.includes('ADJUDICADO') || val.includes('GANADA')) {
+      return 'bg-amber-100 text-amber-700 border border-amber-200';
+    } else if (val.includes('NO_ADJUDICADO') || val.includes('CANCELADA')) {
+      return 'bg-red-100 text-red-700 border border-red-200';
+    }
+
+    return 'bg-gray-100 text-gray-700 border border-gray-200';
+  }
+
+  formatStatus(value: string): string {
+    if (!value) return '';
+    return value
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   }
 
   /**
@@ -86,14 +115,9 @@ export class ModernTable {
   /**
    * Función de seguimiento para `*ngFor` en las filas de la tabla.
    * Mejora el rendimiento al permitir que Angular rastree los elementos de la lista.
-   * Se asume que cada fila tiene una 'key' única, si no, se podría usar el índice.
    */
-  trackByFn(index: number, item: TableData): string {
-    // Verificar si columns no está vacío antes de intentar acceder a this.columns[0]
-    if (this.columns && this.columns.length > 0 && this.columns[0].key) {
-      return item[this.columns[0].key] || index;
-    }
-    return index.toString(); // Fallback a index si no hay columnas o key
+  trackByFn(index: number, item: any): string {
+    return index.toString();
   }
 }
 
