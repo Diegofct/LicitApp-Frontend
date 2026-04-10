@@ -8,7 +8,7 @@ import { CuadroDeObraItem } from '../../pages/CuadroDeObra/interface/cuadro-de-o
   selector: 'app-edit-cuadro-modal',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './edit-cuadro-modal.html',
+  templateUrl: './edit-cuadro-modal.html'
 })
 export class EditCuadroModal implements OnInit {
   private readonly fb = inject(FormBuilder);

@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { PaginatedResponse } from '../../Licitaciones/interface/paginated-response';
-import { CuadroDeObraItem } from '../interface/cuadro-de-obra';
+import { CuadroDeObraItem, RequisitoLicitacion } from '../interface/cuadro-de-obra';
 
 @Injectable({
   providedIn: 'root',
@@ -24,8 +24,7 @@ export class CuadroDeObraService {
       .set('page', page.toString())
       .set('size', size.toString())
       .set('vista', tab) // Cambiado a 'vista' para coincidir con @RequestParam en Java
-      .set('sort', 'fechaCierre,asc')
-      .append('sort', 'id,desc');
+      .set('sort', 'id,desc');
 
     return this.http.get<PaginatedResponse<CuadroDeObraItem>>(this.apiUrl, { params });
   }
@@ -62,5 +61,33 @@ export class CuadroDeObraService {
    */
   agregarACuadroDeObra(data: any): Observable<CuadroDeObraItem> {
     return this.http.post<CuadroDeObraItem>(this.apiUrl, data);
+  }
+
+  /**
+   * Guarda los requisitos de licitación para un registro del cuadro de obra.
+   * @param id ID del registro del cuadro de obra.
+   * @param data Requisitos de la licitación.
+   */
+  guardarRequisitos(id: number, data: RequisitoLicitacion): Observable<RequisitoLicitacion> {
+    return this.http.post<RequisitoLicitacion>(`${this.apiUrl}/${id}/requisitos`, data);
+  }
+
+  /**
+   * Envía un archivo al backend para ser analizado por la IA y extraer requisitos.
+   * @param id ID del registro del cuadro de obra.
+   * @param file Archivo del pliego de condiciones.
+   */
+  analizarPliego(id: number, file: File): Observable<RequisitoLicitacion> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<RequisitoLicitacion>(`${this.apiUrl}/${id}/extraer-requisitos`, formData);
+  }
+
+  /**
+   * Obtiene los requisitos de licitación para un registro del cuadro de obra.
+   * @param id ID del registro.
+   */
+  obtenerRequisitos(id: number): Observable<RequisitoLicitacion> {
+    return this.http.get<RequisitoLicitacion>(`${this.apiUrl}/${id}/requisitos`);
   }
 }

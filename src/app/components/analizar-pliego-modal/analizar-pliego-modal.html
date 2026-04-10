@@ -1,0 +1,181 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all animate-in fade-in zoom-in duration-300">
+    
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-purple-100 rounded-lg">
+          <i class="bx bx-bot text-2xl text-purple-600"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-800">Analizar Pliego con IA</h2>
+          <p class="text-xs text-gray-500">Extrae requisitos automáticamente usando Inteligencia Artificial</p>
+        </div>
+      </div>
+      <button (click)="close.emit()" class="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full">
+        <i class="bx bx-x text-2xl"></i>
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-6">
+      
+      <!-- Paso 1: Carga de Archivo -->
+      @if (step() === 'upload') {
+        <div class="flex flex-col items-center justify-center py-10 space-y-6">
+          <div class="w-full max-w-md">
+            <label class="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-all group">
+              <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                <i class="bx bx-cloud-upload text-5xl text-gray-400 group-hover:text-purple-500 mb-3 transition-colors"></i>
+                <p class="mb-2 text-sm text-gray-700 font-medium">
+                  {{ selectedFile ? selectedFile.name : 'Haz clic para subir el pliego' }}
+                </p>
+                <p class="text-xs text-gray-500">PDF, Word o Imagen (Max. 10MB)</p>
+              </div>
+              <input type="file" class="hidden" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx" />
+            </label>
+          </div>
+          
+          <button 
+            [disabled]="!selectedFile"
+            (click)="onUpload()"
+            class="w-full max-w-md py-3 px-6 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all shadow-lg shadow-purple-200 flex items-center justify-center space-x-2">
+            <i class="bx bx-wand text-xl"></i>
+            <span>Comenzar Análisis</span>
+          </button>
+        </div>
+      }
+
+      <!-- Paso 2: Analizando -->
+      @if (step() === 'analyzing') {
+        <div class="flex flex-col items-center justify-center py-16 space-y-8">
+          <div class="relative">
+            <div class="w-24 h-24 border-4 border-purple-100 border-t-purple-600 rounded-full animate-spin"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <i class="bx bx-bot text-4xl text-purple-600 animate-pulse"></i>
+            </div>
+          </div>
+          <div class="text-center space-y-2">
+            <h3 class="text-xl font-bold text-gray-800">La IA está trabajando...</h3>
+            <p class="text-gray-500 max-w-xs mx-auto">Estamos extrayendo la información técnica y financiera del pliego de condiciones.</p>
+          </div>
+          
+          <!-- Barra de progreso simulada o indeterminada -->
+          <div class="w-full max-w-xs bg-gray-100 h-2 rounded-full overflow-hidden">
+            <div class="bg-purple-600 h-full animate-progress-indeterminate"></div>
+          </div>
+        </div>
+      }
+
+      <!-- Paso 3: Confirmación de Datos -->
+      @if (step() === 'confirm') {
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+          <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 rounded-r-lg">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <i class="bx bx-info-circle text-blue-500 text-xl"></i>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm text-blue-700">
+                  Por favor, valida que los datos extraídos por la IA sean correctos antes de guardar.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Experiencia -->
+          <div class="space-y-4">
+            <h3 class="font-bold text-gray-700 border-b pb-2 flex items-center">
+              <i class="bx bx-briefcase-alt-2 me-2 text-purple-600"></i> Experiencia Requerida
+            </h3>
+            <div class="grid grid-cols-1 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">General</label>
+                <textarea formControlName="general" rows="2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-all"></textarea>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Específica 1</label>
+                  <textarea formControlName="especifica1" rows="2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-all"></textarea>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Específica 2</label>
+                  <textarea formControlName="especifica2" rows="2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-all"></textarea>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Secundaria</label>
+                <textarea formControlName="secundaria" rows="2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-all"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Indicadores -->
+          <div class="space-y-4 pt-4">
+            <h3 class="font-bold text-gray-700 border-b pb-2 flex items-center">
+              <i class="bx bx-stats me-2 text-purple-600"></i> Indicadores y Otros
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Contrato</label>
+                <input type="number" formControlName="contrato" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">CT Proceso</label>
+                <input type="number" formControlName="ctProceso" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Patrimonio</label>
+                <input type="number" formControlName="patrimonio" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">N (Nivel)</label>
+                <input type="number" formControlName="n" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">K Residual</label>
+                <input type="number" formControlName="kresidualProceso" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">POE Anticipo</label>
+                <input type="number" formControlName="poeAnticipo" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" />
+              </div>
+            </div>
+          </div>
+
+          <div class="flex space-x-3 pt-6">
+            <button 
+              type="button"
+              (click)="step.set('upload')"
+              class="flex-1 py-3 px-6 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all">
+              Re-subir archivo
+            </button>
+            <button 
+              type="submit"
+              [disabled]="loading()"
+              class="flex-[2] py-3 px-6 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-green-200 flex items-center justify-center space-x-2">
+              @if (loading()) {
+                <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              } @else {
+                <i class="bx bx-check-double text-xl"></i>
+              }
+              <span>Guardar Requisitos</span>
+            </button>
+          </div>
+        </form>
+      }
+
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes progress-indeterminate {
+    0% { transform: translateX(-100%); width: 30%; }
+    50% { transform: translateX(100%); width: 30%; }
+    100% { transform: translateX(400%); width: 30%; }
+  }
+  .animate-progress-indeterminate {
+    animation: progress-indeterminate 2s infinite linear;
+  }
+</style>

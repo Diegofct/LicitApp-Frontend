@@ -1,0 +1,199 @@
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { EmpresaService } from '../service/empresa.service';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Empresa, IndicadoresFinancieros, Experiencia } from '../interface/empresa';
+import { Tabs, Tab } from '../../../components/tabs/tabs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { of } from 'rxjs';
+
+@Component({
+  selector: 'app-empresa-form',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, Tabs, RouterLink],
+  templateUrl: './empresa-form.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class EmpresaFormComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly empresaService = inject(EmpresaService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
+
+  // --- CONFIGURACIÓN DE PESTAÑAS ---
+  tabs: Tab[] = [
+    { id: 'general', label: 'Información General', icon: 'bx bx-info-circle' },
+    { id: 'financiero', label: 'Datos Financieros (RUP)', icon: 'bx bx-stats' },
+    { id: 'experiencia', label: 'Experiencia (Contratos)', icon: 'bx bx-briefcase' },
+  ];
+  activeTabId = signal('general');
+
+  // --- ESTADO ---
+  isEditMode = signal(false);
+  loading = signal(false);
+  calculatingIndicadores = signal(false);
+  empresaNit = signal<string | null>(null);
+
+  // --- FORMULARIO ---
+  empresaForm: FormGroup = this.fb.group({
+    nit: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+    razonSocial: ['', Validators.required],
+    direccion: ['', Validators.required],
+    telefono: ['', Validators.required],
+    correo: ['', [Validators.required, Validators.email]],
+    numeroProponenteCcb: ['', Validators.required],
+    tamanoEmpresa: ['MICROEMPRESA', Validators.required],
+    representanteLegal: ['', Validators.required],
+    identificacionRepresentanteLegal: ['', Validators.required],
+    fechaInscripcion: ['', Validators.required],
+    fechaUltimaRenovacion: ['', Validators.required],
+    
+    // Grupo de Indicadores Financieros
+    indicadores: this.fb.group({
+      anioCierre: [new Date().getFullYear() - 1, [Validators.required, Validators.min(2000)]],
+      activoCorriente: [0, [Validators.required, Validators.min(0)]],
+      pasivoCorriente: [0, [Validators.required, Validators.min(0)]],
+      activoTotal: [0, [Validators.required, Validators.min(0)]],
+      pasivoTotal: [0, [Validators.required, Validators.min(0)]],
+      patrimonio: [0, [Validators.required]],
+      utilidadOperacional: [0, [Validators.required]],
+      gastosInteres: [0, [Validators.required, Validators.min(0)]],
+    }),
+
+    // Arreglo de Experiencias
+    experiencias: this.fb.array([])
+  });
+
+  // --- GETTERS PARA FORM ARRAY ---
+  get experiencias() {
+    return this.empresaForm.get('experiencias') as FormArray;
+  }
+
+  // --- INDICADORES CALCULADOS (SIGNALS) ---
+  indicadoresCalculados = signal<IndicadoresFinancieros | null>(null);
+
+  ngOnInit(): void {
+    this.setupIndicadoresListener();
+    
+    const nit = this.route.snapshot.paramMap.get('nit');
+    if (nit) {
+      this.isEditMode.set(true);
+      this.empresaNit.set(nit);
+      this.cargarEmpresa(nit);
+    } else {
+      // Agregar una fila inicial de experiencia
+      this.agregarExperiencia();
+    }
+  }
+
+  private setupIndicadoresListener(): void {
+    this.empresaForm.get('indicadores')?.valueChanges.pipe(
+      debounceTime(500),
+      distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)),
+      switchMap(values => {
+        this.calculatingIndicadores.set(true);
+        return this.empresaService.calcularIndicadores(values);
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (res) => {
+        this.indicadoresCalculados.set(res);
+        this.calculatingIndicadores.set(false);
+      },
+      error: (err) => {
+        console.error('Error al calcular indicadores:', err);
+        this.calculatingIndicadores.set(false);
+      }
+    });
+  }
+
+  cargarEmpresa(nit: string): void {
+    this.loading.set(true);
+    this.empresaService.obtenerEmpresaPorNit(nit).subscribe({
+      next: (empresa) => {
+        this.empresaForm.patchValue({
+          nit: empresa.nit,
+          razonSocial: empresa.razonSocial,
+          direccion: empresa.direccion,
+          telefono: empresa.telefono,
+          correo: empresa.correo,
+          numeroProponenteCcb: empresa.numeroProponenteCcb,
+          tamanoEmpresa: empresa.tamanoEmpresa,
+          representanteLegal: empresa.representanteLegal,
+          identificacionRepresentanteLegal: empresa.identificacionRepresentanteLegal,
+          fechaInscripcion: empresa.fechaInscripcion,
+          fechaUltimaRenovacion: empresa.fechaUltimaRenovacion,
+          indicadores: empresa.indicadores || {}
+        });
+
+        if (empresa.indicadores) {
+          this.indicadoresCalculados.set(empresa.indicadores);
+        }
+
+        // Limpiar y cargar experiencias
+        this.experiencias.clear();
+        empresa.experiencias?.forEach(exp => this.agregarExperiencia(exp));
+        
+        // Inicializar indicadores calculados con los datos existentes
+        if (empresa.indicadores) {
+          this.indicadoresCalculados.set(empresa.indicadores);
+        }
+
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error al cargar empresa:', err);
+        this.loading.set(false);
+      }
+    });
+  }
+
+  agregarExperiencia(data?: Experiencia): void {
+    const expGroup = this.fb.group({
+      numeroContrato: [data?.numeroContrato || '', Validators.required],
+      contratante: [data?.contratante || '', Validators.required],
+      objeto: [data?.objeto || '', Validators.required],
+      valorPesos: [data?.valorPesos || 0, [Validators.required, Validators.min(0)]],
+      valorSMMLV: [data?.valorSMMLV || 0, [Validators.required, Validators.min(0)]],
+      fechaTerminacion: [data?.fechaTerminacion || '', Validators.required],
+      codigosUNSPSC: [data?.codigosUNSPSC || '', [Validators.required, Validators.pattern('^([0-9]{8})(,s*[0-9]{8})*$')]],
+      porcentajeParticipacionConsorcio: [data?.porcentajeParticipacionConsorcio || 100, [Validators.required, Validators.min(0), Validators.max(100)]]
+    });
+    this.experiencias.push(expGroup);
+  }
+
+  eliminarExperiencia(index: number): void {
+    this.experiencias.removeAt(index);
+  }
+
+  onTabChange(tabId: string): void {
+    this.activeTabId.set(tabId);
+  }
+
+  onSubmit(): void {
+    if (this.empresaForm.invalid) {
+      this.empresaForm.markAllAsTouched();
+      return;
+    }
+
+    const formData = this.empresaForm.value;
+    this.loading.set(true);
+
+    const request = this.isEditMode() 
+      ? this.empresaService.actualizarEmpresa(this.empresaNit()!, formData)
+      : this.empresaService.crearEmpresa(formData);
+
+    request.subscribe({
+      next: () => {
+        this.router.navigate(['/empresas']);
+      },
+      error: (err) => {
+        console.error('Error al guardar empresa:', err);
+        this.loading.set(false);
+      }
+    });
+  }
+}

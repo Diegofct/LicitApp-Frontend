@@ -14,6 +14,8 @@ export class AddToCuadroModal implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly cuadroService = inject(CuadroDeObraService);
 
+  private readonly SMMLV_2026 = 1750905; // Valor SMMLV 2026
+
   @Input({ required: true }) licitacion!: Licitacion;
   @Output() close = new EventEmitter<void>();
   @Output() saved = new EventEmitter<any>();
@@ -23,36 +25,59 @@ export class AddToCuadroModal implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
+    this.setupMontoListener();
+    this.calculateInitialSMMLV();
   }
 
-      private initForm(): void {
-        // Dividir la ubicación (ej: "ANTIOQUIA - MEDELLIN") si es posible
-        const ubicacionPartes = this.licitacion.ubicacion ? this.licitacion.ubicacion.split(' - ') : ['', ''];
-        const depto = ubicacionPartes[0] || '';
-        const muni = ubicacionPartes[1] || '';
-    
-        this.form = this.fb.group({
-          // --- CAMPOS AUTOMÁTICOS (De SECOP) ---
-          numeroProceso: [this.licitacion.idDelProceso, Validators.required],
-          entidadContratante: [this.licitacion.entidad, Validators.required],
-          descripcionObjeto: [this.licitacion.objeto, Validators.required],
-          estadoProceso: [this.licitacion.estado],
-          fechaPublicacion: [this.licitacion.fechaPublicacion],
-          departamento: [depto],
-          municipio: [muni],
-          monto: [this.licitacion.cuantia, [Validators.required, Validators.min(0)]],
-          
-          // --- CAMPOS MANUALES (Requeridos para Cuadro de Obra) ---
-          fechaCierre: ['', Validators.required],
-          valorSMMLV: [null, [Validators.required]],
-          tipoProyecto: ['', Validators.required],
-          experiencia: ['', Validators.required],
-          plazo: ['', Validators.required],
-          anticipo: ['', Validators.required],
-          observacion: [''],
-          cuadroDeObraEstado: ['POR_PRESENTAR']
-        });
-      }  onSubmit(): void {
+  private initForm(): void {
+    const ubicacionPartes = this.licitacion.ubicacion ? this.licitacion.ubicacion.split(' - ') : ['', ''];
+    const depto = ubicacionPartes[0] || '';
+    const muni = ubicacionPartes[1] || '';
+
+    this.form = this.fb.group({
+      numeroProceso: [this.licitacion.numero, Validators.required],
+      entidadContratante: [this.licitacion.entidad, Validators.required],
+      descripcionObjeto: [this.licitacion.objeto, Validators.required],
+      estadoProceso: [this.licitacion.estado],
+      fechaPublicacion: [this.licitacion.fechaPublicacion],
+      departamento: [depto],
+      municipio: [muni],
+      monto: [this.licitacion.cuantia, [Validators.required, Validators.min(0)]],
+      fechaCierre: ['', Validators.required],
+      valorSMMLV: [{ value: null, disabled: false }, [Validators.required]],
+      tipoProyecto: ['', Validators.required],
+      experiencia: ['', Validators.required],
+      plazo: ['', Validators.required],
+      anticipo: ['', Validators.required],
+      observacion: [''],
+      cuadroDeObraEstado: ['POR_PRESENTAR']
+    });
+  }
+
+  private setupMontoListener(): void {
+    this.form.get('monto')?.valueChanges.subscribe(monto => {
+      this.updateSMMLV(monto);
+    });
+  }
+
+  private calculateInitialSMMLV(): void {
+    const initialMonto = this.form.get('monto')?.value;
+    if (initialMonto) {
+      this.updateSMMLV(initialMonto);
+    }
+  }
+
+  private updateSMMLV(monto: number): void {
+    if (monto && monto > 0) {
+      const calculo = monto / this.SMMLV_2026;
+      // Redondeamos a 2 decimales para mayor limpieza
+      this.form.get('valorSMMLV')?.patchValue(parseFloat(calculo.toFixed(2)), { emitEvent: false });
+    } else {
+      this.form.get('valorSMMLV')?.patchValue(0, { emitEvent: false });
+    }
+  }
+
+  onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

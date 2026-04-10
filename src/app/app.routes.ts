@@ -13,5 +13,26 @@ export const routes: Routes = [
     {
         path: 'cuadro-de-obra',
         loadComponent: () => import('./pages/CuadroDeObra/cuadro-de-obra/cuadro-de-obra').then(m => m.CuadroDeObra)
+    },
+    {
+        path: 'analisis-cumplimiento',
+        loadComponent: () => import('./pages/AnalisisCumplimiento/analisis-cumplimiento/analisis-cumplimiento').then(m => m.AnalisisCumplimiento)
+    },
+    {
+        path: 'empresas',
+        children: [
+            {
+                path: '',
+                loadComponent: () => import('./pages/Empresa/empresa-list/empresa-list').then(m => m.EmpresaListComponent)
+            },
+            {
+                path: 'nueva',
+                loadComponent: () => import('./pages/Empresa/empresa-form/empresa-form').then(m => m.EmpresaFormComponent)
+            },
+            {
+                path: 'editar/:nit',
+                loadComponent: () => import('./pages/Empresa/empresa-form/empresa-form').then(m => m.EmpresaFormComponent)
+            }
+        ]
     }
 ];
