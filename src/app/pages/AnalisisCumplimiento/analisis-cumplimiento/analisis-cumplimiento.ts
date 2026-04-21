@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CuadroDeObraService } from '../../CuadroDeObra/service/cuadro-de-obra.service';
 import { EmpresaService } from '../../Empresa/service/empresa.service';
 import { AnalisisCumplimientoService } from '../service/analisis.service';
-import { CuadroDeObraItem } from '../../CuadroDeObra/interface/cuadro-de-obra';
+import { CuadroDeObraItem, RequisitoLicitacion } from '../../CuadroDeObra/interface/cuadro-de-obra';
 import { Empresa } from '../../Empresa/interface/empresa';
 import { AnalisisResponse } from '../interface/analisis';
 import { forkJoin } from 'rxjs';
@@ -33,6 +33,7 @@ export class AnalisisCumplimiento implements OnInit {
   loadingEmpresas = signal(false);
   loadingAnalisis = signal(false);
   hasRequisitos = signal<boolean | null>(null);
+  requisitos = signal<RequisitoLicitacion | null>(null);
   resultados = signal<AnalisisResponse[]>([]);
 
   ngOnInit(): void {
@@ -70,16 +71,22 @@ export class AnalisisCumplimiento implements OnInit {
     if (!id) {
       this.selectedProcesoId.set(null);
       this.hasRequisitos.set(null);
+      this.requisitos.set(null);
       return;
     }
 
     this.selectedProcesoId.set(id);
     this.cuadroService.obtenerRequisitos(id).subscribe({
       next: (req) => {
-        this.hasRequisitos.set(!!req && !!req.id);
+        // Un objeto vacío o nulo se considera como falta de requisitos.
+        // Verificamos si tiene al menos un campo clave como 'general' o 'presupuesto'
+        const existe = !!req && (!!req.id || !!req.general || !!req.presupuesto);
+        this.hasRequisitos.set(existe);
+        this.requisitos.set(existe ? req : null);
       },
       error: () => {
         this.hasRequisitos.set(false);
+        this.requisitos.set(null);
       }
     });
   }

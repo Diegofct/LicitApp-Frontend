@@ -28,8 +28,9 @@ export interface RequisitoLicitacion {
   // Capacidad Técnica
   contrato: number;
   // Indicadores Financieros
-  ctProceso: number;
+  presupuesto: number;
   patrimonio: number;
+  capitalTrabajo: number;
   n: number;
   liquidez: number;
   endeudamiento: number;

@@ -1,5 +1,5 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-  <div class="w-full max-w-2xl bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+  <div class="w-full max-w-3xl bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
     <!-- Header -->
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
       <div class="flex items-center gap-3">
@@ -14,141 +14,157 @@
     </div>
 
     <!-- Formulario -->
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="p-6 max-h-[75vh] overflow-y-auto">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="p-6 max-h-[80vh] overflow-y-auto">
 
       <!-- Sección: Experiencia -->
       <div class="mb-8">
-        <h3 class="flex items-center gap-2 text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4">
+        <h3 class="flex items-center gap-2 text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 border-b pb-2">
           <i class="bx bx-briefcase"></i>
           Experiencia Requerida
         </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">General</label>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">General</label>
             <textarea formControlName="general"
-              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none bg-gray-50/30"
               rows="2"
               placeholder="Describa la experiencia general requerida"></textarea>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Específica 1</label>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Específica 1</label>
             <textarea formControlName="especifica1"
-              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none bg-gray-50/30"
               rows="2"
               placeholder="Describa la experiencia específica 1"></textarea>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Específica 2</label>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Específica 2</label>
             <textarea formControlName="especifica2"
-              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none bg-gray-50/30"
               rows="2"
               placeholder="Describa la experiencia específica 2"></textarea>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Secundaria</label>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Secundaria</label>
             <textarea formControlName="secundaria"
-              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none bg-gray-50/30"
               rows="2"
               placeholder="Describa la experiencia secundaria"></textarea>
           </div>
+          <div class="space-y-1 md:col-span-2">
+            <div class="max-w-[200px]">
+              <label class="block text-sm font-medium text-gray-700">Nº de Contratos</label>
+              <input type="number" formControlName="contrato"
+                class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                placeholder="1">
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Sección: Capacidad Técnica y Capital de Trabajo -->
+      <!-- Sección: Capital de Trabajo y Patrimonio Requerido -->
       <div class="mb-8">
-        <h3 class="flex items-center gap-2 text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4">
+        <h3 class="flex items-center gap-2 text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 border-b pb-2">
           <i class="bx bx-stats"></i>
-          Capacidad Técnica y Capital de Trabajo
+          Capital de Trabajo y Patrimonio Requerido
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nº Contratos</label>
-            <input type="number" formControlName="contrato"
-              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              placeholder="1">
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Presupuesto PC</label>
+            <input type="text"
+              [value]="formatCurrency(form.get('presupuesto')?.value)"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-600 cursor-not-allowed outline-none font-medium"
+              readonly>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Capital Trabajo (Proceso)</label>
-            <input type="number" formControlName="ctProceso"
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Capital de Trabajo</label>
+            <input type="text"
+              [value]="formatCurrency(form.get('capitalTrabajo')?.value)"
+              (input)="onCurrencyInput($event, 'capitalTrabajo')"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              placeholder="0.00">
+              placeholder="$ 0">
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Patrimonio Requerido</label>
-            <input type="number" formControlName="patrimonio"
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Patrimonio Requerido</label>
+            <input type="text"
+              [value]="formatCurrency(form.get('patrimonio')?.value)"
+              (input)="onCurrencyInput($event, 'patrimonio')"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              placeholder="0.00">
+              placeholder="$ 0">
           </div>
         </div>
       </div>
 
-      <!-- Sección: Indicadores Financieros de Capacidad y Organización -->
-      <div class="mb-8 p-4 bg-gray-50 rounded-xl border border-gray-100">
+      <!-- Sección: Indicadores Financieros -->
+      <div class="mb-8 p-5 bg-indigo-50/30 rounded-xl border border-indigo-100">
         <h3 class="flex items-center gap-2 text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-4">
           <i class="bx bx-calculator"></i>
           Indicadores Financieros de Capacidad y Organización
         </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Índice de Liquidez</label>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Índice de Liquidez</label>
             <input type="number" formControlName="liquidez" step="0.01"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               placeholder="≥ 1.0">
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nivel de Endeudamiento</label>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Nivel de Endeudamiento</label>
             <input type="number" formControlName="endeudamiento" step="0.01"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               placeholder="≤ 0.7">
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Razón Cobertura Interés</label>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Razón Cobertura Interés</label>
             <input type="number" formControlName="razonCoberturaInteres" step="0.01"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               placeholder="≥ 1.0">
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Rentabilidad Patrimonio</label>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Rentabilidad Patrimonio</label>
             <input type="number" formControlName="rentabilidadPatrimonio" step="0.01"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               placeholder="0.00">
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Rentabilidad Activo</label>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Rentabilidad Activo</label>
             <input type="number" formControlName="rentabilidadActivo" step="0.01"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               placeholder="0.00">
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Valor n (Meses)</label>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">N (Nivel/Factor)</label>
             <input type="number" formControlName="n" step="0.1"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-              placeholder="1">
+              placeholder="1.0">
           </div>
         </div>
       </div>
 
       <!-- Sección: Capacidad Residual -->
       <div class="mb-2">
-        <h3 class="flex items-center gap-2 text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4">
+        <h3 class="flex items-center gap-2 text-sm font-semibold text-emerald-600 uppercase tracking-wider mb-4 border-b pb-2">
           <i class="bx bx-pie-chart-alt-2"></i>
-          Capacidad Residual y Anticipo
+          Capacidad Residual y Anticipo del Proceso
         </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">K Residual del Proceso</label>
-            <input type="number" formControlName="kresidualProceso"
-              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              placeholder="0.00">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">% de Anticipo</label>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">% de Anticipo</label>
             <div class="relative">
               <input type="number" formControlName="poeAnticipo"
-                class="w-full px-4 py-2 pr-8 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                class="w-full px-4 py-2 pr-8 rounded-lg border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                 placeholder="0">
-              <span class="absolute right-3 top-2 text-gray-400">%</span>
+              <span class="absolute right-3 top-2 text-gray-400 font-medium">%</span>
             </div>
+            <p class="text-xs text-gray-500 mt-1">Este porcentaje afecta el cálculo de la capacidad residual.</p>
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-emerald-700">Capacidad Residual (Calculada)</label>
+            <input type="text"
+              [value]="formatCurrency(form.get('kresidualProceso')?.value)"
+              class="w-full px-4 py-2 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 font-bold cursor-not-allowed outline-none"
+              readonly>
+            <p class="text-xs text-emerald-600 mt-1 italic">Fórmula: Presupuesto - Anticipo</p>
           </div>
         </div>
       </div>

@@ -153,14 +153,11 @@ export class EmpresaFormComponent implements OnInit {
 
   agregarExperiencia(data?: Experiencia): void {
     const expGroup = this.fb.group({
-      numeroContrato: [data?.numeroContrato || '', Validators.required],
-      contratante: [data?.contratante || '', Validators.required],
-      objeto: [data?.objeto || '', Validators.required],
-      valorPesos: [data?.valorPesos || 0, [Validators.required, Validators.min(0)]],
+      contratista: [data?.contratista || '', Validators.required],
+      entidadContratante: [data?.entidadContratante || '', Validators.required],
       valorSMMLV: [data?.valorSMMLV || 0, [Validators.required, Validators.min(0)]],
-      fechaTerminacion: [data?.fechaTerminacion || '', Validators.required],
-      codigosUNSPSC: [data?.codigosUNSPSC || '', [Validators.required, Validators.pattern('^([0-9]{8})(,s*[0-9]{8})*$')]],
-      porcentajeParticipacionConsorcio: [data?.porcentajeParticipacionConsorcio || 100, [Validators.required, Validators.min(0), Validators.max(100)]]
+      porcentajeParticipacion: [data?.porcentajeParticipacion || 100, [Validators.required, Validators.min(0), Validators.max(100)]],
+      codigosUNSPSC: [data?.codigosUNSPSC?.join(', ') || '', [Validators.required]]
     });
     this.experiencias.push(expGroup);
   }
@@ -173,13 +170,76 @@ export class EmpresaFormComponent implements OnInit {
     this.activeTabId.set(tabId);
   }
 
+  // --- CURRENCY FORMATTING ---
+  formatCurrencyInput(event: any, controlPath: string): void {
+    const input = event.target as HTMLInputElement;
+    let value = input.value;
+    
+    if (!value) return;
+
+    // 1. Limpiar el string: quitar símbolo $, espacios y puntos de miles
+    // 2. Cambiar la coma decimal por punto para que parseFloat lo entienda
+    const cleanValue = value.replace(/[$\s.]/g, '').replace(',', '.');
+    const num = parseFloat(cleanValue);
+
+    if (!isNaN(num)) {
+      // Formatear para visualización con 2 decimales según estándar es-CO
+      input.value = new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(num);
+      
+      // ALERTA: Quitamos { emitEvent: false } para que el listener de indicadores 
+      // se active y llame al backend para recalcular.
+      this.empresaForm.get(controlPath)?.setValue(num);
+    }
+  }
+
+  unformatCurrencyInput(event: any, controlPath: string): void {
+    const input = event.target as HTMLInputElement;
+    const value = this.empresaForm.get(controlPath)?.value;
+    if (value !== null && value !== undefined && !isNaN(value)) {
+      // Al editar, mostramos el número con coma decimal si tiene decimales, o limpio
+      input.value = value.toLocaleString('es-CO', { 
+        useGrouping: false, 
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2 
+      });
+    }
+  }
+
+  // Helper para inicializar los inputs de moneda al cargar
+  getFormattedValue(controlPath: string): string {
+    const value = this.empresaForm.get(controlPath)?.value;
+    if (value === null || value === undefined || isNaN(value)) return '';
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
+  }
+
   onSubmit(): void {
     if (this.empresaForm.invalid) {
       this.empresaForm.markAllAsTouched();
       return;
     }
 
-    const formData = this.empresaForm.value;
+    const formData = { ...this.empresaForm.value };
+    
+    // Mapear codigosUNSPSC de string a array
+    if (formData.experiencias) {
+      formData.experiencias = formData.experiencias.map((exp: any) => ({
+        ...exp,
+        codigosUNSPSC: typeof exp.codigosUNSPSC === 'string' 
+          ? exp.codigosUNSPSC.split(',').map((c: string) => c.trim()).filter((c: string) => c !== '')
+          : exp.codigosUNSPSC
+      }));
+    }
+
     this.loading.set(true);
 
     const request = this.isEditMode() 

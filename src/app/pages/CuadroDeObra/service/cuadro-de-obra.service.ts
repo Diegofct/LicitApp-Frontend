@@ -64,6 +64,14 @@ export class CuadroDeObraService {
   }
 
   /**
+   * Obtiene un registro del cuadro de obra por su ID.
+   * @param id ID del registro.
+   */
+  obtenerCuadroDeObraPorId(id: number): Observable<CuadroDeObraItem> {
+    return this.http.get<CuadroDeObraItem>(`${this.apiUrl}/${id}`);
+  }
+
+  /**
    * Guarda los requisitos de licitación para un registro del cuadro de obra.
    * @param id ID del registro del cuadro de obra.
    * @param data Requisitos de la licitación.

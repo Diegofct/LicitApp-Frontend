@@ -36,7 +36,7 @@ export class AnalizarPliegoModal implements OnInit {
       especifica2: [data?.especifica2 || '', [Validators.required]],
       secundaria: [data?.secundaria || '', [Validators.required]],
       contrato: [data?.contrato || 1, [Validators.required, Validators.min(1)]],
-      ctProceso: [data?.ctProceso || 0, [Validators.required, Validators.min(0)]],
+      capitalTrabajo: [data?.capitalTrabajo || 0, [Validators.required, Validators.min(0)]],
       patrimonio: [data?.patrimonio || 0, [Validators.required, Validators.min(0)]],
       n: [data?.n || 1, [Validators.required, Validators.min(0.1)]],
       kresidualProceso: [data?.kresidualProceso || 0, [Validators.required, Validators.min(0)]],
