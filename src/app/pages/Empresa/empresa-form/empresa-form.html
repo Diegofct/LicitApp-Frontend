@@ -1,331 +1,399 @@
-<div class="p-4 sm:p-6 md:p-8">
-  <div class="flex items-center gap-4 mb-6">
-    <button
-      routerLink="/empresas"
-      class="cursor-pointer p-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all"
-    >
-      <i class="bx bx-arrow-back text-2xl"></i>
-    </button>
-    <h1 class="text-2xl font-bold text-gray-800">
-      {{ isEditMode() ? 'Editar Empresa' : 'Registrar Nueva Empresa' }}
-    </h1>
+<div class="min-h-screen bg-gray-50/50 p-4 sm:p-6 md:p-8">
+  <!-- Header Section -->
+  <div class="max-w-7xl mx-auto mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <button
+        routerLink="/empresas"
+        class="group flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm border border-gray-200 text-gray-600 hover:text-indigo-600 hover:border-indigo-200 transition-all duration-300 cursor-pointer"
+      >
+        <i class="bx bx-arrow-back text-xl group-hover:-translate-x-1 transition-transform"></i>
+      </button>
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800 tracking-tight">
+          {{ isEditMode() ? 'Editar Empresa' : 'Registrar Empresa' }}
+        </h1>
+        <p class="text-sm text-gray-500 mt-0.5">
+          {{ isEditMode() ? 'Actualice los datos de la organización' : 'Complete el formulario para dar de alta una nueva empresa' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        routerLink="/empresas"
+        class="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all cursor-pointer"
+      >
+        Cancelar
+      </button>
+      <button
+        (click)="onSubmit()"
+        [disabled]="loading() || empresaForm.invalid"
+        class="px-6 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:shadow-none transition-all flex items-center gap-2 cursor-pointer"
+      >
+        @if (loading()) {
+          <i class="bx bx-loader-alt animate-spin text-lg"></i>
+        } @else {
+          <i class="bx bx-save text-lg"></i>
+        }
+        {{ isEditMode() ? 'Actualizar Cambios' : 'Guardar Empresa' }}
+      </button>
+    </div>
   </div>
 
-  <div class="bg-white rounded-xl shadow-md overflow-hidden">
-    <!-- Componente de Pestañas -->
-    <app-tabs
-      [tabs]="tabs"
-      [activeTabId]="activeTabId()"
-      (tabChange)="onTabChange($event)"
-    ></app-tabs>
+  <div class="max-w-7xl mx-auto bg-white rounded-3xl shadow-xl shadow-gray-200/50 overflow-hidden border border-gray-100">
+    <!-- Navigation Tabs -->
+    <div class="bg-gray-50/50 border-b border-gray-100">
+      <app-tabs
+        [tabs]="tabs"
+        [activeTabId]="activeTabId()"
+        (tabChange)="onTabChange($event)"
+      ></app-tabs>
+    </div>
 
-    <form [formGroup]="empresaForm" (ngSubmit)="onSubmit()" class="p-6">
+    <form [formGroup]="empresaForm" (ngSubmit)="onSubmit()" class="p-6 md:p-8 lg:p-10">
 
       <!-- TAB 1: INFORMACIÓN GENERAL -->
-      <div [hidden]="activeTabId() !== 'general'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-gray-700">NIT (Solo números)</label>
-          <input
-            type="text"
-            formControlName="nit"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            [class.border-red-500]="empresaForm.get('nit')?.touched && empresaForm.get('nit')?.invalid"
-            placeholder="Ej: 900123456"
-          />
-        </div>
+      <div [hidden]="activeTabId() !== 'general'" class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-gray-700">Razón Social</label>
-          <input
-            type="text"
-            formControlName="razonSocial"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            [class.border-red-500]="empresaForm.get('razonSocial')?.touched && empresaForm.get('razonSocial')?.invalid"
-            placeholder="Nombre de la empresa"
-          />
-        </div>
+          <div class="space-y-6 lg:col-span-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- NIT -->
+              <div class="space-y-2">
+                <label class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <i class="bx bx-id-card text-indigo-500"></i> NIT
+                </label>
+                <input
+                  type="text"
+                  formControlName="nit"
+                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all"
+                  [class.border-red-500]="empresaForm.get('nit')?.touched && empresaForm.get('nit')?.invalid"
+                  placeholder="Ej: 900123456"
+                />
+              </div>
 
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-gray-700">No. Proponente CCB</label>
-          <input
-            type="text"
-            formControlName="numeroProponenteCcb"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            placeholder="Ej: 12345"
-          />
-        </div>
+              <!-- Razón Social -->
+              <div class="space-y-2">
+                <label class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <i class="bx bx-buildings text-indigo-500"></i> Razón Social
+                </label>
+                <input
+                  type="text"
+                  formControlName="razonSocial"
+                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all"
+                  placeholder="Nombre de la empresa"
+                />
+              </div>
 
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-gray-700">Tamaño de Empresa</label>
-          <select
-            formControlName="tamanoEmpresa"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all bg-white"
-          >
-            <option value="GRANDE">GRANDE</option>
-            <option value="MEDIANA">MEDIANA</option>
-            <option value="PEQUEÑA">PEQUEÑA</option>
-            <option value="MICROEMPRESA">MICROEMPRESA</option>
-          </select>
-        </div>
+              <!-- No. Proponente CCB -->
+              <div class="space-y-2">
+                <label class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <i class="bx bx-hash text-indigo-500"></i> No. Proponente CCB
+                </label>
+                <input
+                  type="text"
+                  formControlName="numeroProponenteCcb"
+                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all"
+                  placeholder="Ej: 12345"
+                />
+              </div>
 
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-gray-700">Representante Legal</label>
-          <input
-            type="text"
-            formControlName="representanteLegal"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            placeholder="Nombre completo"
-          />
-        </div>
+              <!-- Tamaño Empresa -->
+              <div class="space-y-2">
+                <label class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <i class="bx bx-line-chart text-indigo-500"></i> Tamaño de Empresa
+                </label>
+                <select
+                  formControlName="tamanoEmpresa"
+                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all appearance-none cursor-pointer"
+                >
+                  <option value="GRANDE">GRANDE</option>
+                  <option value="MEDIANA">MEDIANA</option>
+                  <option value="PEQUEÑA">PEQUEÑA</option>
+                  <option value="MICROEMPRESA">MICROEMPRESA</option>
+                </select>
+              </div>
 
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-gray-700">Identificación Rep. Legal</label>
-          <input
-            type="text"
-            formControlName="identificacionRepresentanteLegal"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            placeholder="CC / NIT"
-          />
-        </div>
+              <!-- Representante Legal -->
+              <div class="space-y-2">
+                <label class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <i class="bx bx-user text-indigo-500"></i> Representante Legal
+                </label>
+                <input
+                  type="text"
+                  formControlName="representanteLegal"
+                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all"
+                  placeholder="Nombre completo"
+                />
+              </div>
 
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-gray-700">Dirección</label>
-          <input
-            type="text"
-            formControlName="direccion"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            placeholder="Dirección física"
-          />
-        </div>
+              <!-- Identificación Representante -->
+              <div class="space-y-2">
+                <label class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <i class="bx bx-fingerprint text-indigo-500"></i> Identificación Representante
+                </label>
+                <input
+                  type="text"
+                  formControlName="identificacionRepresentanteLegal"
+                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all"
+                  placeholder="CC / NIT"
+                />
+              </div>
+            </div>
+          </div>
 
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-gray-700">Teléfono</label>
-          <input
-            type="text"
-            formControlName="telefono"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            placeholder="Ej: 3001234567"
-          />
-        </div>
+          <!-- Contact Info Card -->
+          <div class="bg-indigo-50/50 rounded-3xl p-6 border border-indigo-100/50 space-y-6">
+            <h3 class="font-bold text-indigo-900 flex items-center gap-2">
+              <i class="bx bx-envelope text-xl"></i> Datos de Contacto
+            </h3>
 
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-gray-700">Correo Electrónico</label>
-          <input
-            type="email"
-            formControlName="correo"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            [class.border-red-500]="empresaForm.get('correo')?.touched && empresaForm.get('correo')?.invalid"
-            placeholder="contacto@empresa.com"
-          />
-        </div>
+            <div class="space-y-4">
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-indigo-700 uppercase tracking-wider">Dirección</label>
+                <input type="text" formControlName="direccion" class="w-full px-4 py-2.5 bg-white border border-indigo-100 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all" placeholder="Dirección física" />
+              </div>
 
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-gray-700">Fecha Inscripción RUP</label>
-          <input
-            type="date"
-            formControlName="fechaInscripcion"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-          />
-        </div>
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-indigo-700 uppercase tracking-wider">Teléfono</label>
+                <input type="text" formControlName="telefono" class="w-full px-4 py-2.5 bg-white border border-indigo-100 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all" placeholder="Ej: 3001234567" />
+              </div>
 
-        <div class="space-y-2 md:col-span-2">
-          <label class="block text-sm font-semibold text-gray-700">Fecha Última Renovación RUP</label>
-          <input
-            type="date"
-            formControlName="fechaUltimaRenovacion"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-          />
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-indigo-700 uppercase tracking-wider">Correo Electrónico</label>
+                <input type="email" formControlName="correo" class="w-full px-4 py-2.5 bg-white border border-indigo-100 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all" placeholder="contacto@empresa.com" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Fechas RUP -->
+          <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+            <div class="space-y-2">
+              <label class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                <i class="bx bx-calendar-plus text-indigo-500"></i> Fecha Inscripción RUP
+              </label>
+              <input type="date" formControlName="fechaInscripcion" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                <i class="bx bx-calendar-check text-indigo-500"></i> Fecha Última Renovación RUP
+              </label>
+              <input type="date" formControlName="fechaUltimaRenovacion" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all" />
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- TAB 2: DATOS FINANCIEROS -->
-      <div [hidden]="activeTabId() !== 'financiero'" formGroupName="indicadores">
-        <div class="bg-gray-50 p-6 rounded-xl border border-gray-200 mb-8">
-          <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-            <i class="bx bx-dollar-circle mr-2"></i> Valores Absolutos (RUP)
-          </h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-gray-700">Año de Cierre</label>
-              <input type="number" formControlName="anioCierre" class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
-            </div>
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-gray-700">Activo Corriente</label>
-              <input type="number" step="0.01" formControlName="activoCorriente" class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
-            </div>
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-gray-700">Pasivo Corriente</label>
-              <input type="number" step="0.01" formControlName="pasivoCorriente" class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
-            </div>
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-gray-700">Activo Total</label>
-              <input type="number" step="0.01" formControlName="activoTotal" class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
-            </div>
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-gray-700">Pasivo Total</label>
-              <input type="number" step="0.01" formControlName="pasivoTotal" class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
-            </div>
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-gray-700">Patrimonio</label>
-              <input type="number" step="0.01" formControlName="patrimonio" class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
-            </div>
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-gray-700">Utilidad Operacional</label>
-              <input type="number" step="0.01" formControlName="utilidadOperacional" class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
-            </div>
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-gray-700">Gastos de Interés</label>
-              <input type="number" step="0.01" formControlName="gastosInteres" class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
+      <div [hidden]="activeTabId() !== 'financiero'" formGroupName="indicadores" class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div class="flex flex-col lg:flex-row gap-8">
+
+          <!-- Inputs section -->
+          <div class="flex-1 space-y-8">
+            <div class="bg-gray-50/50 rounded-3xl p-8 border border-gray-100 shadow-inner">
+              <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+                  <i class="bx bx-dollar-circle text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 tracking-tight">Valores Absolutos (RUP)</h3>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                  <label class="text-xs font-bold text-gray-500 uppercase">Año de Cierre</label>
+                  <input type="number" formControlName="anioCierre" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm" />
+                </div>
+
+                <!-- Financial Fields with Currency Formatting -->
+                @for (field of [
+                  { key: 'activoCorriente', label: 'Activo Corriente' },
+                  { key: 'pasivoCorriente', label: 'Pasivo Corriente' },
+                  { key: 'activoTotal', label: 'Activo Total' },
+                  { key: 'pasivoTotal', label: 'Pasivo Total' },
+                  { key: 'patrimonio', label: 'Patrimonio' },
+                  { key: 'utilidadOperacional', label: 'Utilidad Operacional' },
+                  { key: 'gastosInteres', label: 'Gastos de Interés' }
+                ]; track field.key) {
+                  <div class="space-y-2">
+                    <label class="text-xs font-bold text-gray-500 uppercase">{{ field.label }}</label>
+                    <input
+                      type="text"
+                      [value]="getFormattedValue('indicadores.' + field.key)"
+                      (blur)="formatCurrencyInput($event, 'indicadores.' + field.key)"
+                      (focus)="unformatCurrencyInput($event, 'indicadores.' + field.key)"
+                      class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                      placeholder="$ 0"
+                    />
+                  </div>
+                }
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- INDICADORES CALCULADOS -->
-        <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
-          <h3 class="text-lg font-bold text-indigo-900 mb-4 flex items-center justify-between">
-            <span class="flex items-center">
-              <i class="bx bx-calculator mr-2"></i> Indicadores Calculados
-            </span>
-            @if (calculatingIndicadores()) {
-              <span class="text-xs font-normal flex items-center text-indigo-600 italic">
-                <i class="bx bx-loader-alt animate-spin mr-1"></i> Calculando...
-              </span>
-            }
-          </h3>
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-indigo-100">
-              <span class="text-xs text-indigo-500 font-bold uppercase">Liquidez</span>
-              <p class="text-xl font-bold text-gray-800">{{ indicadoresCalculados()?.liquidez | number:'1.2-2' }}</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-indigo-100">
-              <span class="text-xs text-indigo-500 font-bold uppercase">Endeudamiento</span>
-              <p class="text-xl font-bold text-gray-800">{{ indicadoresCalculados()?.endeudamiento | percent:'1.2-2' }}</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-indigo-100">
-              <span class="text-xs text-indigo-500 font-bold uppercase">Razón Cobertura Intereses</span>
-              <p class="text-xl font-bold text-gray-800">{{ indicadoresCalculados()?.razonCoberturaInteres | number:'1.2-2' }}</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-indigo-100">
-              <span class="text-xs text-indigo-500 font-bold uppercase">Rentabilidad Activo (ROA)</span>
-              <p class="text-xl font-bold text-gray-800">{{ indicadoresCalculados()?.rentabilidadActivo | percent:'1.2-2' }}</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-indigo-100">
-              <span class="text-xs text-indigo-500 font-bold uppercase">Rentabilidad Patr. (ROE)</span>
-              <p class="text-xl font-bold text-gray-800">{{ indicadoresCalculados()?.rentabilidadPatrimonio | percent:'1.2-2' }}</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-indigo-100">
-              <span class="text-xs text-indigo-500 font-bold uppercase">Capital de Trabajo</span>
-              <p class="text-xl font-bold text-indigo-700">{{ indicadoresCalculados()?.capitalTrabajo | currency:'COP':'symbol-narrow':'1.0-0' }}</p>
+          <!-- Calculated section -->
+          <div class="w-full lg:w-80 xl:w-96">
+            <div class="sticky top-6 bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-3xl p-8 text-white shadow-xl shadow-indigo-200">
+              <div class="flex items-center justify-between mb-8">
+                <h3 class="text-xl font-bold flex items-center gap-2">
+                  <i class="bx bx-calculator"></i> Indicadores Calculados
+                </h3>
+                @if (calculatingIndicadores()) {
+                  <i class="bx bx-loader-alt animate-spin text-xl opacity-75"></i>
+                }
+              </div>
+
+              <div class="space-y-6">
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+                  <p class="text-xs font-bold text-indigo-100 uppercase mb-1">Liquidez</p>
+                  <p class="text-2xl font-black">{{ (indicadoresCalculados()?.liquidez || 0) | number:'1.2-2' }}</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+                  <p class="text-xs font-bold text-indigo-100 uppercase mb-1">Endeudamiento</p>
+                  <p class="text-2xl font-black">{{ (indicadoresCalculados()?.endeudamiento || 0) | percent:'1.2-2' }}</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+                  <p class="text-xs font-bold text-indigo-100 uppercase mb-1">Cob. Intereses</p>
+                  <p class="text-2xl font-black">{{ (indicadoresCalculados()?.razonCoberturaInteres || 0) | number:'1.2-2' }}</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+                  <p class="text-xs font-bold text-indigo-100 uppercase mb-1">ROA</p>
+                  <p class="text-2xl font-black">{{ (indicadoresCalculados()?.rentabilidadActivo || 0) | percent:'1.2-2' }}</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+                  <p class="text-xs font-bold text-indigo-100 uppercase mb-1">ROE</p>
+                  <p class="text-2xl font-black">{{ (indicadoresCalculados()?.rentabilidadPatrimonio || 0) | percent:'1.2-2' }}</p>
+                </div>
+                <div class="bg-indigo-500/30 backdrop-blur-xl rounded-2xl p-5 border border-white/20 mt-4">
+                  <p class="text-xs font-bold text-white uppercase mb-1">Capital de Trabajo</p>
+                  <p class="text-3xl font-black text-white leading-tight">
+                    {{ (indicadoresCalculados()?.capitalTrabajo || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- TAB 3: EXPERIENCIA -->
-      <div [hidden]="activeTabId() !== 'experiencia'">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-bold text-gray-800">Contratos de Experiencia</h3>
+      <div [hidden]="activeTabId() !== 'experiencia'" class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h3 class="text-xl font-bold text-gray-800 tracking-tight">Experiencia y Contratos</h3>
+            <p class="text-sm text-gray-500">Registre los contratos que respaldan la experiencia técnica</p>
+          </div>
           <button
             type="button"
             (click)="agregarExperiencia()"
-            class="cursor-pointer px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center transition-all"
+            class="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all flex items-center gap-2 cursor-pointer"
           >
-            <i class="bx bx-plus mr-1"></i> Agregar Fila
+            <i class="bx bx-plus-circle text-lg"></i> Agregar Contrato
           </button>
         </div>
 
-        <div class="overflow-x-auto border rounded-xl">
-          <table class="w-full text-sm text-left text-gray-500">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
-              <tr>
-                <th class="px-4 py-3 min-w-[120px]">No. Contrato</th>
-                <th class="px-4 py-3 min-w-[180px]">Contratante</th>
-                <th class="px-4 py-3 min-w-[200px]">Objeto</th>
-                <th class="px-4 py-3 min-w-[140px]">Valor (Pesos)</th>
-                <th class="px-4 py-3 min-w-[100px]">SMMLV</th>
-                <th class="px-4 py-3 min-w-[130px]">Terminación</th>
-                <th class="px-4 py-3 min-w-[150px]">UNSPSC</th>
-                <th class="px-4 py-3 min-w-[80px]">Part. %</th>
-                <th class="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody formArrayName="experiencias">
-              @for (exp of experiencias.controls; track $index; let i = $index) {
-                <tr [formGroupName]="i" class="bg-white border-b hover:bg-gray-50">
-                  <td class="px-4 py-2">
-                    <input type="text" formControlName="numeroContrato" class="w-full p-1 border rounded outline-none focus:ring-1 focus:ring-indigo-500" />
-                  </td>
-                  <td class="px-4 py-2">
-                    <input type="text" formControlName="contratante" class="w-full p-1 border rounded outline-none focus:ring-1 focus:ring-indigo-500" />
-                  </td>
-                  <td class="px-4 py-2">
-                    <textarea formControlName="objeto" rows="1" class="w-full p-1 border rounded outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
-                  </td>
-                  <td class="px-4 py-2">
-                    <input type="number" step="0.01" formControlName="valorPesos" class="w-full p-1 border rounded outline-none focus:ring-1 focus:ring-indigo-500" />
-                  </td>
-                  <td class="px-4 py-2">
-                    <input type="number" step="0.01" formControlName="valorSMMLV" class="w-full p-1 border rounded outline-none focus:ring-1 focus:ring-indigo-500" />
-                  </td>
-                  <td class="px-4 py-2">
-                    <input type="date" formControlName="fechaTerminacion" class="w-full p-1 border rounded outline-none focus:ring-1 focus:ring-indigo-500" />
-                  </td>
-                  <td class="px-4 py-2">
+        <div formArrayName="experiencias" class="space-y-6">
+          @for (exp of experiencias.controls; track $index; let i = $index) {
+            <div [formGroupName]="i" class="group relative bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300">
+              <!-- Delete Button -->
+              <button
+                type="button"
+                (click)="eliminarExperiencia(i)"
+                class="absolute -top-3 -right-3 w-8 h-8 bg-white text-red-500 rounded-full shadow-md border border-red-50 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center z-10 cursor-pointer"
+                title="Eliminar contrato"
+              >
+                <i class="bx bx-x text-xl font-bold"></i>
+              </button>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Contratista -->
+                <div class="space-y-2">
+                  <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Contratista</label>
+                  <input
+                    type="text"
+                    formControlName="contratista"
+                    class="w-full px-0 py-1 bg-transparent border-b-2 border-gray-100 focus:border-indigo-500 outline-none transition-all text-gray-800 font-medium placeholder:text-gray-300"
+                    placeholder="Nombre del contratista"
+                  />
+                </div>
+
+                <!-- Entidad Contratante -->
+                <div class="space-y-2">
+                  <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Entidad Contratante</label>
+                  <input
+                    type="text"
+                    formControlName="entidadContratante"
+                    class="w-full px-0 py-1 bg-transparent border-b-2 border-gray-100 focus:border-indigo-500 outline-none transition-all text-gray-800 font-medium placeholder:text-gray-300"
+                    placeholder="Nombre de la entidad"
+                  />
+                </div>
+
+                <!-- Valor SMMLV -->
+                <div class="space-y-2">
+                  <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Valor SMMLV</label>
+                  <div class="relative">
+                    <input
+                      type="number"
+                      step="0.01"
+                      formControlName="valorSMMLV"
+                      class="w-full px-0 py-1 bg-transparent border-b-2 border-gray-100 focus:border-indigo-500 outline-none transition-all text-gray-800 font-bold placeholder:text-gray-300"
+                      placeholder="0.00"
+                    />
+                    <span class="absolute right-0 top-1 text-xs font-bold text-gray-400">SMMLV</span>
+                  </div>
+                </div>
+
+                <!-- Porcentaje Participación -->
+                <div class="space-y-2">
+                  <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Participación (%)</label>
+                  <div class="relative">
+                    <input
+                      type="number"
+                      formControlName="porcentajeParticipacion"
+                      class="w-full px-0 py-1 bg-transparent border-b-2 border-gray-100 focus:border-indigo-500 outline-none transition-all text-gray-800 font-bold placeholder:text-gray-300"
+                      placeholder="100"
+                    />
+                    <span class="absolute right-0 top-1 text-xs font-bold text-gray-400">%</span>
+                  </div>
+                </div>
+
+                <!-- Codigos UNSPSC -->
+                <div class="space-y-2 lg:col-span-2">
+                  <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Códigos UNSPSC</label>
+                  <div class="flex items-center gap-2">
+                    <div class="p-2 bg-gray-50 rounded-lg text-gray-400">
+                      <i class="bx bx-tag-alt"></i>
+                    </div>
                     <input
                       type="text"
                       formControlName="codigosUNSPSC"
-                      placeholder="72141100"
-                      class="w-full p-1 border rounded outline-none focus:ring-1 focus:ring-indigo-500"
+                      class="w-full px-0 py-1 bg-transparent border-b-2 border-gray-100 focus:border-indigo-500 outline-none transition-all text-gray-800 font-medium placeholder:text-gray-300"
+                      placeholder="Ej: 72141100, 72141101 (separados por coma)"
                     />
-                  </td>
-                  <td class="px-4 py-2">
-                    <input
-                      type="number"
-                      formControlName="porcentajeParticipacionConsorcio"
-                      min="0"
-                      max="100"
-                      class="w-full p-1 border rounded outline-none focus:ring-1 focus:ring-indigo-500"
-                    />
-                  </td>
-                  <td class="px-4 py-2 text-center">
-                    <button
-                      type="button"
-                      (click)="eliminarExperiencia(i)"
-                      class="cursor-pointer text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-all"
-                    >
-                      <i class="bx bx-trash text-lg"></i>
-                    </button>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-          @if (experiencias.length === 0) {
-            <div class="p-8 text-center text-gray-500 italic">No hay contratos registrados. Haga clic en "Agregar Fila".</div>
+                  </div>
+                  <p class="text-[10px] text-gray-400 italic">Ingrese los códigos de 8 dígitos separados por comas.</p>
+                </div>
+              </div>
+            </div>
+          } @empty {
+            <div class="py-16 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200 flex flex-col items-center justify-center text-center">
+              <div class="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center text-gray-300 mb-4">
+                <i class="bx bx-briefcase text-3xl"></i>
+              </div>
+              <p class="text-gray-500 font-medium">No se han registrado contratos aún</p>
+              <button
+                type="button"
+                (click)="agregarExperiencia()"
+                class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <i class="bx bx-plus"></i> Agregar el primer contrato
+              </button>
+            </div>
           }
         </div>
       </div>
 
-      <!-- BOTONES DE ACCIÓN -->
-      <div class="mt-8 flex justify-end gap-4 border-t pt-6">
-        <button
-          type="button"
-          routerLink="/empresas"
-          class="cursor-pointer px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          [disabled]="loading() || empresaForm.invalid"
-          class="cursor-pointer px-8 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all flex items-center"
-        >
-          @if (loading()) {
-            <i class="bx bx-loader-alt animate-spin mr-2"></i>
-          }
-          {{ isEditMode() ? 'Actualizar Empresa' : 'Guardar Empresa' }}
-        </button>
-      </div>
     </form>
   </div>
 </div>

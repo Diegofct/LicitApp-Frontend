@@ -19,14 +19,11 @@ export interface IndicadoresFinancieros {
 
 export interface Experiencia {
   id?: number;
-  numeroContrato: string;
-  contratante: string;
-  objeto: string;
-  valorPesos: number;
+  contratista: string;
+  entidadContratante: string;
   valorSMMLV: number;
-  fechaTerminacion: string | Date;
-  codigosUNSPSC: string; // Almacenados como string o separados por coma
-  porcentajeParticipacionConsorcio: number;
+  porcentajeParticipacion: number;
+  codigosUNSPSC: string[];
 }
 
 export interface Empresa {
