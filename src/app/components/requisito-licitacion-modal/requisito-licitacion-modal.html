@@ -3,16 +3,54 @@
     <!-- Header -->
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
       <div class="flex items-center gap-3">
-        <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
-          <i class="bx bx-list-check text-2xl"></i>
+        <div class="p-2 rounded-lg"
+          [class.bg-blue-100]="!isEditMode()"
+          [class.text-blue-600]="!isEditMode()"
+          [class.bg-emerald-100]="isEditMode()"
+          [class.text-emerald-600]="isEditMode()">
+          <i class="bx text-2xl" [class.bx-list-check]="!isEditMode()" [class.bx-edit-alt]="isEditMode()"></i>
         </div>
-        <h2 class="text-xl font-bold text-gray-800">Requisitos de Licitación</h2>
+        <div>
+          <h2 class="text-xl font-bold text-gray-800">
+            {{ isEditMode() ? 'Actualizar Requisitos de Licitación' : 'Requisitos de Licitación' }}
+          </h2>
+          @if (isEditMode()) {
+            <p class="text-xs text-emerald-600 mt-0.5 flex items-center gap-1">
+              <i class="bx bx-info-circle"></i>
+              Se encontraron requisitos registrados. Modifique los campos que necesite actualizar.
+            </p>
+          }
+        </div>
       </div>
       <button (click)="close.emit()" class="text-gray-400 hover:text-gray-600 transition-colors">
         <i class="bx bx-x text-3xl"></i>
       </button>
     </div>
 
+    @if (loadingData()) {
+      <!-- Skeleton de carga mientras se verifican requisitos existentes -->
+      <div class="p-6 max-h-[80vh] overflow-y-auto">
+        <div class="flex flex-col items-center justify-center py-12 gap-3">
+          <i class="bx bx-loader-alt animate-spin text-4xl text-blue-500"></i>
+          <p class="text-sm text-gray-500">Verificando requisitos existentes...</p>
+        </div>
+        <div class="space-y-4 animate-pulse">
+          <div class="h-4 w-1/3 bg-gray-200 rounded"></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="h-16 bg-gray-100 rounded-lg"></div>
+            <div class="h-16 bg-gray-100 rounded-lg"></div>
+            <div class="h-16 bg-gray-100 rounded-lg"></div>
+            <div class="h-16 bg-gray-100 rounded-lg"></div>
+          </div>
+          <div class="h-4 w-1/3 bg-gray-200 rounded mt-6"></div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="h-16 bg-gray-100 rounded-lg"></div>
+            <div class="h-16 bg-gray-100 rounded-lg"></div>
+            <div class="h-16 bg-gray-100 rounded-lg"></div>
+          </div>
+        </div>
+      </div>
+    } @else {
     <!-- Formulario -->
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="p-6 max-h-[80vh] overflow-y-auto">
 
@@ -170,6 +208,7 @@
       </div>
 
     </form>
+    }
 
     <!-- Footer Actions -->
     <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
@@ -177,12 +216,21 @@
         class="cursor-pointer px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
         Cancelar
       </button>
-      <button (click)="onSubmit()" [disabled]="form.invalid || loading"
-        class="cursor-pointer flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-lg shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
-        @if (loading) {
+      <button (click)="onSubmit()" [disabled]="form.invalid || saving() || loadingData()"
+        class="cursor-pointer flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        [ngClass]="isEditMode()
+          ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
+          : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'">
+        @if (saving()) {
           <i class="bx bx-loader-alt animate-spin"></i>
+        } @else {
+          <i class="bx" [class.bx-save]="!isEditMode()" [class.bx-refresh]="isEditMode()"></i>
         }
-        <span>{{ loading ? 'Guardando...' : 'Guardar Requisitos' }}</span>
+        <span>
+          {{ saving()
+              ? (isEditMode() ? 'Actualizando...' : 'Guardando...')
+              : (isEditMode() ? 'Actualizar Requisitos' : 'Guardar Requisitos') }}
+        </span>
       </button>
     </div>
   </div>

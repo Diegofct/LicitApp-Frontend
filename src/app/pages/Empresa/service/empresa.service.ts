@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Empresa, IndicadoresFinancieros } from '../interface/empresa';
+import { Empresa, IndicadoresFinancieros, CapacidadResidual } from '../interface/empresa';
 import { PaginatedResponse } from '../../Licitaciones/interface/paginated-response';
 
 @Injectable({
@@ -57,5 +57,22 @@ export class EmpresaService {
    */
   calcularIndicadores(indicadores: Partial<IndicadoresFinancieros>): Observable<IndicadoresFinancieros> {
     return this.http.post<IndicadoresFinancieros>(`${this.apiUrl}/calcular-indicadores`, indicadores);
+  }
+
+  /**
+   * Preview del cálculo de capacidad residual sin persistir (no requiere id).
+   * Usado para el cálculo en vivo mientras el usuario edita el formulario.
+   */
+  previewCapacidadResidual(capacidad: Partial<CapacidadResidual>): Observable<CapacidadResidual> {
+    return this.http.post<CapacidadResidual>(`${this.apiUrl}/calcular-capacidad-residual`, capacidad);
+  }
+
+  /**
+   * Calcula y persiste la capacidad residual asociada a una empresa existente.
+   * @param id El ID de la empresa.
+   * @param capacidad Valores para el cálculo.
+   */
+  calcularCapacidadResidual(id: number, capacidad: Partial<CapacidadResidual>): Observable<CapacidadResidual> {
+    return this.http.post<CapacidadResidual>(`${this.apiUrl}/${id}/capacidad-residual`, capacidad);
   }
 }

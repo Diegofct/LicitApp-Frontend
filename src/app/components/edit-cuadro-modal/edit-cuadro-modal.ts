@@ -1,18 +1,27 @@
-import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CuadroDeObraService } from '../../pages/CuadroDeObra/service/cuadro-de-obra.service';
 import { CuadroDeObraItem } from '../../pages/CuadroDeObra/interface/cuadro-de-obra';
+import { ConformacionProponenteService } from '../../pages/Conformacion/service/conformacion.service';
+import { ConformacionResponse } from '../../pages/Conformacion/interface/conformacion';
+import { AlertService } from '../../services/alert.service';
+import { ConfirmPresentacionModal } from '../confirm-presentacion-modal/confirm-presentacion-modal';
 
 @Component({
   selector: 'app-edit-cuadro-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './edit-cuadro-modal.html'
+  imports: [CommonModule, ReactiveFormsModule, ConfirmPresentacionModal],
+  templateUrl: './edit-cuadro-modal.html',
 })
 export class EditCuadroModal implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly cuadroService = inject(CuadroDeObraService);
+  private readonly conformacionService = inject(ConformacionProponenteService);
+  private readonly alertService = inject(AlertService);
+  private readonly router = inject(Router);
 
   @Input({ required: true }) item!: CuadroDeObraItem;
   @Output() close = new EventEmitter<void>();
@@ -20,6 +29,15 @@ export class EditCuadroModal implements OnInit {
 
   form!: FormGroup;
   loading = false;
+
+  // Estado del modal de confirmación de presentación
+  showConfirmPresentacion = signal(false);
+  conformacionEncontrada = signal<ConformacionResponse | null>(null);
+  presentacionErrorMsg = signal<string | null>(null);
+  presentacionLoading = signal(false);
+
+  /** Snapshot del payload listo para PUT cuando el usuario confirme. */
+  private pendingPayload: any = null;
 
   ngOnInit(): void {
     this.initForm();
@@ -46,7 +64,7 @@ export class EditCuadroModal implements OnInit {
       plazo: [this.item.plazo, Validators.required],
       anticipo: [this.item.anticipo, Validators.required],
       observacion: [this.item.observacion || ''],
-      cuadroDeObraEstado: [this.item.cuadroDeObraEstado, Validators.required]
+      cuadroDeObraEstado: [this.item.cuadroDeObraEstado, Validators.required],
     });
   }
 
@@ -62,18 +80,100 @@ export class EditCuadroModal implements OnInit {
       return;
     }
 
-    this.loading = true;
-    const formData = { ...this.form.value };
+    const formData = this.normalizarPayload();
+    const estadoOriginal = this.item.cuadroDeObraEstado;
+    const estadoNuevo = formData.cuadroDeObraEstado;
 
-    // Asegurar formato ISO con segundos para ambas fechas
+    // Intercepción: si transita a PRESENTADO desde otro estado, validar conformación.
+    if (estadoNuevo === 'PRESENTADO' && estadoOriginal !== 'PRESENTADO') {
+      this.pendingPayload = formData;
+      this.verificarConformacionYConfirmar();
+      return;
+    }
+
+    this.persistir(formData);
+  }
+
+  private normalizarPayload(): any {
+    const data = { ...this.form.value };
     ['fechaCierre', 'fechaPublicacion'].forEach((field) => {
-      if (formData[field] && typeof formData[field] === 'string' && formData[field].length === 16) {
-        formData[field] += ':00';
+      if (data[field] && typeof data[field] === 'string' && data[field].length === 16) {
+        data[field] += ':00';
       }
     });
+    return data;
+  }
 
-    // Realizamos una única actualización atómica con todos los datos.
-    // Esto evita problemas de campos obligatorios faltantes y es más eficiente.
+  private verificarConformacionYConfirmar(): void {
+    this.presentacionErrorMsg.set(null);
+    this.presentacionLoading.set(true);
+    this.conformacionService.obtenerPorCuadroDeObra(this.item.id).subscribe({
+      next: (resp) => {
+        this.conformacionEncontrada.set(resp);
+        this.presentacionLoading.set(false);
+        this.showConfirmPresentacion.set(true);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.presentacionLoading.set(false);
+        if (err.status === 404) {
+          this.conformacionEncontrada.set(null);
+          this.showConfirmPresentacion.set(true);
+        } else {
+          this.alertService.error('No se pudo verificar la conformación del proponente.');
+        }
+      },
+    });
+  }
+
+  confirmarPresentacion(): void {
+    if (!this.pendingPayload) {
+      this.showConfirmPresentacion.set(false);
+      return;
+    }
+    this.presentacionLoading.set(true);
+    this.cuadroService.actualizarCuadroDeObra(this.item.id, this.pendingPayload).subscribe({
+      next: () => {
+        this.presentacionLoading.set(false);
+        this.showConfirmPresentacion.set(false);
+        this.pendingPayload = null;
+        this.alertService.success('El proceso fue marcado como Presentado.');
+        this.saved.emit();
+        this.close.emit();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.presentacionLoading.set(false);
+        if (err.status === 400) {
+          const msg =
+            err.error?.message ||
+            'El servidor rechazó la transición a PRESENTADO. Verifica la conformación del proponente.';
+          this.presentacionErrorMsg.set(msg);
+          // Si el back devolvió 400 por conformación ausente, forzar vista “sin conformación”.
+          this.conformacionEncontrada.set(null);
+        } else {
+          this.alertService.error('No se pudo actualizar el estado del proceso.');
+        }
+      },
+    });
+  }
+
+  cancelarPresentacion(): void {
+    if (this.presentacionLoading()) return;
+    this.showConfirmPresentacion.set(false);
+    this.pendingPayload = null;
+    this.presentacionErrorMsg.set(null);
+  }
+
+  irADefinirConformacion(): void {
+    this.showConfirmPresentacion.set(false);
+    this.pendingPayload = null;
+    this.close.emit();
+    this.router.navigate(['/analisis-cumplimiento'], {
+      queryParams: { cuadroId: this.item.id, conformacion: 1 },
+    });
+  }
+
+  private persistir(formData: any): void {
+    this.loading = true;
     this.cuadroService.actualizarCuadroDeObra(this.item.id, formData).subscribe({
       next: () => {
         this.loading = false;
@@ -91,8 +191,14 @@ export class EditCuadroModal implements OnInit {
     console.error(`Error (${contexto}):`, err);
     let mensaje = 'Hubo un error al procesar la solicitud.';
     if (err.status === 400) {
-      mensaje = 'Error 400: Los datos enviados no son válidos para el servidor. Revisa los formatos de fecha y campos obligatorios.';
+      mensaje =
+        err.error?.message ||
+        'Error 400: Los datos enviados no son válidos para el servidor. Revisa los formatos de fecha y campos obligatorios.';
     }
-    alert(mensaje);
+    this.alertService.error(mensaje);
+  }
+
+  get cuadroLabel(): string {
+    return `${this.item.numeroProceso} — ${this.item.entidadContratante}`;
   }
 }

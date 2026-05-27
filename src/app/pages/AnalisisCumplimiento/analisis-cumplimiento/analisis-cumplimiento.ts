@@ -1,24 +1,30 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { CuadroDeObraService } from '../../CuadroDeObra/service/cuadro-de-obra.service';
 import { EmpresaService } from '../../Empresa/service/empresa.service';
 import { AnalisisCumplimientoService } from '../service/analisis.service';
 import { CuadroDeObraItem, RequisitoLicitacion } from '../../CuadroDeObra/interface/cuadro-de-obra';
 import { Empresa } from '../../Empresa/interface/empresa';
 import { AnalisisResponse } from '../interface/analisis';
+import { ConformacionProponenteComponent } from '../../../components/conformacion-proponente/conformacion-proponente';
 import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-analisis-cumplimiento',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ConformacionProponenteComponent],
   templateUrl: './analisis-cumplimiento.html',
 })
 export class AnalisisCumplimiento implements OnInit {
   private readonly cuadroService = inject(CuadroDeObraService);
   private readonly empresaService = inject(EmpresaService);
   private readonly analisisService = inject(AnalisisCumplimientoService);
+  private readonly route = inject(ActivatedRoute);
+
+  /** Indica si veníamos de un deep-link para definir conformación. */
+  autoEditConformacion = signal(false);
 
   // --- LISTAS ---
   procesos = signal<CuadroDeObraItem[]>([]);
@@ -39,6 +45,34 @@ export class AnalisisCumplimiento implements OnInit {
   ngOnInit(): void {
     this.cargarProcesos();
     this.cargarEmpresas();
+
+    // Soporta deep-link tipo /analisis-cumplimiento?cuadroId=123&conformacion=1
+    const params = this.route.snapshot.queryParamMap;
+    const cuadroIdParam = params.get('cuadroId');
+    const conformacionFlag = params.get('conformacion');
+    if (cuadroIdParam) {
+      const id = Number(cuadroIdParam);
+      if (!Number.isNaN(id)) {
+        this.autoEditConformacion.set(conformacionFlag === '1');
+        this.selectProceso(id);
+      }
+    }
+  }
+
+  /** Selección programática de un proceso (también desde deep-link). */
+  selectProceso(id: number): void {
+    this.selectedProcesoId.set(id);
+    this.cuadroService.obtenerRequisitos(id).subscribe({
+      next: (req) => {
+        const existe = !!req && (!!req.id || !!req.general || !!req.presupuesto);
+        this.hasRequisitos.set(existe);
+        this.requisitos.set(existe ? req : null);
+      },
+      error: () => {
+        this.hasRequisitos.set(false);
+        this.requisitos.set(null);
+      },
+    });
   }
 
   cargarProcesos(): void {
@@ -72,23 +106,12 @@ export class AnalisisCumplimiento implements OnInit {
       this.selectedProcesoId.set(null);
       this.hasRequisitos.set(null);
       this.requisitos.set(null);
+      this.resultados.set([]);
+      this.autoEditConformacion.set(false);
       return;
     }
-
-    this.selectedProcesoId.set(id);
-    this.cuadroService.obtenerRequisitos(id).subscribe({
-      next: (req) => {
-        // Un objeto vacío o nulo se considera como falta de requisitos.
-        // Verificamos si tiene al menos un campo clave como 'general' o 'presupuesto'
-        const existe = !!req && (!!req.id || !!req.general || !!req.presupuesto);
-        this.hasRequisitos.set(existe);
-        this.requisitos.set(existe ? req : null);
-      },
-      error: () => {
-        this.hasRequisitos.set(false);
-        this.requisitos.set(null);
-      }
-    });
+    this.autoEditConformacion.set(false);
+    this.selectProceso(id);
   }
 
   toggleEmpresa(id: number | undefined): void {

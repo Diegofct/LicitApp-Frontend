@@ -8,13 +8,23 @@ export interface IndicadoresFinancieros {
   utilidadOperacional: number;
   gastosInteres: number;
   patrimonio: number;
-  // Campos calculados (solo lectura en el frontend, calculados o devueltos por backend)
+  // Campos calculados
   liquidez?: number;
   endeudamiento?: number;
   razonCoberturaInteres?: number;
   rentabilidadActivo?: number;
   rentabilidadPatrimonio?: number;
   capitalTrabajo?: number;
+}
+
+export interface CapacidadResidual {
+  id?: number;
+  capacidadOrganizacion: number;
+  experiencia: number;
+  capacidadTecnica: number;
+  capacidadFinanciera: number;
+  saldosContratosEjecucion: number;
+  resultadoCapacidadResidualProponente?: number;
 }
 
 export interface Experiencia {
@@ -41,4 +51,5 @@ export interface Empresa {
   fechaUltimaRenovacion: string | Date;
   indicadores?: IndicadoresFinancieros;
   experiencias?: Experiencia[];
+  capacidadResidual?: CapacidadResidual;
 }

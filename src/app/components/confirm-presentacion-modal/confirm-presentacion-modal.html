@@ -1,0 +1,149 @@
+<div
+  class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+  (click)="onBackdrop($event)"
+>
+  <div
+    role="alertdialog"
+    aria-modal="true"
+    class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200"
+    (click)="$event.stopPropagation()"
+  >
+    @if (conformacion) {
+      <!-- ====== Caso: conformación existe → confirmar transición ====== -->
+      <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-emerald-50 via-white to-white flex items-center gap-3">
+        <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-emerald-100 text-emerald-600">
+          <i class="bx bx-check-double text-2xl"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">Marcar como Presentado</h3>
+          <p class="text-xs text-gray-500">Verifica con quién se presentará la oferta antes de continuar.</p>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-5">
+        @if (cuadroLabel) {
+          <p class="text-xs text-gray-500">
+            Proceso: <span class="font-semibold text-gray-700">{{ cuadroLabel }}</span>
+          </p>
+        }
+
+        <div class="rounded-xl border border-gray-100 bg-gray-50/50 p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Tipo de participación</span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-indigo-100 text-indigo-700 border border-indigo-200">
+              <i class="bx" [ngClass]="tipoIcon(conformacion.tipoParticipacion)"></i>
+              {{ tipoLabel(conformacion.tipoParticipacion) }}
+            </span>
+          </div>
+
+          <div class="border-t border-gray-100 pt-3 space-y-2">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Integrantes</p>
+            @for (i of conformacion.integrantes; track i.id) {
+              <div class="flex items-center gap-2.5">
+                <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-600 text-white font-bold text-[11px] shrink-0">
+                  {{ iniciales(i.nombreEmpresa) }}
+                </div>
+                <p class="text-sm font-semibold text-gray-800 truncate flex-1">{{ i.nombreEmpresa }}</p>
+                <span class="px-2 py-0.5 rounded-md text-xs font-bold tabular-nums text-indigo-700 bg-indigo-50 border border-indigo-100">
+                  {{ i.porcentajeParticipacion }}%
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (errorMessage) {
+          <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2">
+            <i class="bx bx-error-circle text-base shrink-0"></i>
+            <span class="leading-relaxed">{{ errorMessage }}</span>
+          </div>
+        }
+
+        <p class="text-xs text-gray-500 leading-relaxed">
+          Al confirmar, el cuadro pasará al estado <strong class="text-emerald-700">PRESENTADO</strong>
+          y se iniciará automáticamente el seguimiento del proceso.
+        </p>
+      </div>
+
+      <div class="px-6 py-4 bg-gray-50/60 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+        <button
+          type="button"
+          (click)="cancel.emit()"
+          [disabled]="loading"
+          class="cursor-pointer px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors disabled:opacity-50"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          (click)="definir.emit()"
+          [disabled]="loading"
+          class="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 text-sm font-medium transition-colors disabled:opacity-50"
+        >
+          <i class="bx bx-edit-alt"></i> Editar conformación
+        </button>
+        <button
+          type="button"
+          (click)="confirm.emit()"
+          [disabled]="loading"
+          class="cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-lg shadow-emerald-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          @if (loading) {
+            <i class="bx bx-loader-alt animate-spin"></i> Confirmando…
+          } @else {
+            <i class="bx bx-check-double"></i> Confirmar y marcar Presentado
+          }
+        </button>
+      </div>
+    } @else {
+      <!-- ====== Caso: NO existe conformación → bloquear y guiar ====== -->
+      <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-amber-50 via-white to-white flex items-center gap-3">
+        <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-amber-100 text-amber-600">
+          <i class="bx bx-info-circle text-2xl"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">Falta la conformación del proponente</h3>
+          <p class="text-xs text-gray-500">Es obligatoria para marcar el cuadro como PRESENTADO.</p>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-4">
+        @if (cuadroLabel) {
+          <p class="text-xs text-gray-500">
+            Proceso: <span class="font-semibold text-gray-700">{{ cuadroLabel }}</span>
+          </p>
+        }
+
+        <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200 text-sm text-amber-900 leading-relaxed">
+          No puedes marcar este proceso como <strong>PRESENTADO</strong> sin antes registrar con quién se presenta la oferta.
+          Si fue presentado individualmente, registra una conformación tipo
+          <strong>Individual</strong> al 100%.
+        </div>
+
+        @if (errorMessage) {
+          <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2">
+            <i class="bx bx-error-circle text-base shrink-0"></i>
+            <span class="leading-relaxed">{{ errorMessage }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="px-6 py-4 bg-gray-50/60 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+        <button
+          type="button"
+          (click)="cancel.emit()"
+          class="cursor-pointer px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          (click)="definir.emit()"
+          class="cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-lg shadow-indigo-200 transition-all"
+        >
+          <i class="bx bx-plus-circle"></i> Definir conformación ahora
+        </button>
+      </div>
+    }
+  </div>
+</div>

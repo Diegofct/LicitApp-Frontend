@@ -60,31 +60,9 @@
       </a>
     </li>
     <li>
-      <a href="#" class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
-        <span class="inline-flex items-center justify-center h-12 w-12 text-lg">
-          <i class="bx bx-file"></i>
-        </span>
-        <span [ngClass]="{'opacity-0': !open()}" class="ml-2 text-sm font-medium transition-opacity duration-300">Documentos</span>
-      </a>
-    </li>
-    <li>
-      <a href="#" class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
-        <span class="inline-flex items-center justify-center h-12 w-12 text-lg">
-          <i class="bx bx-slider-alt"></i>
-        </span>
-        <span [ngClass]="{'opacity-0': !open()}" class="ml-2 text-sm font-medium transition-opacity duration-300">Preparación</span>
-      </a>
-    </li>
-    <li>
-      <a href="#" class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
-        <span class="inline-flex items-center justify-center h-12 w-12 text-lg">
-          <i class="bx bx-send"></i>
-        </span>
-        <span [ngClass]="{'opacity-0': !open()}" class="ml-2 text-sm font-medium transition-opacity duration-300">Presentación</span>
-      </a>
-    </li>
-    <li>
-      <a href="#" class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
+      <a routerLink="/seguimiento"
+         routerLinkActive="bg-gray-800 text-indigo-500"
+         class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
         <span class="inline-flex items-center justify-center h-12 w-12 text-lg">
           <i class="bx bx-line-chart"></i>
         </span>
@@ -92,7 +70,9 @@
       </a>
     </li>
     <li>
-      <a href="#" class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
+      <a routerLink="/resultados"
+         routerLinkActive="bg-gray-800 text-indigo-500"
+         class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
         <span class="inline-flex items-center justify-center h-12 w-12 text-lg">
           <i class="bx bx-trophy"></i>
         </span>

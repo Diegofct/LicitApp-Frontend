@@ -20,9 +20,9 @@
             (change)="onProcesoChange($event)"
             class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all text-sm"
           >
-            <option value="">Seleccione un proceso...</option>
+            <option value="" [selected]="!selectedProcesoId()">Seleccione un proceso...</option>
             @for (proceso of procesos(); track proceso.id) {
-              <option [value]="proceso.id">
+              <option [value]="proceso.id" [selected]="selectedProcesoId() === proceso.id">
                 {{ proceso.numeroProceso }} - {{ proceso.entidadContratante | slice:0:30 }}...
               </option>
             }
@@ -240,20 +240,49 @@
                     </table>
                   </div>
 
-                  <!-- Sugerencias -->
-                  @if (res.sugerencias && res.sugerencias.length > 0) {
-                    <div class="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                      <h5 class="text-xs font-black text-indigo-900 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <i class="bx bxs-magic-wand"></i> Sugerencias de Consorcio
-                      </h5>
-                      <div class="flex flex-wrap gap-2">
-                        @for (sug of res.sugerencias; track sug.empresaId) {
-                          <div class="px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-indigo-700 shadow-sm">
-                            {{ sug.razonSocial }}
+                  <!-- Sugerencias de Consorcio -->
+                  @if (!res.cumpleGlobal) {
+                    @if (res.sugerencias.length > 0) {
+                      <div class="mt-6 p-5 bg-amber-50 rounded-2xl border border-amber-200">
+                        <div class="flex items-start gap-3 mb-4">
+                          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-amber-100 text-amber-600 shrink-0">
+                            <i class="bx bx-bulb text-xl"></i>
                           </div>
-                        }
+                          <div>
+                            <h5 class="text-sm font-bold text-amber-900">Sugerencias de Consorcio</h5>
+                            <p class="text-xs text-amber-800/80 leading-relaxed mt-1">
+                              El proponente no cumple individualmente, pero <strong>sí cumpliría haciendo consorcio (50/50)</strong> con alguna de las siguientes empresas:
+                            </p>
+                          </div>
+                        </div>
+
+                        <ul class="space-y-2">
+                          @for (sug of res.sugerencias; track sug.empresaId) {
+                            <li class="flex items-center justify-between gap-3 px-4 py-3 bg-white border border-amber-200 rounded-xl shadow-sm">
+                              <div class="flex items-center gap-3 min-w-0">
+                                <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-50 text-amber-600 shrink-0">
+                                  <i class="bx bx-buildings"></i>
+                                </div>
+                                <div class="min-w-0">
+                                  <p class="text-sm font-bold text-gray-800 truncate">{{ sug.razonSocial }}</p>
+                                  <p class="text-[11px] text-gray-500 font-medium">NIT {{ sug.nit }}</p>
+                                </div>
+                              </div>
+                              <span class="px-2.5 py-1 bg-amber-100 rounded-lg text-[10px] font-bold uppercase tracking-wider text-amber-700 shrink-0">
+                                Consorcio 50/50
+                              </span>
+                            </li>
+                          }
+                        </ul>
                       </div>
-                    </div>
+                    } @else {
+                      <div class="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-start gap-3">
+                        <i class="bx bx-info-circle text-gray-400 text-xl shrink-0"></i>
+                        <p class="text-xs text-gray-600 leading-relaxed">
+                          No se encontraron empresas con las que pueda hacer consorcio para cubrir los requisitos.
+                        </p>
+                      </div>
+                    }
                   }
                 </div>
               </div>
@@ -267,6 +296,21 @@
           </div>
           <h4 class="text-lg font-bold text-gray-400">Listo para analizar</h4>
           <p class="text-sm text-gray-300">Seleccione las empresas y presione el botón para ver resultados.</p>
+        </div>
+      }
+
+      <!-- CONFORMACIÓN DEL PROPONENTE -->
+      @if (selectedProcesoId(); as procesoId) {
+        <div class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 font-bold text-sm">3</span>
+            <h2 class="text-xl font-bold text-gray-800">Conformación del Proponente</h2>
+          </div>
+          <app-conformacion-proponente
+            [cuadroDeObraId]="procesoId"
+            [empresas]="empresas()"
+            [autoEdit]="autoEditConformacion()">
+          </app-conformacion-proponente>
         </div>
       }
     </div>
