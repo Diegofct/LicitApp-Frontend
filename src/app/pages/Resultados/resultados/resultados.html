@@ -1,0 +1,355 @@
+<div class="p-4 sm:p-6 md:p-8">
+
+  <!-- ============================================================ -->
+  <!-- Header                                                       -->
+  <!-- ============================================================ -->
+  <div class="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Resultados</h1>
+      <p class="text-gray-500 mt-2">Resumen de tus procesos de licitación e historial de procesos cerrados.</p>
+    </div>
+    @if (resumen(); as r) {
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
+          <i class="bx bx-trophy"></i> {{ r.procesosCerrados }} procesos cerrados
+        </span>
+      </div>
+    }
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- KPIs                                                         -->
+  <!-- ============================================================ -->
+
+  <!-- Loading resumen -->
+  @if (loadingResumen()) {
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+      @for (i of [1,2,3,4,5,6,7,8]; track i) {
+        <div class="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse">
+          <div class="h-3 w-20 bg-gray-100 rounded mb-3"></div>
+          <div class="h-8 w-16 bg-gray-100 rounded"></div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (!loadingResumen() && resumen(); as r) {
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
+
+      <!-- Tasa de éxito (KPI destacado) -->
+      <div class="lg:col-span-1 bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+        <div class="absolute -top-8 -right-8 w-40 h-40 bg-white/10 rounded-full"></div>
+        <div class="absolute -bottom-12 -left-8 w-32 h-32 bg-white/5 rounded-full"></div>
+
+        <div class="relative flex flex-col h-full">
+          <p class="text-xs font-bold uppercase tracking-wider text-indigo-100">Tasa de éxito</p>
+          <p class="text-sm text-indigo-200 mt-1">Sobre procesos cerrados</p>
+
+          <div class="flex items-center justify-between gap-4 mt-4 flex-1">
+            <div>
+              <p class="text-5xl font-extrabold tabular-nums leading-none">
+                {{ r.tasaExitoPorcentaje | number:'1.0-2' }}<span class="text-2xl font-bold">%</span>
+              </p>
+              <p class="text-xs text-indigo-200 mt-3">
+                <span class="font-semibold">{{ r.adjudicados }}</span> adjudicados de
+                <span class="font-semibold">{{ r.procesosCerrados }}</span> cerrados
+              </p>
+            </div>
+
+            <!-- Anillo de progreso -->
+            <div class="relative shrink-0">
+              <svg width="120" height="120" viewBox="0 0 120 120" class="-rotate-90">
+                <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="10"></circle>
+                <circle
+                  cx="60" cy="60" r="52" fill="none"
+                  stroke="#fbbf24" stroke-width="10" stroke-linecap="round"
+                  [attr.stroke-dasharray]="circleCircumference"
+                  [attr.stroke-dashoffset]="circleOffset()"
+                  class="transition-all duration-700 ease-out">
+                </circle>
+              </svg>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <i class="bx bx-trophy text-2xl text-amber-300"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid del resto de KPIs -->
+      <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-4">
+
+        <!-- Total procesos -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 inline-flex items-center justify-center">
+              <i class="bx bx-layer text-lg"></i>
+            </span>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total procesos</p>
+          </div>
+          <p class="text-3xl font-extrabold text-gray-900 tabular-nums">{{ r.totalProcesos }}</p>
+        </div>
+
+        <!-- Por presentar -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 inline-flex items-center justify-center">
+              <i class="bx bx-time-five text-lg"></i>
+            </span>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Por presentar</p>
+          </div>
+          <p class="text-3xl font-extrabold text-blue-700 tabular-nums">{{ r.porPresentar }}</p>
+        </div>
+
+        <!-- Presentados -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-8 h-8 rounded-lg bg-violet-50 text-violet-600 inline-flex items-center justify-center">
+              <i class="bx bx-check-double text-lg"></i>
+            </span>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Presentados</p>
+          </div>
+          <p class="text-3xl font-extrabold text-violet-700 tabular-nums">{{ r.presentados }}</p>
+        </div>
+
+        <!-- Adjudicados (verde) -->
+        <div class="bg-emerald-50/60 rounded-2xl border border-emerald-100 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 inline-flex items-center justify-center">
+              <i class="bx bx-trophy text-lg"></i>
+            </span>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Adjudicados</p>
+          </div>
+          <p class="text-3xl font-extrabold text-emerald-700 tabular-nums">{{ r.adjudicados }}</p>
+        </div>
+
+        <!-- No adjudicados (rojo/ámbar) -->
+        <div class="bg-red-50/60 rounded-2xl border border-red-100 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-8 h-8 rounded-lg bg-red-100 text-red-700 inline-flex items-center justify-center">
+              <i class="bx bx-x-circle text-lg"></i>
+            </span>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-red-700">No adjudicados</p>
+          </div>
+          <p class="text-3xl font-extrabold text-red-700 tabular-nums">{{ r.noAdjudicados }}</p>
+        </div>
+
+        <!-- Cancelados (gris) -->
+        <div class="bg-gray-50 rounded-2xl border border-gray-200 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-8 h-8 rounded-lg bg-gray-200 text-gray-600 inline-flex items-center justify-center">
+              <i class="bx bx-block text-lg"></i>
+            </span>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Cancelados</p>
+          </div>
+          <p class="text-3xl font-extrabold text-gray-600 tabular-nums">{{ r.cancelados }}</p>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- ============================================================ -->
+  <!-- Historial                                                    -->
+  <!-- ============================================================ -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+    <!-- Header de sección -->
+    <div class="px-5 sm:px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
+      <div>
+        <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <i class="bx bx-history text-indigo-600"></i>
+          Historial de procesos cerrados
+        </h2>
+        <p class="text-xs text-gray-500 mt-0.5">Procesos en estado adjudicado o no adjudicado.</p>
+      </div>
+      @if (!loadingHistorial() && totalElements() > 0) {
+        <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100 shrink-0">
+          {{ totalElements() }} registros
+        </span>
+      }
+    </div>
+
+    <!-- Loading historial -->
+    @if (loadingHistorial()) {
+      <div class="flex flex-col items-center justify-center py-20 text-gray-400">
+        <i class="bx bx-loader-alt animate-spin text-4xl mb-3"></i>
+        <p class="text-sm">Cargando historial…</p>
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (!loadingHistorial() && historial().length === 0) {
+      <div class="py-20 flex flex-col items-center text-center px-4">
+        <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-4">
+          <i class="bx bx-trophy text-4xl text-indigo-300"></i>
+        </div>
+        <h4 class="text-lg font-bold text-gray-500">Aún no hay procesos cerrados</h4>
+        <p class="text-sm text-gray-400 mt-1 max-w-md">
+          Cuando uno de tus procesos sea marcado como <strong>Adjudicado</strong> o
+          <strong>No adjudicado</strong>, aparecerá en este historial.
+        </p>
+      </div>
+    }
+
+    <!-- Tabla -->
+    @if (!loadingHistorial() && historial().length > 0) {
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-100">
+          <thead class="bg-gray-50/80">
+            <tr>
+              <th scope="col" class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500">N° proceso</th>
+              <th scope="col" class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500">Entidad contratante</th>
+              <th scope="col" class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500">Objeto</th>
+
+              <!-- Monto (sortable) -->
+              <th scope="col" class="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                <button
+                  type="button"
+                  (click)="toggleSort('monto')"
+                  [attr.aria-sort]="isSortedBy('monto') ? (sort().direction === 'asc' ? 'ascending' : 'descending') : 'none'"
+                  class="cursor-pointer inline-flex items-center gap-1.5 hover:text-indigo-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400 rounded px-1"
+                  [class.text-indigo-600]="isSortedBy('monto')">
+                  Monto
+                  <i class="bx text-sm" [ngClass]="sortIcon('monto')"></i>
+                </button>
+              </th>
+
+              <th scope="col" class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500">Estado</th>
+              <th scope="col" class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500">Fecha publicación</th>
+
+              <!-- Fecha cierre (sortable) -->
+              <th scope="col" class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                <button
+                  type="button"
+                  (click)="toggleSort('fechaCierre')"
+                  [attr.aria-sort]="isSortedBy('fechaCierre') ? (sort().direction === 'asc' ? 'ascending' : 'descending') : 'none'"
+                  class="cursor-pointer inline-flex items-center gap-1.5 hover:text-indigo-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400 rounded px-1"
+                  [class.text-indigo-600]="isSortedBy('fechaCierre')">
+                  Fecha cierre
+                  <i class="bx text-sm" [ngClass]="sortIcon('fechaCierre')"></i>
+                </button>
+              </th>
+
+              <th scope="col" class="px-5 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500">Obs.</th>
+            </tr>
+          </thead>
+
+          <tbody class="bg-white divide-y divide-gray-100">
+            @for (item of historial(); track trackById($index, item)) {
+              <tr class="hover:bg-indigo-50/30 transition-colors">
+
+                <td class="px-5 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">
+                  {{ item.numeroProceso }}
+                </td>
+
+                <td class="px-5 py-4 text-sm text-gray-700 max-w-[220px]">
+                  <span class="line-clamp-2">{{ item.entidadContratante }}</span>
+                </td>
+
+                <td class="px-5 py-4 text-sm text-gray-600 max-w-[320px]">
+                  <span class="line-clamp-2" [attr.title]="item.descripcionObjeto">
+                    {{ item.descripcionObjeto }}
+                  </span>
+                </td>
+
+                <td class="px-5 py-4 text-sm font-semibold text-gray-900 text-right tabular-nums whitespace-nowrap">
+                  {{ item.monto | currency:'COP':'symbol-narrow':'1.0-0' }}
+                </td>
+
+                <td class="px-5 py-4 text-sm whitespace-nowrap">
+                  <span
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border"
+                    [ngClass]="badge(item.estado).classes">
+                    <span class="w-1.5 h-1.5 rounded-full" [ngClass]="badge(item.estado).dot"></span>
+                    <i class="bx" [ngClass]="badge(item.estado).icon"></i>
+                    {{ badge(item.estado).label }}
+                  </span>
+                </td>
+
+                <td class="px-5 py-4 text-sm text-gray-600 tabular-nums whitespace-nowrap">
+                  {{ item.fechaPublicacion | date:'dd MMM yyyy' }}
+                </td>
+
+                <td class="px-5 py-4 text-sm text-gray-600 tabular-nums whitespace-nowrap">
+                  {{ item.fechaCierre | date:'dd MMM yyyy' }}
+                </td>
+
+                <td class="px-5 py-4 text-center">
+                  @if (item.observacion) {
+                    <button
+                      type="button"
+                      (click)="abrirObservacion(item)"
+                      [attr.aria-label]="'Ver observación del proceso ' + item.numeroProceso"
+                      class="cursor-pointer inline-flex items-center justify-center w-8 h-8 rounded-full text-indigo-600 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors">
+                      <i class="bx bx-message-detail text-lg"></i>
+                    </button>
+                  } @else {
+                    <span class="text-gray-300 text-xs italic">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [totalElements]="totalElements()"
+        (pageChange)="onPageChange($event)">
+      </app-pagination>
+    }
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Modal de observación                                         -->
+  <!-- ============================================================ -->
+  @if (observacionSeleccionada(); as obs) {
+    <div
+      class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      (click)="cerrarObservacion()">
+
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+        (click)="$event.stopPropagation()">
+
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 inline-flex items-center justify-center shrink-0">
+              <i class="bx bx-message-detail text-xl"></i>
+            </span>
+            <div class="min-w-0">
+              <h3 class="text-base font-bold text-gray-900 truncate">Observación</h3>
+              <p class="text-xs text-gray-500 truncate">N° {{ obs.numeroProceso }} · {{ obs.entidadContratante }}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            (click)="cerrarObservacion()"
+            aria-label="Cerrar"
+            class="cursor-pointer text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg p-1">
+            <i class="bx bx-x text-2xl"></i>
+          </button>
+        </div>
+
+        <div class="px-6 py-5">
+          <p class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{{ obs.observacion }}</p>
+        </div>
+
+        <div class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
+          <button
+            type="button"
+            (click)="cerrarObservacion()"
+            class="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

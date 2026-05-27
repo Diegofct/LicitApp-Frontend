@@ -2,6 +2,7 @@ import { Component, EventEmitter, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CuadroDeObraService } from '../../pages/CuadroDeObra/service/cuadro-de-obra.service';
+import { AlertService } from '../../services/alert.service';
 
 @Component({
   selector: 'app-add-proceso-modal',
@@ -12,6 +13,7 @@ import { CuadroDeObraService } from '../../pages/CuadroDeObra/service/cuadro-de-
 export class AddProcesoModal implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly cuadroService = inject(CuadroDeObraService);
+  private readonly alertService = inject(AlertService);
 
   @Output() close = new EventEmitter<void>();
   @Output() saved = new EventEmitter<void>();
@@ -70,7 +72,7 @@ export class AddProcesoModal implements OnInit {
       error: (err) => {
         this.loading = false;
         console.error('Error al agregar proceso:', err);
-        alert('Hubo un error al intentar guardar el proceso. Revisa que todos los campos obligatorios estén llenos.');
+        this.alertService.error('Hubo un error al intentar guardar el proceso. Revisa que todos los campos obligatorios estén llenos.');
       }
     });
   }

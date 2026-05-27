@@ -122,3 +122,15 @@
     </div>
   </div>
 </div>
+
+@if (showConfirmPresentacion()) {
+  <app-confirm-presentacion-modal
+    [conformacion]="conformacionEncontrada()"
+    [cuadroLabel]="cuadroLabel"
+    [loading]="presentacionLoading()"
+    [errorMessage]="presentacionErrorMsg()"
+    (confirm)="confirmarPresentacion()"
+    (definir)="irADefinirConformacion()"
+    (cancel)="cancelarPresentacion()">
+  </app-confirm-presentacion-modal>
+}

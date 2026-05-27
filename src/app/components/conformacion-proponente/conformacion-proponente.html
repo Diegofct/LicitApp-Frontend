@@ -1,0 +1,366 @@
+<div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+
+  <!-- Header -->
+  <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between gap-4 bg-gradient-to-r from-indigo-50/60 via-white to-white">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600/10 text-indigo-600">
+        <i class="bx bx-handshake text-2xl"></i>
+      </div>
+      <div>
+        <h2 class="text-lg font-bold text-gray-800">Conformación del Proponente</h2>
+        <p class="text-xs text-gray-500">Define con quién se presentará la oferta. Es obligatorio antes de pasar a PRESENTADO.</p>
+      </div>
+    </div>
+    @if (viewMode() === 'summary' && conformacion(); as c) {
+      <span class="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
+        <i class="bx bx-check-circle"></i> Definida
+      </span>
+    }
+  </div>
+
+  <div class="p-6">
+
+    <!-- Loading -->
+    @if (viewMode() === 'loading') {
+      <div class="flex flex-col items-center justify-center py-12 text-gray-400">
+        <i class="bx bx-loader-alt animate-spin text-3xl mb-2"></i>
+        <p class="text-sm">Cargando conformación…</p>
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (viewMode() === 'empty') {
+      <div class="flex flex-col items-center justify-center py-10 text-center">
+        <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-4">
+          <i class="bx bx-group text-4xl text-indigo-300"></i>
+        </div>
+        <h4 class="text-lg font-bold text-gray-700">Aún no has definido la conformación</h4>
+        <p class="text-sm text-gray-400 mt-1 max-w-md">
+          Registra si presentarás individualmente, como consorcio o como unión temporal,
+          con qué empresas y en qué porcentajes.
+        </p>
+        <button
+          type="button"
+          (click)="empezar()"
+          class="cursor-pointer mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5"
+        >
+          <i class="bx bx-plus-circle text-lg"></i> Definir conformación
+        </button>
+      </div>
+    }
+
+    <!-- Summary -->
+    @if (viewMode() === 'summary' && conformacion(); as c) {
+      <div class="space-y-5">
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider border border-indigo-100">
+            <i class="bx" [ngClass]="tipoIcon(c.tipoParticipacion)"></i>
+            {{ tipoLabel(c.tipoParticipacion) }}
+          </span>
+          <span class="text-xs text-gray-400">Conformada el {{ c.fechaConformacion | date:'dd MMM yyyy' }}</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          @for (i of c.integrantes; track i.id) {
+            <div class="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/40 hover:bg-gray-50 transition-colors">
+              <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 text-white font-bold text-sm shrink-0">
+                {{ iniciales(i.nombreEmpresa) }}
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold text-gray-800 truncate">{{ i.nombreEmpresa }}</p>
+                <p class="text-[11px] text-gray-400">ID Empresa #{{ i.empresaId }}</p>
+              </div>
+              <span class="px-3 py-1 rounded-lg text-sm font-bold tabular-nums text-indigo-700 bg-indigo-50 border border-indigo-100 shrink-0">
+                {{ i.porcentajeParticipacion }}%
+              </span>
+            </div>
+          }
+        </div>
+
+        @if (c.observaciones) {
+          <div class="p-4 bg-gray-50/60 rounded-xl border border-gray-100">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Observaciones</p>
+            <p class="text-sm text-gray-600 whitespace-pre-line">{{ c.observaciones }}</p>
+          </div>
+        }
+
+        <div class="flex justify-end">
+          <button
+            type="button"
+            (click)="entrarEdicion()"
+            class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors"
+          >
+            <i class="bx bx-edit-alt"></i> Editar conformación
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Edit form -->
+    @if (viewMode() === 'edit') {
+      <form [formGroup]="form" (ngSubmit)="guardar()" class="space-y-7">
+
+        <!-- Selector de tipo -->
+        <div>
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Tipo de participación</p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            @for (opt of tipoOptions; track opt.id) {
+              <button
+                type="button"
+                (click)="form.get('tipoParticipacion')!.setValue(opt.id)"
+                [class.border-indigo-500]="tipoActual() === opt.id"
+                [class.ring-2]="tipoActual() === opt.id"
+                [class.ring-indigo-200]="tipoActual() === opt.id"
+                [class.bg-indigo-50/40]="tipoActual() === opt.id"
+                class="cursor-pointer relative text-left p-4 rounded-2xl border-2 border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all group"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600/10 text-indigo-600 shrink-0">
+                    <i class="bx text-xl" [ngClass]="opt.icon"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-gray-800">{{ opt.label }}</p>
+                    <p class="text-[11px] text-gray-500 mt-0.5 leading-snug">{{ opt.description }}</p>
+                  </div>
+                </div>
+                @if (tipoActual() === opt.id) {
+                  <span class="absolute top-2 right-2 flex items-center justify-center w-5 h-5 rounded-full bg-indigo-600 text-white">
+                    <i class="bx bx-check text-sm"></i>
+                  </span>
+                }
+              </button>
+            }
+          </div>
+          @if (isInvalid('tipoParticipacion')) {
+            <p class="text-xs text-red-600 mt-2 flex items-center gap-1">
+              <i class="bx bx-error-circle"></i> Debes elegir un tipo de participación.
+            </p>
+          }
+        </div>
+
+        <!-- Integrantes -->
+        @if (tipoActual()) {
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                {{ esIndividual() ? 'Empresa proponente' : 'Integrantes' }}
+              </p>
+              @if (!esIndividual()) {
+                <button
+                  type="button"
+                  (click)="agregarIntegrante()"
+                  class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition-colors"
+                >
+                  <i class="bx bx-plus"></i> Agregar integrante
+                </button>
+              }
+            </div>
+
+            <div formArrayName="integrantes" class="space-y-3">
+              @for (ctrl of integrantes.controls; track $index; let i = $index) {
+                <div [formGroupName]="i" class="group relative grid grid-cols-12 gap-3 items-start p-3 rounded-xl border border-gray-100 bg-gray-50/40 hover:bg-gray-50 transition-colors">
+                  <!-- Searchable empresa -->
+                  <div class="col-span-12 md:col-span-7 relative">
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Empresa</label>
+                    <button
+                      type="button"
+                      (click)="toggleSelector(i)"
+                      class="cursor-pointer w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border border-gray-200 bg-white hover:border-indigo-300 transition-colors text-left"
+                      [class.border-red-300]="isInvalid(['integrantes', i, 'empresaId'])"
+                    >
+                      <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-xs shrink-0">
+                        @if (ctrl.get('empresaId')!.value) {
+                          {{ iniciales(empresaNombre(ctrl.get('empresaId')!.value)) }}
+                        } @else {
+                          <i class="bx bx-search"></i>
+                        }
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <p class="text-sm font-semibold text-gray-800 truncate">
+                          {{ empresaNombre(ctrl.get('empresaId')!.value) }}
+                        </p>
+                        @if (empresaNit(ctrl.get('empresaId')!.value)) {
+                          <p class="text-[11px] text-gray-400">{{ empresaNit(ctrl.get('empresaId')!.value) }}</p>
+                        }
+                      </div>
+                      <i class="bx bx-chevron-down text-gray-400"></i>
+                    </button>
+
+                    @if (openSelectorIndex() === i) {
+                      <div class="absolute z-30 left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                        <div class="p-2 border-b border-gray-100">
+                          <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50">
+                            <i class="bx bx-search text-gray-400"></i>
+                            <input
+                              type="text"
+                              [value]="searchTerms()[i] || ''"
+                              (input)="updateSearch(i, $any($event.target).value)"
+                              placeholder="Buscar por razón social o NIT…"
+                              class="flex-1 bg-transparent outline-none text-sm"
+                            />
+                          </div>
+                        </div>
+                        <ul class="max-h-60 overflow-y-auto py-1">
+                          @for (e of empresasDisponibles(i); track e.id) {
+                            <li>
+                              <button
+                                type="button"
+                                (click)="setEmpresa(i, e.id!)"
+                                class="cursor-pointer w-full flex items-center gap-3 px-3 py-2 hover:bg-indigo-50/60 text-left transition-colors"
+                              >
+                                <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-xs shrink-0">
+                                  {{ iniciales(e.razonSocial) }}
+                                </div>
+                                <div class="min-w-0">
+                                  <p class="text-sm font-semibold text-gray-800 truncate">{{ e.razonSocial }}</p>
+                                  <p class="text-[11px] text-gray-400">NIT {{ e.nit }}</p>
+                                </div>
+                              </button>
+                            </li>
+                          }
+                          @if (empresasDisponibles(i).length === 0) {
+                            <li class="px-4 py-6 text-center text-xs text-gray-400 italic">No hay empresas disponibles.</li>
+                          }
+                        </ul>
+                      </div>
+                    }
+
+                    @if (isInvalid(['integrantes', i, 'empresaId'])) {
+                      <p class="text-[11px] text-red-600 mt-1 flex items-center gap-1">
+                        <i class="bx bx-error-circle"></i> Selecciona una empresa.
+                      </p>
+                    }
+                  </div>
+
+                  <!-- Porcentaje -->
+                  <div class="col-span-8 md:col-span-3">
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Porcentaje</label>
+                    <div class="relative">
+                      <input
+                        type="number"
+                        formControlName="porcentajeParticipacion"
+                        min="0.01" max="100" step="0.01"
+                        class="w-full px-3 py-2.5 pr-8 rounded-lg border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm font-semibold tabular-nums"
+                        [class.bg-gray-100]="esIndividual()"
+                        [class.border-red-300]="isInvalid(['integrantes', i, 'porcentajeParticipacion'])"
+                      />
+                      <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
+                    </div>
+                    @if (isInvalid(['integrantes', i, 'porcentajeParticipacion'])) {
+                      <p class="text-[11px] text-red-600 mt-1 flex items-center gap-1">
+                        <i class="bx bx-error-circle"></i> Entre 0,01 y 100.
+                      </p>
+                    }
+                  </div>
+
+                  <!-- Eliminar -->
+                  <div class="col-span-4 md:col-span-2 flex md:justify-end items-end">
+                    @if (!esIndividual()) {
+                      <button
+                        type="button"
+                        (click)="eliminarIntegrante(i)"
+                        [disabled]="integrantes.length <= 2"
+                        title="Eliminar integrante"
+                        class="cursor-pointer w-full md:w-10 h-10 inline-flex items-center justify-center rounded-lg border border-gray-200 text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <i class="bx bx-trash text-lg"></i>
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Live sum indicator -->
+            <div class="mt-4 p-4 rounded-xl border"
+                 [ngClass]="{
+                   'bg-emerald-50 border-emerald-200': sumaValida(),
+                   'bg-amber-50 border-amber-200': !sumaValida() && sumaPorcentajes() < 100,
+                   'bg-red-50 border-red-200': sumaPorcentajes() > 100
+                 }">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold uppercase tracking-wider"
+                      [ngClass]="{
+                        'text-emerald-700': sumaValida(),
+                        'text-amber-700': !sumaValida() && sumaPorcentajes() < 100,
+                        'text-red-700': sumaPorcentajes() > 100
+                      }">
+                  Suma de porcentajes
+                </span>
+                <span class="text-base font-black tabular-nums"
+                      [ngClass]="{
+                        'text-emerald-700': sumaValida(),
+                        'text-amber-700': !sumaValida() && sumaPorcentajes() < 100,
+                        'text-red-700': sumaPorcentajes() > 100
+                      }">
+                  {{ sumaPorcentajes() }}% / 100%
+                </span>
+              </div>
+              <div class="h-2 rounded-full bg-white/60 overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-300"
+                     [style.width.%]="porcentajeBarra()"
+                     [ngClass]="{
+                       'bg-emerald-500': sumaValida(),
+                       'bg-amber-500': !sumaValida() && sumaPorcentajes() < 100,
+                       'bg-red-500': sumaPorcentajes() > 100
+                     }"></div>
+              </div>
+              @if (!sumaValida()) {
+                <p class="text-[11px] mt-2 flex items-center gap-1"
+                   [ngClass]="{
+                     'text-amber-700': sumaPorcentajes() < 100,
+                     'text-red-700': sumaPorcentajes() > 100
+                   }">
+                  <i class="bx bx-error-circle"></i>
+                  {{ sumaPorcentajes() < 100 ? 'Faltan ' + (100 - sumaPorcentajes()).toFixed(2) + '% para completar.' : 'Excede 100% por ' + (sumaPorcentajes() - 100).toFixed(2) + '%.' }}
+                </p>
+              }
+            </div>
+
+            @if (integrantes.errors?.['empresasDuplicadas']) {
+              <p class="text-xs text-red-600 mt-2 flex items-center gap-1">
+                <i class="bx bx-error-circle"></i> Hay empresas duplicadas. Cada empresa debe ser única.
+              </p>
+            }
+          </div>
+
+          <!-- Observaciones -->
+          <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              Observaciones <span class="text-gray-300 font-normal normal-case">(opcional)</span>
+            </label>
+            <textarea
+              formControlName="observaciones"
+              rows="3"
+              placeholder="Notas internas sobre la conformación, acuerdos relevantes, etc."
+              class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm resize-none"
+            ></textarea>
+          </div>
+        }
+
+        <!-- Footer actions -->
+        <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2 border-t border-gray-100">
+          <button
+            type="button"
+            (click)="cancelar()"
+            class="cursor-pointer px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="form.invalid || saving()"
+            class="cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-lg shadow-indigo-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+          >
+            @if (saving()) {
+              <i class="bx bx-loader-alt animate-spin text-lg"></i> Guardando…
+            } @else {
+              <i class="bx bx-save text-lg"></i> Guardar conformación
+            }
+          </button>
+        </div>
+      </form>
+    }
+
+  </div>
+</div>

@@ -5,6 +5,7 @@ import { ModernTable, TableColumn } from '../../../components/modern-table/moder
 import { Pagination } from '../../../components/pagination/pagination';
 import { CuadroDeObraService } from '../service/cuadro-de-obra.service';
 import { CuadroDeObraItem } from '../interface/cuadro-de-obra';
+import { AlertService } from '../../../services/alert.service';
 import { EditCuadroModal } from '../../../components/edit-cuadro-modal/edit-cuadro-modal';
 import { ConfirmModal } from '../../../components/confirm-modal/confirm-modal';
 import { AddProcesoModal } from '../../../components/add-proceso-modal/add-proceso-modal';
@@ -30,6 +31,7 @@ import { AnalizarPliegoModal } from '../../../components/analizar-pliego-modal/a
 })
 export class CuadroDeObra implements OnInit {
   private readonly cuadroDeObraService = inject(CuadroDeObraService);
+  private readonly alertService = inject(AlertService);
 
   tabs: Tab[] = [
     { id: 'por-presentar', label: 'Por Presentar', icon: 'bx bx-time-five' },
@@ -163,7 +165,7 @@ export class CuadroDeObra implements OnInit {
       error: (err) => {
         console.error('Error al eliminar el registro:', err);
         this.loading.set(false);
-        alert('Hubo un error al intentar eliminar el registro.');
+        this.alertService.error('Hubo un error al intentar eliminar el registro.');
       },
     });
   }

@@ -81,6 +81,16 @@ export class CuadroDeObraService {
   }
 
   /**
+   *Actualiza los requisitos de licitación para un registro del cuadro de obra.
+   * @param id ID del registro del cuadro de obra.
+   * @param data Requisitos de la licitación actualizados.
+   * @returns Un Observable con los requisitos actualizados.
+   */
+  actualizarRequisitos(id: number, data: RequisitoLicitacion): Observable<RequisitoLicitacion> {
+    return this.http.patch<RequisitoLicitacion>(`${this.apiUrl}/${id}/requisitos`, data);
+  }
+
+  /**
    * Envía un archivo al backend para ser analizado por la IA y extraer requisitos.
    * @param id ID del registro del cuadro de obra.
    * @param file Archivo del pliego de condiciones.

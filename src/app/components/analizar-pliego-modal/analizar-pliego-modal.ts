@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CuadroDeObraService } from '../../pages/CuadroDeObra/service/cuadro-de-obra.service';
 import { RequisitoLicitacion } from '../../pages/CuadroDeObra/interface/cuadro-de-obra';
+import { AlertService } from '../../services/alert.service';
 
 @Component({
   selector: 'app-analizar-pliego-modal',
@@ -13,6 +14,7 @@ import { RequisitoLicitacion } from '../../pages/CuadroDeObra/interface/cuadro-d
 export class AnalizarPliegoModal implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly cuadroService = inject(CuadroDeObraService);
+  private readonly alertService = inject(AlertService);
 
   @Input() cuadroObraId!: number;
   @Output() close = new EventEmitter<void>();
@@ -65,7 +67,7 @@ export class AnalizarPliegoModal implements OnInit {
       },
       error: (err) => {
         console.error('Error al analizar pliego:', err);
-        alert('Hubo un error al analizar el pliego con IA. Inténtalo de nuevo.');
+        this.alertService.error('Hubo un error al analizar el pliego con IA. Inténtalo de nuevo.');
         this.step.set('upload');
         this.loading.set(false);
       }
@@ -88,7 +90,7 @@ export class AnalizarPliegoModal implements OnInit {
       error: (err) => {
         this.loading.set(false);
         console.error('Error al guardar requisitos:', err);
-        alert('Hubo un error al intentar guardar los requisitos.');
+        this.alertService.error('Hubo un error al intentar guardar los requisitos.');
       }
     });
   }

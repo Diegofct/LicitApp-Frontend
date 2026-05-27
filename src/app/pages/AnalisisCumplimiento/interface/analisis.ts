@@ -6,7 +6,7 @@ export interface DetalleAnalisis {
   observacion?: string;
 }
 
-export interface SugerenciaAnalisis {
+export interface SugerenciaConsorcio {
   empresaId: number;
   nit: string;
   razonSocial: string;
@@ -18,7 +18,7 @@ export interface AnalisisResponse {
   tipoParticipacion: string;
   cumpleGlobal: boolean;
   detalles: DetalleAnalisis[];
-  sugerencias: SugerenciaAnalisis[];
+  sugerencias: SugerenciaConsorcio[];
 }
 
 export interface AnalisisRequest {

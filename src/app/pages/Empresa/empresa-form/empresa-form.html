@@ -376,19 +376,21 @@
               <div class="space-y-6">
                 <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 text-center">
                   <p class="text-xs font-bold text-slate-300 uppercase mb-2">Capacidad Residual Proponente</p>
-                  <p class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">
+                  <p
+                    class="font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 tabular-nums leading-tight break-all text-2xl sm:text-3xl"
+                    [title]="(capacidadCalculada()?.resultadoCapacidadResidualProponente || 0) | currency:'COP':'symbol-narrow':'1.0-0'">
                     {{ (capacidadCalculada()?.resultadoCapacidadResidualProponente || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}
                   </p>
                 </div>
 
-                <div class="space-y-4 pt-4">
-                  <div class="flex items-center justify-between text-sm border-b border-white/5 pb-2">
-                    <span class="text-slate-400">Puntaje: CRP=CO*[(E+CT+CF)/100]-SCE</span>
-                    <span class="font-bold">{{ (capacidadCalculada()?.capacidadOrganizacion || 0) + (capacidadCalculada()?.experiencia || 0) + (capacidadCalculada()?.capacidadTecnica || 0) + (capacidadCalculada()?.capacidadFinanciera || 0) }} pts</span>
-                  </div>
-                  <div class="p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-                    <p class="text-[10px] leading-relaxed text-indigo-200 italic text-center">
-                      "La Capacidad Residual es la aptitud de un proponente para cumplir oportuna y plenamente con el objeto de un contrato de obra."
+                <div class="pt-2">
+                  <div class="p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20 space-y-2">
+                    <p class="text-[10px] font-bold text-indigo-200 uppercase tracking-wider text-center">Fórmula de cálculo</p>
+                    <p class="text-sm font-mono font-semibold text-center text-white">
+                      CRP = CO × [(E + CT + CF) / 100] − SCE
+                    </p>
+                    <p class="text-[10px] leading-relaxed text-indigo-200/80 text-center pt-1">
+                      CO: Capacidad de Organización · E: Experiencia · CT: Capacidad Técnica · CF: Capacidad Financiera · SCE: Saldos de Contratos en Ejecución
                     </p>
                   </div>
                 </div>
