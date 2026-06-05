@@ -19,66 +19,18 @@
 
   <!-- Navigation Links -->
   <ul class="flex flex-col py-4 flex-grow justify-center">
-    <li>
-      <a routerLink="/busqueda-secop"
-         routerLinkActive="bg-gray-800 text-indigo-500"
-         class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
-        <span class="inline-flex items-center justify-center h-12 w-12 text-lg">
-          <i class="bx bx-search"></i>
-        </span>
-        <span [ngClass]="{'opacity-0': !open()}" class="ml-2 text-sm font-medium transition-opacity duration-300">Busqueda SECOP</span>
-      </a>
-    </li>
-    <li>
-      <a routerLink="/cuadro-de-obra"
-         routerLinkActive="bg-gray-800 text-indigo-500"
-         class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
-        <span class="inline-flex items-center justify-center h-12 w-12 text-lg">
-          <i class="bx bx-building-house"></i>
-        </span>
-        <span [ngClass]="{'opacity-0': !open()}" class="ml-2 text-sm font-medium transition-opacity duration-300">Cuadro de Obra</span>
-      </a>
-    </li>
-    <li>
-      <a routerLink="/analisis-cumplimiento"
-         routerLinkActive="bg-gray-800 text-indigo-500"
-         class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
-        <span class="inline-flex items-center justify-center h-12 w-12 text-lg">
-          <i class="bx bx-analyse"></i>
-        </span>
-        <span [ngClass]="{'opacity-0': !open()}" class="ml-2 text-sm font-medium transition-opacity duration-300">Análisis</span>
-      </a>
-    </li>
-    <li>
-      <a routerLink="/empresas"
-         routerLinkActive="bg-gray-800 text-indigo-500"
-         class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
-        <span class="inline-flex items-center justify-center h-12 w-12 text-lg">
-          <i class="bx bx-group"></i>
-        </span>
-        <span [ngClass]="{'opacity-0': !open()}" class="ml-2 text-sm font-medium transition-opacity duration-300">Empresas</span>
-      </a>
-    </li>
-    <li>
-      <a routerLink="/seguimiento"
-         routerLinkActive="bg-gray-800 text-indigo-500"
-         class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
-        <span class="inline-flex items-center justify-center h-12 w-12 text-lg">
-          <i class="bx bx-line-chart"></i>
-        </span>
-        <span [ngClass]="{'opacity-0': !open()}" class="ml-2 text-sm font-medium transition-opacity duration-300">Seguimiento</span>
-      </a>
-    </li>
-    <li>
-      <a routerLink="/resultados"
-         routerLinkActive="bg-gray-800 text-indigo-500"
-         class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
-        <span class="inline-flex items-center justify-center h-12 w-12 text-lg">
-          <i class="bx bx-trophy"></i>
-        </span>
-        <span [ngClass]="{'opacity-0': !open()}" class="ml-2 text-sm font-medium transition-opacity duration-300">Resultados</span>
-      </a>
-    </li>
+    @for (item of navItems(); track item.route) {
+      <li>
+        <a [routerLink]="item.route"
+           routerLinkActive="bg-gray-800 text-indigo-500"
+           class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
+          <span class="inline-flex items-center justify-center h-12 w-12 text-lg">
+            <i class="bx" [ngClass]="item.icon"></i>
+          </span>
+          <span [ngClass]="{'opacity-0': !open()}" class="ml-2 text-sm font-medium transition-opacity duration-300">{{ item.label }}</span>
+        </a>
+      </li>
+    }
   </ul>
 
   <!-- Footer -->

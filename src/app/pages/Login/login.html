@@ -1,0 +1,156 @@
+<div class="min-h-screen flex font-roboto bg-gray-100">
+  <!-- Panel de branding (oculto en móvil) -->
+  <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gray-900">
+    <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-900 to-indigo-950"></div>
+    <div class="absolute -top-24 -right-24 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-32 -left-16 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
+
+    <div class="relative z-10 flex flex-col justify-between p-12 text-white w-full">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-900/40">
+          <i class="bx bxs-building-house text-2xl"></i>
+        </span>
+        <span class="text-2xl font-bold tracking-tight">LicitApp</span>
+      </div>
+
+      <div class="max-w-md">
+        <h2 class="text-4xl font-bold leading-tight mb-4">
+          Gestión inteligente de licitaciones de obra pública
+        </h2>
+        <p class="text-gray-300 text-lg leading-relaxed">
+          Centraliza empresas, cuadros de obra, análisis de cumplimiento y el seguimiento
+          de cada proceso en un solo lugar.
+        </p>
+      </div>
+
+      <ul class="space-y-3 text-gray-300">
+        <li class="flex items-center gap-3">
+          <i class="bx bx-check-circle text-indigo-400 text-xl"></i>
+          Análisis de capacidad y cumplimiento
+        </li>
+        <li class="flex items-center gap-3">
+          <i class="bx bx-check-circle text-indigo-400 text-xl"></i>
+          Integración con SECOP
+        </li>
+        <li class="flex items-center gap-3">
+          <i class="bx bx-check-circle text-indigo-400 text-xl"></i>
+          Seguimiento y resultados en tiempo real
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Panel del formulario -->
+  <div class="flex-1 flex items-center justify-center p-6 sm:p-12">
+    <div class="w-full max-w-md">
+      <!-- Branding compacto para móvil -->
+      <div class="flex lg:hidden items-center justify-center gap-3 mb-8">
+        <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-indigo-600 text-white shadow-lg">
+          <i class="bx bxs-building-house text-2xl"></i>
+        </span>
+        <span class="text-2xl font-bold text-gray-900 tracking-tight">LicitApp</span>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+        <div class="mb-8">
+          <h1 class="text-2xl font-bold text-gray-900">Iniciar sesión</h1>
+          <p class="text-sm text-gray-500 mt-1">Ingresa tus credenciales para continuar</p>
+        </div>
+
+        <!-- Error general -->
+        @if (errorMsg(); as msg) {
+          <div class="mb-5 flex items-start gap-3 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 animate-in fade-in duration-200">
+            <i class="bx bx-error-circle text-lg mt-0.5"></i>
+            <span>{{ msg }}</span>
+          </div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="space-y-5">
+          <!-- Correo -->
+          <div>
+            <label for="correo" class="block text-sm font-medium text-gray-700 mb-1.5">
+              Correo electrónico
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <i class="bx bx-envelope text-lg"></i>
+              </span>
+              <input
+                id="correo"
+                type="email"
+                formControlName="correo"
+                autocomplete="username"
+                placeholder="tucorreo@dominio.com"
+                class="w-full rounded-lg border bg-gray-50 py-2.5 pl-10 pr-3 text-sm text-gray-900 transition-colors focus:bg-white focus:outline-none focus:ring-2"
+                [ngClass]="esInvalido('correo')
+                  ? 'border-red-300 focus:ring-red-400'
+                  : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-400'" />
+            </div>
+            @if (esInvalido('correo')) {
+              <p class="mt-1.5 text-xs text-red-600">
+                @if (form.controls.correo.errors?.['required']) {
+                  El correo es obligatorio.
+                } @else {
+                  Ingresa un correo válido.
+                }
+              </p>
+            }
+          </div>
+
+          <!-- Contraseña -->
+          <div>
+            <label for="contrasena" class="block text-sm font-medium text-gray-700 mb-1.5">
+              Contraseña
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <i class="bx bx-lock-alt text-lg"></i>
+              </span>
+              <input
+                id="contrasena"
+                [type]="mostrarPassword() ? 'text' : 'password'"
+                formControlName="contrasena"
+                autocomplete="current-password"
+                placeholder="••••••••"
+                class="w-full rounded-lg border bg-gray-50 py-2.5 pl-10 pr-10 text-sm text-gray-900 transition-colors focus:bg-white focus:outline-none focus:ring-2"
+                [ngClass]="esInvalido('contrasena')
+                  ? 'border-red-300 focus:ring-red-400'
+                  : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-400'" />
+              <button
+                type="button"
+                (click)="togglePassword()"
+                [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none">
+                <i class="bx text-lg" [ngClass]="mostrarPassword() ? 'bx-hide' : 'bx-show'"></i>
+              </button>
+            </div>
+            @if (esInvalido('contrasena')) {
+              <p class="mt-1.5 text-xs text-red-600">La contraseña es obligatoria.</p>
+            }
+          </div>
+
+          <!-- Botón -->
+          <button
+            type="submit"
+            [disabled]="loading()"
+            class="w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70">
+            @if (loading()) {
+              <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              Ingresando…
+            } @else {
+              <i class="bx bx-log-in text-lg"></i>
+              Ingresar
+            }
+          </button>
+        </form>
+      </div>
+
+      <p class="text-center text-xs text-gray-400 mt-6">
+        &copy; 2026 Elemental · Ingeniería y Arquitectura
+      </p>
+    </div>
+  </div>
+</div>

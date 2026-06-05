@@ -251,7 +251,7 @@
                 </div>
                 <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
                   <p class="text-xs font-bold text-indigo-100 uppercase mb-1">Endeudamiento</p>
-                  <p class="text-2xl font-black">{{ (indicadoresCalculados()?.endeudamiento || 0) | percent:'1.2-2' }}</p>
+                  <p class="text-2xl font-black">{{ (indicadoresCalculados()?.endeudamiento || 0) | number:'1.2-2' }}</p>
                 </div>
                 <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
                   <p class="text-xs font-bold text-indigo-100 uppercase mb-1">Cob. Intereses</p>
@@ -259,11 +259,11 @@
                 </div>
                 <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
                   <p class="text-xs font-bold text-indigo-100 uppercase mb-1">ROA</p>
-                  <p class="text-2xl font-black">{{ (indicadoresCalculados()?.rentabilidadActivo || 0) | percent:'1.2-2' }}</p>
+                  <p class="text-2xl font-black">{{ (indicadoresCalculados()?.rentabilidadActivo || 0) | number:'1.2-2' }}</p>
                 </div>
                 <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
                   <p class="text-xs font-bold text-indigo-100 uppercase mb-1">ROE</p>
-                  <p class="text-2xl font-black">{{ (indicadoresCalculados()?.rentabilidadPatrimonio || 0) | percent:'1.2-2' }}</p>
+                  <p class="text-2xl font-black">{{ (indicadoresCalculados()?.rentabilidadPatrimonio || 0) | number:'1.2-2' }}</p>
                 </div>
                 <div class="bg-indigo-500/30 backdrop-blur-xl rounded-2xl p-5 border border-white/20 mt-4">
                   <p class="text-xs font-bold text-white uppercase mb-1">Capital de Trabajo</p>
@@ -457,11 +457,13 @@
                   <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Valor SMMLV</label>
                   <div class="relative">
                     <input
-                      type="number"
-                      step="0.01"
-                      formControlName="valorSMMLV"
-                      class="w-full px-0 py-1 bg-transparent border-b-2 border-gray-100 focus:border-indigo-500 outline-none transition-all text-gray-800 font-bold placeholder:text-gray-300"
-                      placeholder="0.00"
+                      type="text"
+                      inputmode="decimal"
+                      [value]="getFormattedNumber('experiencias.' + i + '.valorSMMLV')"
+                      (blur)="formatNumberInput($event, 'experiencias.' + i + '.valorSMMLV')"
+                      (focus)="unformatCurrencyInput($event, 'experiencias.' + i + '.valorSMMLV')"
+                      class="w-full pr-16 px-0 py-1 bg-transparent border-b-2 border-gray-100 focus:border-indigo-500 outline-none transition-all text-gray-800 font-bold placeholder:text-gray-300"
+                      placeholder="0,00"
                     />
                     <span class="absolute right-0 top-1 text-xs font-bold text-gray-400">SMMLV</span>
                   </div>
@@ -515,6 +517,23 @@
             </div>
           }
         </div>
+
+        @if (experiencias.length > 0) {
+          <div class="mt-6 flex justify-end">
+            <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-2xl px-6 py-4 text-white shadow-lg shadow-indigo-200 flex items-center gap-4">
+              <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                <i class="bx bx-calculator text-xl"></i>
+              </div>
+              <div class="text-right">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-indigo-200">Total Experiencia</p>
+                <p class="text-2xl font-bold tracking-tight">
+                  {{ getFormattedTotalSMMLV() }}
+                  <span class="text-sm font-semibold text-indigo-200">SMMLV</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        }
       </div>
 
     </form>

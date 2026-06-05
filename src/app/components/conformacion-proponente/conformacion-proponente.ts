@@ -86,6 +86,29 @@ export class ConformacionProponenteComponent implements OnChanges {
 
   readonly tipoOptions = TIPO_OPTIONS;
 
+  // Validadores del FormArray. DEBEN declararse antes de `form`, porque
+  // `buildForm()` los referencia durante la inicialización de campos de clase
+  // (que ocurre en orden de declaración). Si se declaran después, llegan como
+  // `undefined` y Angular falla con "Cannot read properties of undefined (reading 'validate')".
+  private empresasUnicasValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+    const arr = control as FormArray;
+    const ids = arr.controls
+      .map((c) => c.get('empresaId')?.value)
+      .filter((v): v is number => v !== null && v !== undefined);
+    const unicas = new Set(ids);
+    return ids.length !== unicas.size ? { empresasDuplicadas: true } : null;
+  };
+
+  private sumaPorcentajesValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+    const arr = control as FormArray;
+    const total = arr.controls.reduce((acc, c) => {
+      const raw = c.get('porcentajeParticipacion');
+      const val = Number(raw?.value || 0);
+      return acc + (isNaN(val) ? 0 : val);
+    }, 0);
+    return Math.abs(total - 100) < 0.01 ? null : { sumaInvalida: { total } };
+  };
+
   form: FormGroup = this.buildForm();
 
   /** Estado UI por fila para el “select buscable” de empresa. */
@@ -171,25 +194,6 @@ export class ConformacionProponenteComponent implements OnChanges {
     }
     this.recalcSuma();
   }
-
-  private empresasUnicasValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
-    const arr = control as FormArray;
-    const ids = arr.controls
-      .map((c) => c.get('empresaId')?.value)
-      .filter((v): v is number => v !== null && v !== undefined);
-    const unicas = new Set(ids);
-    return ids.length !== unicas.size ? { empresasDuplicadas: true } : null;
-  };
-
-  private sumaPorcentajesValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
-    const arr = control as FormArray;
-    const total = arr.controls.reduce((acc, c) => {
-      const raw = c.get('porcentajeParticipacion');
-      const val = Number(raw?.value || 0);
-      return acc + (isNaN(val) ? 0 : val);
-    }, 0);
-    return Math.abs(total - 100) < 0.01 ? null : { sumaInvalida: { total } };
-  };
 
   // ============ UI actions ============
   agregarIntegrante(): void {

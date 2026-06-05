@@ -292,6 +292,54 @@ export class EmpresaFormComponent implements OnInit {
     }).format(value);
   }
 
+  // --- NUMBER FORMATTING (SMMLV: separador de miles con punto y decimales con coma, sin símbolo $) ---
+  getFormattedNumber(controlPath: string): string {
+    const value = this.empresaForm.get(controlPath)?.value;
+    if (value === null || value === undefined || isNaN(value)) return '';
+    return new Intl.NumberFormat('es-CO', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  }
+
+  formatNumberInput(event: Event, controlPath: string): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+
+    if (!value) {
+      this.empresaForm.get(controlPath)?.setValue(0);
+      input.value = '';
+      return;
+    }
+
+    // Quitar puntos de miles y cambiar la coma decimal por punto para parseFloat
+    const cleanValue = value.replace(/[$\s.]/g, '').replace(',', '.');
+    const num = parseFloat(cleanValue);
+
+    if (!isNaN(num)) {
+      input.value = new Intl.NumberFormat('es-CO', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(num);
+      this.empresaForm.get(controlPath)?.setValue(num);
+    }
+  }
+
+  // --- TOTAL DE EXPERIENCIA EN SMMLV ---
+  getTotalSMMLV(): number {
+    return this.experiencias.controls.reduce((sum, ctrl) => {
+      const v = ctrl.get('valorSMMLV')?.value;
+      return sum + (typeof v === 'number' && !isNaN(v) ? v : 0);
+    }, 0);
+  }
+
+  getFormattedTotalSMMLV(): string {
+    return new Intl.NumberFormat('es-CO', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(this.getTotalSMMLV());
+  }
+
   onSubmit(): void {
     if (this.empresaForm.invalid) {
       this.empresaForm.markAllAsTouched();
