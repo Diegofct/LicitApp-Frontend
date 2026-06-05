@@ -12,7 +12,9 @@ export class AnalisisCumplimientoService {
 
   /**
    * Evalúa el cumplimiento de una empresa con los requisitos de un proceso.
-   * @param request Payload con empresaId y cuadroDeObraId.
+   * @param request Payload con empresaId, cuadroDeObraId y, opcionalmente,
+   *                porcentajeSimulacion (fracción 0.01–0.99 de participación
+   *                de la empresa elegida; si se omite el backend usa 0.5).
    */
   evaluarAnalisis(request: AnalisisRequest): Observable<AnalisisResponse> {
     return this.http.post<AnalisisResponse>(`${this.apiUrl}/evaluar`, request);

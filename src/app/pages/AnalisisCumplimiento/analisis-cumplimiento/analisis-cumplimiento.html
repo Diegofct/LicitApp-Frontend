@@ -81,6 +81,37 @@
         </div>
       </div>
 
+      <!-- SIMULACIÓN DE PARTICIPACIÓN -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-1">
+          <h2 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+            <i class="bx bx-slider-alt text-indigo-500"></i>
+            Participación en consorcio
+          </h2>
+          <span class="px-2.5 py-1 bg-indigo-100 rounded-lg text-xs font-black text-indigo-700">
+            {{ porcentajeSimulacion() }}%
+          </span>
+        </div>
+        <p class="text-xs text-gray-400 leading-relaxed mb-4">
+          % de participación de la empresa elegida al simular un consorcio.
+          Los socios cubrirían el {{ 100 - porcentajeSimulacion() }}% restante.
+        </p>
+        <input
+          type="range"
+          min="1"
+          max="99"
+          step="1"
+          [value]="porcentajeSimulacion()"
+          (input)="setPorcentajeSimulacion($any($event.target).value)"
+          class="w-full accent-indigo-600 cursor-pointer"
+        >
+        <div class="flex justify-between text-[10px] text-gray-400 mt-1 font-medium">
+          <span>1%</span>
+          <span>50% (def.)</span>
+          <span>99%</span>
+        </div>
+      </div>
+
       <!-- PASO 3: ACCIÓN -->
       <button
         (click)="analizar()"
@@ -243,43 +274,144 @@
                   <!-- Sugerencias de Consorcio -->
                   @if (!res.cumpleGlobal) {
                     @if (res.sugerencias.length > 0) {
-                      <div class="mt-6 p-5 bg-amber-50 rounded-2xl border border-amber-200">
+                      <div class="mt-6">
                         <div class="flex items-start gap-3 mb-4">
                           <div class="flex items-center justify-center w-9 h-9 rounded-full bg-amber-100 text-amber-600 shrink-0">
                             <i class="bx bx-bulb text-xl"></i>
                           </div>
                           <div>
-                            <h5 class="text-sm font-bold text-amber-900">Sugerencias de Consorcio</h5>
-                            <p class="text-xs text-amber-800/80 leading-relaxed mt-1">
-                              El proponente no cumple individualmente, pero <strong>sí cumpliría haciendo consorcio (50/50)</strong> con alguna de las siguientes empresas:
+                            <h5 class="text-sm font-bold text-gray-900">Propuestas de Consorcio</h5>
+                            <p class="text-xs text-gray-500 leading-relaxed mt-1">
+                              El proponente no cumple individualmente. Estas son las
+                              <strong>{{ res.sugerencias.length }}</strong>
+                              combinación(es) de socios sugeridas (ordenadas de mejor a peor):
                             </p>
                           </div>
                         </div>
 
-                        <ul class="space-y-2">
-                          @for (sug of res.sugerencias; track sug.empresaId) {
-                            <li class="flex items-center justify-between gap-3 px-4 py-3 bg-white border border-amber-200 rounded-xl shadow-sm">
-                              <div class="flex items-center gap-3 min-w-0">
-                                <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-50 text-amber-600 shrink-0">
-                                  <i class="bx bx-buildings"></i>
+                        <div class="space-y-4">
+                          @for (sug of res.sugerencias; track $index) {
+                            <div class="rounded-2xl border overflow-hidden"
+                              [ngClass]="{
+                                'border-emerald-200 bg-emerald-50/40': sug.cumpleGlobal,
+                                'border-amber-200 bg-amber-50/40': !sug.cumpleGlobal
+                              }">
+
+                              <!-- Header de la propuesta -->
+                              <div class="px-4 py-3 flex flex-wrap items-center justify-between gap-2 border-b"
+                                [ngClass]="{
+                                  'border-emerald-100': sug.cumpleGlobal,
+                                  'border-amber-100': !sug.cumpleGlobal
+                                }">
+                                <div class="flex items-center gap-2">
+                                  <span class="flex items-center justify-center w-6 h-6 rounded-lg text-[11px] font-black"
+                                    [ngClass]="{
+                                      'bg-emerald-100 text-emerald-700': sug.cumpleGlobal,
+                                      'bg-amber-100 text-amber-700': !sug.cumpleGlobal
+                                    }">
+                                    {{ $index + 1 }}
+                                  </span>
+                                  <span class="text-sm font-bold text-gray-800">
+                                    Opción {{ $index + 1 }}
+                                  </span>
                                 </div>
-                                <div class="min-w-0">
-                                  <p class="text-sm font-bold text-gray-800 truncate">{{ sug.razonSocial }}</p>
-                                  <p class="text-[11px] text-gray-500 font-medium">NIT {{ sug.nit }}</p>
-                                </div>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                                  [ngClass]="{
+                                    'bg-emerald-100 text-emerald-700': sug.cumpleGlobal,
+                                    'bg-amber-100 text-amber-700': !sug.cumpleGlobal
+                                  }">
+                                  <i class="bx" [class.bx-check-circle]="sug.cumpleGlobal" [class.bx-error-circle]="!sug.cumpleGlobal"></i>
+                                  {{ sug.cumpleGlobal ? 'Consorcio viable' : 'Cobertura parcial' }}
+                                </span>
                               </div>
-                              <span class="px-2.5 py-1 bg-amber-100 rounded-lg text-[10px] font-bold uppercase tracking-wider text-amber-700 shrink-0">
-                                Consorcio 50/50
-                              </span>
-                            </li>
+
+                              <!-- Integrantes -->
+                              <div class="p-4 space-y-2">
+                                @for (integrante of sug.integrantes; track integrante.empresaId) {
+                                  <div class="flex flex-col gap-2 px-4 py-3 bg-white border rounded-xl shadow-sm"
+                                    [ngClass]="{
+                                      'border-indigo-300 ring-1 ring-indigo-200': integrante.solicitante,
+                                      'border-gray-200': !integrante.solicitante
+                                    }">
+                                    <div class="flex items-center justify-between gap-3">
+                                      <div class="flex items-center gap-3 min-w-0">
+                                        <div class="flex items-center justify-center w-8 h-8 rounded-lg shrink-0"
+                                          [ngClass]="{
+                                            'bg-indigo-100 text-indigo-600': integrante.solicitante,
+                                            'bg-gray-100 text-gray-500': !integrante.solicitante
+                                          }">
+                                          <i class="bx" [class.bx-user-check]="integrante.solicitante" [class.bx-buildings]="!integrante.solicitante"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                          <div class="flex items-center gap-2">
+                                            <p class="text-sm font-bold text-gray-800 truncate">{{ integrante.razonSocial }}</p>
+                                            @if (integrante.solicitante) {
+                                              <span class="px-2 py-0.5 bg-indigo-100 rounded text-[9px] font-bold uppercase tracking-wider text-indigo-700 shrink-0">
+                                                Tu empresa
+                                              </span>
+                                            }
+                                          </div>
+                                          <p class="text-[11px] text-gray-500 font-medium">NIT {{ integrante.nit }}</p>
+                                        </div>
+                                      </div>
+                                      <span class="px-2.5 py-1 rounded-lg text-xs font-black shrink-0"
+                                        [ngClass]="{
+                                          'bg-indigo-50 text-indigo-700': integrante.solicitante,
+                                          'bg-gray-100 text-gray-600': !integrante.solicitante
+                                        }">
+                                        {{ integrante.porcentaje * 100 | number:'1.0-0' }}%
+                                      </span>
+                                    </div>
+
+                                    <!-- Requisitos que cubre este integrante -->
+                                    @if (integrante.requisitosQueCubre.length > 0) {
+                                      <div class="flex flex-wrap gap-1.5 pl-11">
+                                        @for (req of integrante.requisitosQueCubre; track req) {
+                                          <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded-md text-[10px] font-semibold text-emerald-700">
+                                            <i class="bx bx-check text-xs"></i>{{ req }}
+                                          </span>
+                                        }
+                                      </div>
+                                    }
+                                  </div>
+                                }
+                              </div>
+
+                              <!-- Cobertura de la propuesta -->
+                              @if (sug.requisitosCubiertos.length > 0 || sug.requisitosPendientes.length > 0) {
+                                <div class="px-4 pb-4 space-y-2">
+                                  @if (sug.requisitosCubiertos.length > 0) {
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                      <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mr-1">Cubre:</span>
+                                      @for (req of sug.requisitosCubiertos; track req) {
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 rounded-md text-[10px] font-semibold text-emerald-700">
+                                          <i class="bx bx-check-circle text-xs"></i>{{ req }}
+                                        </span>
+                                      }
+                                    </div>
+                                  }
+                                  @if (sug.requisitosPendientes.length > 0) {
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                      <span class="text-[10px] font-bold uppercase tracking-wider text-red-600 mr-1">Pendiente:</span>
+                                      @for (req of sug.requisitosPendientes; track req) {
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 rounded-md text-[10px] font-semibold text-red-700">
+                                          <i class="bx bx-x-circle text-xs"></i>{{ req }}
+                                        </span>
+                                      }
+                                    </div>
+                                  }
+                                </div>
+                              }
+                            </div>
                           }
-                        </ul>
+                        </div>
                       </div>
                     } @else {
                       <div class="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-start gap-3">
                         <i class="bx bx-info-circle text-gray-400 text-xl shrink-0"></i>
                         <p class="text-xs text-gray-600 leading-relaxed">
-                          No se encontraron empresas con las que pueda hacer consorcio para cubrir los requisitos.
+                          No se encontró ninguna combinación de socios que aporte la cobertura
+                          faltante. Ajusta el % de participación o registra más empresas e intenta de nuevo.
                         </p>
                       </div>
                     }

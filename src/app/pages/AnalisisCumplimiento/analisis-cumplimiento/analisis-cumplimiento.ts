@@ -33,7 +33,13 @@ export class AnalisisCumplimiento implements OnInit {
   // --- SELECCIÓN ---
   selectedProcesoId = signal<number | null>(null);
   selectedEmpresasIds = signal<Set<number>>(new Set());
-  
+
+  /**
+   * % de participación de la empresa elegida en el consorcio simulado (1–99).
+   * Se envía al backend como fracción (porcentaje / 100). Default 50 (= backend).
+   */
+  porcentajeSimulacion = signal<number>(50);
+
   // --- ESTADO ---
   loadingProcesos = signal(false);
   loadingEmpresas = signal(false);
@@ -146,8 +152,15 @@ analizar(): void {
   this.loadingAnalisis.set(true);
   this.resultados.set([]);
 
-  const requests = empresasIds.map(empresaId => 
-    this.analisisService.evaluarAnalisis({ empresaId, cuadroDeObraId: procesoId })
+  // El usuario ajusta el % (1–99); el backend espera la fracción (0.01–0.99).
+  const fraccion = Math.min(0.99, Math.max(0.01, this.porcentajeSimulacion() / 100));
+
+  const requests = empresasIds.map(empresaId =>
+    this.analisisService.evaluarAnalisis({
+      empresaId,
+      cuadroDeObraId: procesoId,
+      porcentajeSimulacion: fraccion,
+    })
   );
 
   forkJoin(requests).subscribe({
@@ -164,5 +177,12 @@ analizar(): void {
 
   getEmpresaNombre(id: number): string {
     return this.empresas().find(e => e.id === id)?.razonSocial || 'Empresa no encontrada';
+  }
+
+  /** Actualiza el % de simulación desde el control, acotado a 1–99. */
+  setPorcentajeSimulacion(value: number | string): void {
+    const n = Math.round(Number(value));
+    if (Number.isNaN(n)) return;
+    this.porcentajeSimulacion.set(Math.min(99, Math.max(1, n)));
   }
 }

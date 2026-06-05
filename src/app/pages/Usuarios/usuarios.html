@@ -1,0 +1,208 @@
+<div class="p-4 sm:p-6 lg:p-8">
+  <!-- Encabezado -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <i class="bx bx-user-circle text-indigo-600"></i>
+        Gestión de usuarios
+      </h1>
+      <p class="text-sm text-gray-500 mt-1">Administra las cuentas y roles del sistema.</p>
+    </div>
+    <button
+      type="button"
+      (click)="abrirModal()"
+      class="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+      <i class="bx bx-plus text-lg"></i>
+      Nuevo usuario
+    </button>
+  </div>
+
+  <!-- Buscador -->
+  <div class="relative mb-4 max-w-sm">
+    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+      <i class="bx bx-search text-lg"></i>
+    </span>
+    <input
+      type="text"
+      [value]="searchTerm()"
+      (input)="searchTerm.set($any($event.target).value)"
+      placeholder="Buscar por nombre, correo o rol…"
+      class="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+  </div>
+
+  <!-- Tabla -->
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    @if (loading()) {
+      <div class="flex items-center justify-center py-16 text-gray-400">
+        <i class="bx bx-loader-alt bx-spin text-3xl"></i>
+      </div>
+    } @else if (filteredUsuarios().length === 0) {
+      <div class="flex flex-col items-center justify-center py-16 text-gray-400">
+        <i class="bx bx-user-x text-5xl mb-2"></i>
+        <p class="text-sm">No hay usuarios para mostrar.</p>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Usuario</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Correo</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Rol</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Estado</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (u of filteredUsuarios(); track u.id) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center gap-3">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700">
+                      {{ iniciales(u.nombre) }}
+                    </span>
+                    <span class="text-sm font-medium text-gray-900">{{ u.nombre }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ u.correo }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="inline-flex text-xs font-medium px-2.5 py-1 rounded-full border" [ngClass]="rolBadge(u.rol)">
+                    {{ rolLabel[u.rol] }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  @if (u.activo) {
+                    <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
+                      <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Activo
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center gap-1 text-xs font-medium text-gray-500">
+                      <span class="h-2 w-2 rounded-full bg-gray-400"></span> Inactivo
+                    </span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Modal: crear usuario -->
+@if (showModal()) {
+  <div
+    class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+    (click)="cerrarModal()">
+    <div
+      class="bg-white rounded-xl shadow-2xl w-full max-w-lg animate-in zoom-in-95 duration-200"
+      (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h3 class="text-lg font-bold text-gray-900">Nuevo usuario</h3>
+        <button type="button" (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+          <i class="bx bx-x text-2xl"></i>
+        </button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="guardar()" novalidate class="p-6 space-y-5">
+        @if (formError(); as msg) {
+          <div class="flex items-start gap-3 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            <i class="bx bx-error-circle text-lg mt-0.5"></i>
+            <span>{{ msg }}</span>
+          </div>
+        }
+
+        <!-- Nombre -->
+        <div>
+          <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1.5">Nombre completo</label>
+          <input
+            id="nombre"
+            type="text"
+            formControlName="nombre"
+            placeholder="Ej. Laura Gómez"
+            class="w-full rounded-lg border bg-gray-50 px-3 py-2.5 text-sm text-gray-900 transition-colors focus:bg-white focus:outline-none focus:ring-2"
+            [ngClass]="esInvalido('nombre') ? 'border-red-300 focus:ring-red-400' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-400'" />
+          @if (esInvalido('nombre')) {
+            <p class="mt-1.5 text-xs text-red-600">El nombre es obligatorio (mínimo 3 caracteres).</p>
+          }
+        </div>
+
+        <!-- Correo -->
+        <div>
+          <label for="correo-nuevo" class="block text-sm font-medium text-gray-700 mb-1.5">Correo electrónico</label>
+          <input
+            id="correo-nuevo"
+            type="email"
+            formControlName="correo"
+            placeholder="laura@empresa.com"
+            class="w-full rounded-lg border bg-gray-50 px-3 py-2.5 text-sm text-gray-900 transition-colors focus:bg-white focus:outline-none focus:ring-2"
+            [ngClass]="esInvalido('correo') ? 'border-red-300 focus:ring-red-400' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-400'" />
+          @if (esInvalido('correo')) {
+            <p class="mt-1.5 text-xs text-red-600">Ingresa un correo válido.</p>
+          }
+        </div>
+
+        <!-- Contraseña -->
+        <div>
+          <label for="contrasena-nueva" class="block text-sm font-medium text-gray-700 mb-1.5">Contraseña</label>
+          <div class="relative">
+            <input
+              id="contrasena-nueva"
+              [type]="mostrarPassword() ? 'text' : 'password'"
+              formControlName="contrasena"
+              placeholder="Mínimo 8 caracteres"
+              class="w-full rounded-lg border bg-gray-50 px-3 py-2.5 pr-10 text-sm text-gray-900 transition-colors focus:bg-white focus:outline-none focus:ring-2"
+              [ngClass]="esInvalido('contrasena') ? 'border-red-300 focus:ring-red-400' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-400'" />
+            <button
+              type="button"
+              (click)="togglePassword()"
+              [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none">
+              <i class="bx text-lg" [ngClass]="mostrarPassword() ? 'bx-hide' : 'bx-show'"></i>
+            </button>
+          </div>
+          @if (esInvalido('contrasena')) {
+            <p class="mt-1.5 text-xs text-red-600">La contraseña debe tener al menos 8 caracteres.</p>
+          }
+        </div>
+
+        <!-- Rol -->
+        <div>
+          <label for="rol" class="block text-sm font-medium text-gray-700 mb-1.5">Rol</label>
+          <select
+            id="rol"
+            formControlName="rol"
+            class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 transition-colors focus:bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+            @for (r of roles; track r) {
+              <option [value]="r">{{ rolLabel[r] }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex justify-end gap-3 pt-2">
+          <button
+            type="button"
+            (click)="cerrarModal()"
+            [disabled]="saving()"
+            class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none disabled:opacity-60">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="saving()"
+            class="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70">
+            @if (saving()) {
+              <i class="bx bx-loader-alt bx-spin text-lg"></i>
+              Guardando…
+            } @else {
+              <i class="bx bx-check text-lg"></i>
+              Crear usuario
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
