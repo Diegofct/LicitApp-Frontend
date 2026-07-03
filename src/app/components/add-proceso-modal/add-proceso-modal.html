@@ -1,135 +1,181 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-  <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in duration-200">
 
     <!-- Header -->
     <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-      <h2 class="text-xl font-bold text-gray-800">Agregar Nuevo Proceso</h2>
-      <button (click)="close.emit()" type="button" aria-label="Cerrar" class="text-gray-400 hover:text-gray-600 transition-colors">
-        <i class="bx bx-x text-2xl"></i>
+      <div class="flex items-center gap-3">
+        <div class="p-2 rounded-lg bg-blue-100 text-blue-600">
+          <i class="bx bx-plus-circle text-2xl"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-800">Agregar Nuevo Proceso</h2>
+          <p class="text-xs text-gray-500 mt-0.5">Registra un proceso de licitación en el cuadro de obra.</p>
+        </div>
+      </div>
+      <button (click)="close.emit()" type="button" aria-label="Cerrar" class="cursor-pointer text-gray-400 hover:text-gray-600 transition-colors">
+        <i class="bx bx-x text-3xl"></i>
       </button>
     </div>
 
     <!-- Body (Scrollable) -->
     <div class="p-6 overflow-y-auto">
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-8">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Sección: Identificación del Proceso -->
+        <div>
+          <h3 class="flex items-center gap-2 text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 border-b pb-2">
+            <i class="bx bx-file"></i>
+            Identificación del Proceso
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+            <!-- N° Proceso -->
+            <div class="space-y-1">
+              <label for="numeroProceso" class="block text-sm font-medium text-gray-700">N° Proceso *</label>
+              <input id="numeroProceso" type="text" formControlName="numeroProceso" placeholder="Ej: LP-001-2024"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+            </div>
 
-          <!-- N° Proceso -->
-          <div>
-            <label for="numeroProceso" class="block text-sm font-medium text-gray-700 mb-1">N° Proceso *</label>
-            <input id="numeroProceso" type="text" formControlName="numeroProceso"
-              placeholder="Ej: LP-001-2024"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-          </div>
+            <!-- Entidad -->
+            <div class="space-y-1">
+              <label for="entidadContratante" class="block text-sm font-medium text-gray-700">Entidad Contratante *</label>
+              <input id="entidadContratante" type="text" formControlName="entidadContratante" placeholder="Nombre de la entidad"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+            </div>
 
-          <!-- Entidad -->
-          <div>
-            <label for="entidadContratante" class="block text-sm font-medium text-gray-700 mb-1">Entidad Contratante *</label>
-            <input id="entidadContratante" type="text" formControlName="entidadContratante"
-              placeholder="Nombre de la entidad"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-          </div>
+            <!-- Objeto (Full Width) -->
+            <div class="space-y-1 md:col-span-2">
+              <label for="descripcionObjeto" class="block text-sm font-medium text-gray-700">Descripción del Objeto *</label>
+              <textarea id="descripcionObjeto" formControlName="descripcionObjeto" rows="2" placeholder="Describa el objeto de la licitación"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"></textarea>
+            </div>
 
-          <!-- Objeto (Full Width) -->
-          <div class="md:col-span-2">
-            <label for="descripcionObjeto" class="block text-sm font-medium text-gray-700 mb-1">Descripción del Objeto *</label>
-            <textarea id="descripcionObjeto" formControlName="descripcionObjeto" rows="2"
-              placeholder="Describa el objeto de la licitación"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"></textarea>
-          </div>
-
-          <!-- Fecha Publicación -->
-          <div>
-            <label for="fechaPublicacion" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Publicación *</label>
-            <input id="fechaPublicacion" type="datetime-local" formControlName="fechaPublicacion"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-          </div>
-
-          <!-- Fecha de Cierre -->
-          <div>
-            <label for="fechaCierre" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Cierre *</label>
-            <input id="fechaCierre" type="datetime-local" formControlName="fechaCierre"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-          </div>
-
-          <!-- Estado Proceso SECOP -->
-          <div>
-            <label for="estadoProceso" class="block text-sm font-medium text-gray-700 mb-1">Estado del Proceso *</label>
-            <input id="estadoProceso" type="text" formControlName="estadoProceso"
-              placeholder="Ej: Presentado, En Evaluación"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-          </div>
-
-          <!-- Departamento -->
-          <div>
-            <label for="departamento" class="block text-sm font-medium text-gray-700 mb-1">Departamento *</label>
-            <input id="departamento" type="text" formControlName="departamento" placeholder="Nombre del departamento"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-          </div>
-
-          <!-- Municipio -->
-          <div>
-            <label for="municipio" class="block text-sm font-medium text-gray-700 mb-1">Municipio *</label>
-            <input id="municipio" type="text" formControlName="municipio" placeholder="Nombre del municipio"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-          </div>
-
-          <!-- Monto -->
-          <div>
-            <label for="monto" class="block text-sm font-medium text-gray-700 mb-1">Presupuesto (Monto) *</label>
-            <input id="monto" type="number" formControlName="monto" placeholder="0.00"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-          </div>
-
-          <!-- Valor SMMLV -->
-          <div>
-            <label for="valorSMMLV" class="block text-sm font-medium text-gray-700 mb-1">Valor SMMLV *</label>
-            <input id="valorSMMLV" type="number" step="0.01" formControlName="valorSMMLV" placeholder="0.00"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-          </div>
-
-          <!-- Tipo Proyecto -->
-          <div>
-            <label for="tipoProyecto" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Proyecto *</label>
-            <select id="tipoProyecto" formControlName="tipoProyecto"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-              <option value="">Seleccione...</option>
-              <option value="Vial">Vial</option>
-              <option value="Edificación">Edificación</option>
-              <option value="Saneamiento">Saneamiento</option>
-              <option value="Otro">Otro</option>
-            </select>
-          </div>
-
-          <!-- Plazo -->
-          <div>
-            <label for="plazo" class="block text-sm font-medium text-gray-700 mb-1">Plazo *</label>
-            <input id="plazo" type="text" formControlName="plazo" placeholder="Ej: 6 meses"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-          </div>
-
-          <!-- Anticipo -->
-          <div>
-            <label for="anticipo" class="block text-sm font-medium text-gray-700 mb-1">Anticipo (%) *</label>
-            <input id="anticipo" type="text" formControlName="anticipo" placeholder="Ej: 30%"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+            <!-- Estado Proceso SECOP -->
+            <div class="space-y-1 md:col-span-2">
+              <label for="estadoProceso" class="block text-sm font-medium text-gray-700">Estado del Proceso *</label>
+              <input id="estadoProceso" type="text" formControlName="estadoProceso" placeholder="Ej: Presentado, En Evaluación"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+            </div>
           </div>
         </div>
 
-        <!-- Experiencia (Full Width) -->
+        <!-- Sección: Fechas y Ubicación -->
         <div>
-          <label for="experiencia" class="block text-sm font-medium text-gray-700 mb-1">Experiencia Requerida *</label>
-          <textarea id="experiencia" formControlName="experiencia" rows="3"
-            placeholder="Detalle la experiencia mínima requerida"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"></textarea>
+          <h3 class="flex items-center gap-2 text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 border-b pb-2">
+            <i class="bx bx-map-pin"></i>
+            Fechas y Ubicación
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+            <!-- Fecha Publicación -->
+            <div class="space-y-1">
+              <label for="fechaPublicacion" class="block text-sm font-medium text-gray-700">Fecha de Publicación *</label>
+              <input id="fechaPublicacion" type="datetime-local" formControlName="fechaPublicacion"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+            </div>
+
+            <!-- Fecha de Cierre -->
+            <div class="space-y-1">
+              <label for="fechaCierre" class="block text-sm font-medium text-gray-700">Fecha de Cierre *</label>
+              <input id="fechaCierre" type="datetime-local" formControlName="fechaCierre"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+            </div>
+
+            <!-- Departamento -->
+            <div class="space-y-1">
+              <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento *</label>
+              <input id="departamento" type="text" formControlName="departamento" placeholder="Nombre del departamento"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+            </div>
+
+            <!-- Municipio -->
+            <div class="space-y-1">
+              <label for="municipio" class="block text-sm font-medium text-gray-700">Municipio *</label>
+              <input id="municipio" type="text" formControlName="municipio" placeholder="Nombre del municipio"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+            </div>
+          </div>
         </div>
 
-        <!-- Observación (Full Width) -->
+        <!-- Sección: Presupuesto y SMMLV -->
+        <div class="p-5 bg-emerald-50/40 rounded-xl border border-emerald-100">
+          <h3 class="flex items-center gap-2 text-sm font-semibold text-emerald-600 uppercase tracking-wider mb-4">
+            <i class="bx bx-dollar-circle"></i>
+            Presupuesto Oficial
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Monto / Presupuesto (formato moneda) -->
+            <div class="space-y-1">
+              <label for="monto" class="block text-sm font-medium text-gray-700">Presupuesto Oficial *</label>
+              <input id="monto" type="text" inputmode="numeric"
+                [value]="formatCurrency(form.get('monto')?.value)"
+                (input)="onMontoInput($event)"
+                placeholder="$ 0"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all font-medium">
+              <p class="text-xs text-gray-500 mt-1">Valor total del presupuesto en pesos colombianos.</p>
+            </div>
+
+            <!-- Valor SMMLV (calculado) -->
+            <div class="space-y-1">
+              <label for="valorSMMLV" class="block text-sm font-medium text-emerald-700">Valor en SMMLV (Calculado)</label>
+              <div class="relative">
+                <input id="valorSMMLV" type="text" [value]="valorSMMLVFormateado" readonly
+                  class="w-full px-4 py-2 pr-16 border border-emerald-200 rounded-lg bg-emerald-50 text-emerald-700 font-bold cursor-not-allowed outline-none">
+                <span class="absolute right-3 top-2.5 text-xs font-bold text-emerald-500">SMMLV</span>
+              </div>
+              <p class="text-xs text-emerald-600 mt-1 italic">
+                Presupuesto / SMMLV ({{ formatCurrency(SMMLV_2026) }})
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección: Condiciones del Proceso -->
         <div>
-          <label for="observacion" class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
-          <textarea id="observacion" formControlName="observacion" rows="2" placeholder="Notas adicionales..."
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"></textarea>
+          <h3 class="flex items-center gap-2 text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 border-b pb-2">
+            <i class="bx bx-list-ul"></i>
+            Condiciones del Proceso
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
+            <!-- Tipo Proyecto -->
+            <div class="space-y-1">
+              <label for="tipoProyecto" class="block text-sm font-medium text-gray-700">Tipo de Proyecto *</label>
+              <select id="tipoProyecto" formControlName="tipoProyecto"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+                <option value="">Seleccione...</option>
+                <option value="Vial">Vial</option>
+                <option value="Edificación">Edificación</option>
+                <option value="Saneamiento">Saneamiento</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+
+            <!-- Plazo -->
+            <div class="space-y-1">
+              <label for="plazo" class="block text-sm font-medium text-gray-700">Plazo *</label>
+              <input id="plazo" type="text" formControlName="plazo" placeholder="Ej: 6 meses"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+            </div>
+
+            <!-- Anticipo -->
+            <div class="space-y-1">
+              <label for="anticipo" class="block text-sm font-medium text-gray-700">Anticipo (%) *</label>
+              <input id="anticipo" type="text" formControlName="anticipo" placeholder="Ej: 30%"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+            </div>
+
+            <!-- Experiencia (Full Width) -->
+            <div class="space-y-1 md:col-span-3">
+              <label for="experiencia" class="block text-sm font-medium text-gray-700">Experiencia Requerida *</label>
+              <textarea id="experiencia" formControlName="experiencia" rows="3" placeholder="Detalle la experiencia mínima requerida"
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"></textarea>
+            </div>
+
+            <!-- Observación (Full Width) -->
+            <div class="space-y-1 md:col-span-3">
+              <label for="observacion" class="block text-sm font-medium text-gray-700">Observaciones</label>
+              <textarea id="observacion" formControlName="observacion" rows="2" placeholder="Notas adicionales..."
+                class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"></textarea>
+            </div>
+          </div>
         </div>
 
         <!-- Estado Inicial -->
@@ -148,15 +194,15 @@
     <!-- Footer Buttons -->
     <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
       <button (click)="close.emit()" type="button"
-        class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
+        class="cursor-pointer px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
         Cancelar
       </button>
       <button [disabled]="form.invalid || loading" (click)="onSubmit()" type="button"
-        class="cursor-pointer px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+        class="cursor-pointer px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-lg shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
         @if (loading) {
-          <i class="bx bx-loader-alt animate-spin me-2"></i> Guardando...
+          <i class="bx bx-loader-alt animate-spin"></i> Guardando...
         } @else {
-          <i class="bx bx-plus me-2"></i> Crear Proceso
+          <i class="bx bx-plus"></i> Crear Proceso
         }
       </button>
     </div>

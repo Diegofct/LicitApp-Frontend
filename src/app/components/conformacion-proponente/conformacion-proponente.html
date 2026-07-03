@@ -60,14 +60,26 @@
           <span class="text-xs text-gray-400">Conformada el {{ c.fechaConformacion | date:'dd MMM yyyy' }}</span>
         </div>
 
+        @if (c.nombre) {
+          <div class="flex items-center gap-3 p-4 rounded-xl border border-indigo-100 bg-indigo-50/40">
+            <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 text-white shrink-0">
+              <i class="bx bx-id-card text-xl"></i>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Nombre del proponente</p>
+              <p class="text-base font-bold text-gray-800 truncate">{{ c.nombre }}</p>
+            </div>
+          </div>
+        }
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           @for (i of c.integrantes; track i.id) {
             <div class="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/40 hover:bg-gray-50 transition-colors">
               <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 text-white font-bold text-sm shrink-0">
-                {{ iniciales(i.nombreEmpresa) }}
+                {{ iniciales(nombreIntegrante(i)) }}
               </div>
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-gray-800 truncate">{{ i.nombreEmpresa }}</p>
+                <p class="text-sm font-semibold text-gray-800 truncate">{{ nombreIntegrante(i) }}</p>
                 <p class="text-[11px] text-gray-400">ID Empresa #{{ i.empresaId }}</p>
               </div>
               <span class="px-3 py-1 rounded-lg text-sm font-bold tabular-nums text-indigo-700 bg-indigo-50 border border-indigo-100 shrink-0">
@@ -137,6 +149,35 @@
             </p>
           }
         </div>
+
+        <!-- Nombre del consorcio / unión temporal -->
+        @if (esConsorcio()) {
+          <div>
+            <label for="nombre-consorcio" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              Nombre del {{ tipoActual() === 'UNION_TEMPORAL' ? 'unión temporal' : 'consorcio' }}
+              <span class="text-red-500 font-normal normal-case">*</span>
+            </label>
+            <input
+              id="nombre-consorcio"
+              type="text"
+              formControlName="nombre"
+              maxlength="255"
+              placeholder="Ej. Consorcio Vías del Norte"
+              class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
+              [class.border-red-300]="isInvalid('nombre')"
+            />
+            @if (isInvalid('nombre')) {
+              <p class="text-xs text-red-600 mt-1 flex items-center gap-1">
+                <i class="bx bx-error-circle"></i>
+                @if (form.get('nombre')!.errors?.['required']) {
+                  El nombre del proponente es obligatorio.
+                } @else {
+                  El nombre no puede superar los 255 caracteres.
+                }
+              </p>
+            }
+          </div>
+        }
 
         <!-- Integrantes -->
         @if (tipoActual()) {

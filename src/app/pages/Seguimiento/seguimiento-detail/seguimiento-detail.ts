@@ -14,7 +14,9 @@ import { catchError } from 'rxjs/operators';
 import { CuadroDeObraService } from '../../CuadroDeObra/service/cuadro-de-obra.service';
 import { CuadroDeObraItem } from '../../CuadroDeObra/interface/cuadro-de-obra';
 import { ConformacionProponenteService } from '../../Conformacion/service/conformacion.service';
-import { ConformacionResponse } from '../../Conformacion/interface/conformacion';
+import { ConformacionResponse, IntegranteResponse } from '../../Conformacion/interface/conformacion';
+import { EmpresaService } from '../../Empresa/service/empresa.service';
+import { Empresa } from '../../Empresa/interface/empresa';
 import { SeguimientoService } from '../service/seguimiento.service';
 import {
   SeguimientoEvento,
@@ -70,6 +72,7 @@ export class SeguimientoDetailComponent implements OnInit {
   private readonly cuadroService = inject(CuadroDeObraService);
   private readonly seguimientoService = inject(SeguimientoService);
   private readonly conformacionService = inject(ConformacionProponenteService);
+  private readonly empresaService = inject(EmpresaService);
   private readonly alertService = inject(AlertService);
 
   readonly cuadroId = signal<number | null>(null);
@@ -77,6 +80,7 @@ export class SeguimientoDetailComponent implements OnInit {
   readonly cuadro = signal<CuadroDeObraItem | null>(null);
   readonly seguimiento = signal<SeguimientoResponse | null>(null);
   readonly conformacion = signal<ConformacionResponse | null>(null);
+  readonly empresas = signal<Empresa[]>([]);
   readonly showRegistrar = signal(false);
 
   readonly eventosOrdenados = computed<EventoExtendido[]>(() => {
@@ -119,11 +123,15 @@ export class SeguimientoDetailComponent implements OnInit {
       conformacion: this.conformacionService.obtenerPorCuadroDeObra(id).pipe(
         catchError(() => of(null))
       ),
+      empresas: this.empresaService.listarEmpresas().pipe(
+        catchError(() => of([] as Empresa[]))
+      ),
     }).subscribe({
-      next: ({ cuadro, seguimiento, conformacion }) => {
+      next: ({ cuadro, seguimiento, conformacion, empresas }) => {
         this.cuadro.set(cuadro);
         this.seguimiento.set(seguimiento);
         this.conformacion.set(conformacion);
+        this.empresas.set(empresas);
         this.loading.set(false);
       },
       error: () => {
@@ -150,6 +158,18 @@ export class SeguimientoDetailComponent implements OnInit {
   // ===== Helpers de estilo =====
   tone(tipo: TipoEvento): typeof TONE_CLASSES[string] {
     return TONE_CLASSES[TIPO_EVENTO_META[tipo].tone];
+  }
+
+  /**
+   * Nombre a mostrar para un integrante del consorcio. Prioriza el
+   * `nombreEmpresa` del backend; si no llega, lo resuelve desde la lista de
+   * empresas por `empresaId`. Así evitamos el "?" cuando la respuesta no
+   * incluye el nombre.
+   */
+  nombreIntegrante(integrante: IntegranteResponse): string {
+    if (integrante.nombreEmpresa?.trim()) return integrante.nombreEmpresa;
+    const empresa = this.empresas().find((e) => e.id === integrante.empresaId);
+    return empresa?.razonSocial ?? `Empresa #${integrante.empresaId}`;
   }
 
   iniciales(razonSocial: string): string {

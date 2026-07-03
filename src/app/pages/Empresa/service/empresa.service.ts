@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Empresa, IndicadoresFinancieros, CapacidadResidual } from '../interface/empresa';
+import { Empresa, IndicadoresFinancieros, CapacidadResidual, RupExtraido } from '../interface/empresa';
 import { PaginatedResponse } from '../../Licitaciones/interface/paginated-response';
 
 @Injectable({
@@ -74,5 +74,22 @@ export class EmpresaService {
    */
   calcularCapacidadResidual(id: number, capacidad: Partial<CapacidadResidual>): Observable<CapacidadResidual> {
     return this.http.post<CapacidadResidual>(`${this.apiUrl}/${id}/capacidad-residual`, capacidad);
+  }
+
+  /**
+   * Extrae con IA la información de un RUP en PDF y devuelve un borrador editable
+   * para precargar el formulario de empresa. La IA NO persiste nada: el guardado
+   * continúa con crearEmpresa/actualizarEmpresa.
+   *
+   * Posibles errores HTTP:
+   *  - 422: el PDF no es legible o no corresponde a un RUP.
+   *  - 500: falló el proveedor de IA (reintentar).
+   *
+   * @param archivo Único PDF del RUP (campo multipart `archivo`).
+   */
+  extraerRup(archivo: File): Observable<RupExtraido> {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    return this.http.post<RupExtraido>(`${this.apiUrl}/extraer-rup`, formData);
   }
 }

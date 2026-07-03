@@ -59,12 +59,22 @@
                 </div>
               </div>
 
-              <div class="mb-4">
+              <div class="mb-4 flex flex-wrap gap-2">
                 <span
                   [class]="'px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ' + getBadgeClass(empresa.tamanoEmpresa)"
                 >
                   {{ empresa.tamanoEmpresa }}
                 </span>
+                @if (empresa.mipyme) {
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider bg-emerald-50 text-emerald-700 border-emerald-200">
+                    <i class="bx bx-store-alt"></i> MiPyme
+                  </span>
+                }
+                @if (empresa.proponenteMujer) {
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider bg-pink-50 text-pink-700 border-pink-200">
+                    <i class="bx bx-female"></i> Proponente mujer
+                  </span>
+                }
               </div>
 
               <h3 class="text-xl font-bold text-gray-900 mb-1 line-clamp-1" [title]="empresa.razonSocial">

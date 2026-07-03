@@ -45,11 +45,11 @@
               <!-- RESUMEN DE REQUISITOS -->
               <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-3">
                 <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Resumen de Requisitos</h3>
-                
+
                 <div class="space-y-2">
                   <div class="flex justify-between text-xs">
                     <span class="text-gray-500">Presupuesto:</span>
-                    <span class="font-bold text-gray-700">{{ requisitos()?.presupuesto | currency:'COP':'symbol':'1.0-0' }}</span>
+                    <span class="font-bold text-gray-700">{{ requisitos()?.presupuesto | currency:'COP':'symbol':'1.2-2' }}</span>
                   </div>
                   <div class="flex justify-between text-xs">
                     <span class="text-gray-500">Experiencia Gral:</span>
@@ -61,18 +61,18 @@
                   </div>
                   <div class="flex justify-between text-xs">
                     <span class="text-gray-500">K Residual Req:</span>
-                    <span class="font-bold text-gray-700">{{ requisitos()?.kresidualProceso | currency:'COP':'symbol':'1.0-0' }}</span>
+                    <span class="font-bold text-gray-700">{{ requisitos()?.kresidualProceso | currency:'COP':'symbol':'1.2-2' }}</span>
                   </div>
                 </div>
 
                 <div class="pt-2 border-t border-gray-200 grid grid-cols-2 gap-2">
                   <div class="text-[10px]">
                     <span class="text-gray-400 block">Liquidez:</span>
-                    <span class="font-bold text-gray-600">≥ {{ requisitos()?.liquidez }}</span>
+                    <span class="font-bold text-gray-600">≥ {{ requisitos()?.liquidez | number:'1.0-4' }}</span>
                   </div>
                   <div class="text-[10px]">
                     <span class="text-gray-400 block">Endeudamiento:</span>
-                    <span class="font-bold text-gray-600">≤ {{ requisitos()?.endeudamiento }}%</span>
+                    <span class="font-bold text-gray-600">≤ {{ requisitos()?.endeudamiento | number:'1.0-4' }}%</span>
                   </div>
                 </div>
               </div>
@@ -116,7 +116,7 @@
       <button
         (click)="analizar()"
         [disabled]="loadingAnalisis() || !hasRequisitos() || selectedEmpresasIds().size === 0"
-        class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+        class="cursor-pointer w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
       >
         @if (loadingAnalisis()) {
           <i class="bx bx-loader-alt animate-spin text-xl"></i>
@@ -247,22 +247,36 @@
                       </thead>
                       <tbody class="divide-y divide-gray-50">
                         @for (det of res.detalles; track $index) {
+                          @let estado = estadoDetalle(det);
                           <tr>
                             <td class="py-4">
                               <div class="font-bold text-gray-700">{{ det.indicador }}</div>
                               @if (det.observacion) {
-                                <div class="text-[10px] text-gray-400 mt-0.5 italic">{{ det.observacion }}</div>
+                                <div class="text-[10px] mt-0.5 italic"
+                                  [ngClass]="{
+                                    'text-amber-600': estado === 'verificar',
+                                    'text-gray-400': estado !== 'verificar'
+                                  }">{{ det.observacion }}</div>
                               }
                             </td>
-                            <td class="py-4 text-gray-600 font-medium">{{ det.valorRequerido }}</td>
-                            <td class="py-4 font-bold text-gray-800">{{ det.valorObtenido }}</td>
+                            <td class="py-4 text-gray-600 font-medium">{{ formatValor(det.valorRequerido) }}</td>
+                            <td class="py-4 font-bold"
+                              [ngClass]="{
+                                'text-gray-300': det.valorObtenido === null,
+                                'text-gray-800': det.valorObtenido !== null
+                              }">{{ valorObtenidoDisplay(det) }}</td>
                             <td class="py-4 text-center">
-                              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full"
+                              <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
                                 [ngClass]="{
-                                  'bg-emerald-100 text-emerald-600': det.cumple,
-                                  'bg-red-100 text-red-600': !det.cumple
+                                  'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200': estado === 'cumple',
+                                  'bg-amber-100 text-amber-700 ring-1 ring-amber-200': estado === 'verificar',
+                                  'bg-red-100 text-red-700 ring-1 ring-red-200': estado === 'no-cumple'
                                 }">
-                                <i class="bx" [class.bx-check]="det.cumple" [class.bx-x]="!det.cumple"></i>
+                                <i class="bx"
+                                  [class.bx-check]="estado === 'cumple'"
+                                  [class.bx-error]="estado === 'verificar'"
+                                  [class.bx-x]="estado === 'no-cumple'"></i>
+                                {{ estado === 'cumple' ? 'Cumple' : estado === 'verificar' ? 'Requiere verificación' : 'No cumple' }}
                               </span>
                             </td>
                           </tr>

@@ -113,6 +113,7 @@ export class RequisitoLicitacionModal implements OnInit {
     this.form.get('presupuesto')?.valueChanges.subscribe(() => this.calcularCapacidadResidual());
   }
 
+  /** Formatea un monto como moneda COP con 2 decimales (los montos son decimales). */
   formatCurrency(value: number | string): string {
     if (value === null || value === undefined || value === '') return '';
     const num = typeof value === 'string' ? parseFloat(value.replace(/[^\d.-]/g, '')) : value;
@@ -120,16 +121,41 @@ export class RequisitoLicitacionModal implements OnInit {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(num);
   }
 
-  onCurrencyInput(event: any, controlName: string): void {
-    let value = event.target.value.replace(/[^\d]/g, '');
-    const numValue = value ? parseInt(value, 10) : 0;
-    this.form.get(controlName)?.setValue(numValue, { emitEvent: false });
-    event.target.value = this.formatCurrency(numValue);
+  /**
+   * Al enfocar un monto mostramos el número crudo (sin símbolo ni miles) para que
+   * el usuario pueda editar decimales cómodamente. No se toca el modelo mientras
+   * escribe: así el binding [value] no sobrescribe lo tecleado.
+   */
+  onCurrencyFocus(event: Event, controlName: string): void {
+    const input = event.target as HTMLInputElement;
+    const value = this.form.get(controlName)?.value;
+    if (value === null || value === undefined || isNaN(value) || value === 0) {
+      input.value = '';
+      return;
+    }
+    input.value = Number(value).toLocaleString('es-CO', {
+      useGrouping: false,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
+  }
+
+  /**
+   * Al salir del campo parseamos permitiendo decimales (coma o punto), guardamos
+   * el valor numérico sin redondear y reformateamos como moneda COP.
+   */
+  onCurrencyBlur(event: Event, controlName: string): void {
+    const input = event.target as HTMLInputElement;
+    const clean = input.value.replace(/[$\s.]/g, '').replace(',', '.');
+    const num = parseFloat(clean);
+    const value = isNaN(num) ? 0 : num;
+    this.form.get(controlName)?.setValue(value, { emitEvent: false });
+    input.value = this.formatCurrency(value);
 
     if (controlName === 'presupuesto') this.calcularCapacidadResidual();
   }

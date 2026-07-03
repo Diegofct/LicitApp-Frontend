@@ -134,6 +134,7 @@ export class ConformacionProponenteComponent implements OnChanges {
   private buildForm(): FormGroup {
     const group = this.fb.group({
       tipoParticipacion: this.fb.control<TipoParticipacion | null>(null, Validators.required),
+      nombre: this.fb.control<string>('', Validators.maxLength(255)),
       observaciones: this.fb.control<string>(''),
       integrantes: this.fb.array([], [this.empresasUnicasValidator, this.sumaPorcentajesValidator]),
     });
@@ -176,6 +177,8 @@ export class ConformacionProponenteComponent implements OnChanges {
   private handleTipoChange(tipo: TipoParticipacion): void {
     if (!tipo) return;
 
+    this.actualizarValidadorNombre(tipo);
+
     if (tipo === 'INDIVIDUAL') {
       this.integrantes.clear();
       const ctrl = this.newIntegranteGroup(null, 100);
@@ -193,6 +196,21 @@ export class ConformacionProponenteComponent implements OnChanges {
       }
     }
     this.recalcSuma();
+  }
+
+  /**
+   * El nombre del proponente es obligatorio para conformaciones plurales
+   * (CONSORCIO / UNION_TEMPORAL) y no aplica para INDIVIDUAL.
+   */
+  private actualizarValidadorNombre(tipo: TipoParticipacion): void {
+    const nombreCtrl = this.form.get('nombre')!;
+    if (tipo === 'CONSORCIO' || tipo === 'UNION_TEMPORAL') {
+      nombreCtrl.setValidators([Validators.required, Validators.maxLength(255)]);
+    } else {
+      nombreCtrl.setValidators(Validators.maxLength(255));
+      nombreCtrl.setValue('', { emitEvent: false });
+    }
+    nombreCtrl.updateValueAndValidity({ emitEvent: false });
   }
 
   // ============ UI actions ============
@@ -262,6 +280,17 @@ export class ConformacionProponenteComponent implements OnChanges {
     return empresa ? `NIT ${empresa.nit}` : '';
   }
 
+  /**
+   * Nombre a mostrar en el resumen para un integrante. Usa el `nombreEmpresa`
+   * de la respuesta y, si no viene, lo resuelve desde la lista de empresas por
+   * `empresaId` para evitar mostrar "?".
+   */
+  nombreIntegrante(integrante: { empresaId: number; nombreEmpresa?: string }): string {
+    if (integrante.nombreEmpresa?.trim()) return integrante.nombreEmpresa;
+    const empresa = this.empresas.find((e) => e.id === integrante.empresaId);
+    return empresa?.razonSocial ?? `Empresa #${integrante.empresaId}`;
+  }
+
   iniciales(razonSocial: string): string {
     if (!razonSocial) return '?';
     return razonSocial
@@ -308,9 +337,11 @@ export class ConformacionProponenteComponent implements OnChanges {
       this.form = this.buildForm();
       this.form.patchValue({
         tipoParticipacion: c.tipoParticipacion,
+        nombre: c.nombre ?? '',
         observaciones: c.observaciones ?? '',
       });
       this.tipoActual.set(c.tipoParticipacion);
+      this.actualizarValidadorNombre(c.tipoParticipacion);
       // Limpiar y poblar integrantes
       this.integrantes.clear();
       c.integrantes.forEach((i) => {
@@ -365,9 +396,13 @@ export class ConformacionProponenteComponent implements OnChanges {
       porcentajeParticipacion: number;
     }[];
 
+    const esPlural = tipo === 'CONSORCIO' || tipo === 'UNION_TEMPORAL';
+    const nombre = (this.form.get('nombre')!.value || '').trim();
+
     const request: ConformacionRequest = {
       cuadroDeObraId: this.cuadroDeObraId,
       tipoParticipacion: tipo,
+      nombre: esPlural ? nombre : undefined,
       observaciones: this.form.get('observaciones')!.value || undefined,
       integrantes: integrantesRaw.map((i) => ({
         empresaId: i.empresaId,

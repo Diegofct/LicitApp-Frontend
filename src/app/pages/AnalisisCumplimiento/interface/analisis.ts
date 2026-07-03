@@ -1,8 +1,19 @@
+/**
+ * Estado explícito de cada requisito evaluado. Es la fuente de verdad para la
+ * representación visual: no se debe inferir del texto de `observacion`.
+ * REQUIERE_VERIFICACION viene con `cumple=false` pero NO es un incumplimiento.
+ */
+export type EstadoCumplimiento = 'CUMPLE' | 'NO_CUMPLE' | 'REQUIERE_VERIFICACION';
+
 export interface DetalleAnalisis {
   indicador: string;
   valorRequerido: string | number;
-  valorObtenido: string | number;
+  /** Valor real de la empresa. `null` cuando el indicador es indeterminado. */
+  valorObtenido: string | number | null;
   cumple: boolean;
+  /** Estado explícito del backend. Fuente de verdad para pintar el detalle. */
+  estado: EstadoCumplimiento;
+  /** Texto humano de apoyo; puede repetir el estado. No parsear. */
   observacion?: string;
 }
 

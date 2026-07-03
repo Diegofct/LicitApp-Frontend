@@ -36,6 +36,13 @@
             </span>
           </div>
 
+          @if (conformacion.nombre) {
+            <div class="flex items-center justify-between border-t border-gray-100 pt-3">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Nombre</span>
+              <span class="text-sm font-bold text-gray-800 truncate ml-3">{{ conformacion.nombre }}</span>
+            </div>
+          }
+
           <div class="border-t border-gray-100 pt-3 space-y-2">
             <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Integrantes</p>
             @for (i of conformacion.integrantes; track i.id) {
