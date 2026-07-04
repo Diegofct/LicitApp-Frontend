@@ -7,7 +7,7 @@ import { EmpresaService } from '../../Empresa/service/empresa.service';
 import { AnalisisCumplimientoService } from '../service/analisis.service';
 import { CuadroDeObraItem, RequisitoLicitacion } from '../../CuadroDeObra/interface/cuadro-de-obra';
 import { Empresa } from '../../Empresa/interface/empresa';
-import { AnalisisResponse } from '../interface/analisis';
+import { AnalisisResponse, DetalleAnalisis } from '../interface/analisis';
 import { ConformacionProponenteComponent } from '../../../components/conformacion-proponente/conformacion-proponente';
 import { forkJoin } from 'rxjs';
 
@@ -177,6 +177,85 @@ analizar(): void {
 
   getEmpresaNombre(id: number): string {
     return this.empresas().find(e => e.id === id)?.razonSocial || 'Empresa no encontrada';
+  }
+
+  /**
+   * Clasifica un detalle del análisis para pintarlo a partir del estado explícito
+   * del backend (nunca se infiere del texto de `observacion`):
+   * - 'cumple' (verde): CUMPLE.
+   * - 'verificar' (ámbar): REQUIERE_VERIFICACION. Viene con `cumple=false` pero
+   *   NO debe verse como incumplimiento rojo, sino como dato a confirmar.
+   * - 'no-cumple' (rojo): NO_CUMPLE, incumplimiento real.
+   */
+  estadoDetalle(det: DetalleAnalisis): 'verificar' | 'cumple' | 'no-cumple' {
+    switch (det.estado) {
+      case 'CUMPLE':
+        return 'cumple';
+      case 'REQUIERE_VERIFICACION':
+        return 'verificar';
+      case 'NO_CUMPLE':
+        return 'no-cumple';
+      default:
+        // Salvaguarda por si llegara un estado desconocido.
+        return det.cumple ? 'cumple' : 'no-cumple';
+    }
+  }
+
+  /** Valor a mostrar en la columna "Obtenido": "—" cuando es null/indeterminado. */
+  valorObtenidoDisplay(det: DetalleAnalisis): string | number {
+    return this.formatValor(det.valorObtenido);
+  }
+
+  /**
+   * Formatea un valor para la tabla de resultados.
+   *
+   * - `null`/`undefined`/vacío => "—".
+   * - Números (o strings puramente numéricos) con magnitud ≥ 1000 => notación
+   *   colombiana de miles/millones con apóstrofo en los millones (1'000.000).
+   * - Ratios y números pequeños (liquidez, endeudamiento, etc.) o strings con
+   *   operadores/unidades ("≥ 1.5", "60%") se devuelven sin alterar.
+   */
+  formatValor(valor: string | number | null | undefined): string | number {
+    if (valor === null || valor === undefined || valor === '') return '—';
+
+    // Strings no numéricos (operadores, unidades, ya formateados): sin tocar.
+    if (typeof valor === 'string' && !/^-?\d+(\.\d+)?$/.test(valor.trim())) {
+      return valor;
+    }
+
+    const num = typeof valor === 'number' ? valor : Number(valor);
+    if (Number.isNaN(num)) return valor;
+
+    // Ratios / cantidades pequeñas: se conservan tal cual.
+    if (Math.abs(num) < 1000) return valor;
+
+    return this.formatoMillonesCO(num);
+  }
+
+  /**
+   * Aplica la notación colombiana donde el separador de miles es "." y el de
+   * millones es "'": 1000000 -> "1'000.000", 123456789 -> "123'456.789".
+   * El monto se redondea a entero (sin decimales), igual que el resumen.
+   */
+  private formatoMillonesCO(valor: number): string {
+    const negativo = valor < 0;
+    const entero = Math.abs(Math.round(valor)).toString();
+
+    let resultado = '';
+    let enGrupo = 0;
+    let separadores = 0;
+    for (let i = entero.length - 1; i >= 0; i--) {
+      resultado = entero[i] + resultado;
+      enGrupo++;
+      if (enGrupo === 3 && i > 0) {
+        // Separadores alternados desde la derecha: miles ".", millones "'", etc.
+        resultado = (separadores % 2 === 0 ? '.' : "'") + resultado;
+        separadores++;
+        enGrupo = 0;
+      }
+    }
+
+    return (negativo ? '-' : '') + resultado;
   }
 
   /** Actualiza el % de simulación desde el control, acotado a 1–99. */

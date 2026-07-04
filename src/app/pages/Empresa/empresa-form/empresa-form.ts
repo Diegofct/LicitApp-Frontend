@@ -3,16 +3,29 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { EmpresaService } from '../service/empresa.service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Empresa, IndicadoresFinancieros, Experiencia, CapacidadResidual } from '../interface/empresa';
+import {
+  Empresa,
+  IndicadoresFinancieros,
+  Experiencia,
+  CapacidadResidual,
+  RupExtraido,
+  CierreFiscalExtraido,
+} from '../interface/empresa';
 import { Tabs, Tab } from '../../../components/tabs/tabs';
+import { IndicadorValorComponent } from '../../../components/indicador-valor/indicador-valor';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { of } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+
+type TamanoEmpresa = Empresa['tamanoEmpresa'];
+const TAMANOS_VALIDOS: TamanoEmpresa[] = ['GRANDE', 'MEDIANA', 'PEQUEÑA', 'MICROEMPRESA'];
+type RupUploadEstado = 'idle' | 'extracting' | 'error';
 
 @Component({
   selector: 'app-empresa-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, Tabs, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, Tabs, RouterLink, IndicadorValorComponent],
   templateUrl: './empresa-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -40,6 +53,20 @@ export class EmpresaFormComponent implements OnInit {
   empresaNit = signal<string | null>(null);
   empresaId = signal<number | null>(null);
 
+  // --- EXTRACCIÓN POR IA (RUP) ---
+  rupEstado = signal<RupUploadEstado>('idle');
+  isDragging = signal(false);
+  archivoNombre = signal<string | null>(null);
+  rupCargado = signal(false);
+  rupError = signal<{ mensaje: string; reintentable: boolean } | null>(null);
+  advertenciasIA = signal<string[]>([]);
+  cierresExtraidos = signal<CierreFiscalExtraido[]>([]);
+  cierreCargado = signal<number | null>(null);
+  /** Rutas de controles precargados por la IA y aún sin validar por el usuario. */
+  private camposIA = signal<Set<string>>(new Set());
+  /** Último archivo subido, para permitir reintentar tras un error 500. */
+  private ultimoArchivo: File | null = null;
+
   // --- FORMULARIO ---
   empresaForm: FormGroup = this.fb.group({
     nit: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
@@ -49,6 +76,8 @@ export class EmpresaFormComponent implements OnInit {
     correo: ['', [Validators.required, Validators.email]],
     numeroProponenteCcb: ['', Validators.required],
     tamanoEmpresa: ['MICROEMPRESA', Validators.required],
+    mipyme: [false],
+    proponenteMujer: [false],
     representanteLegal: ['', Validators.required],
     identificacionRepresentanteLegal: ['', Validators.required],
     fechaInscripcion: ['', Validators.required],
@@ -188,6 +217,8 @@ export class EmpresaFormComponent implements OnInit {
           correo: empresa.correo,
           numeroProponenteCcb: empresa.numeroProponenteCcb,
           tamanoEmpresa: empresa.tamanoEmpresa,
+          mipyme: empresa.mipyme ?? false,
+          proponenteMujer: empresa.proponenteMujer ?? false,
           representanteLegal: empresa.representanteLegal,
           identificacionRepresentanteLegal: empresa.identificacionRepresentanteLegal,
           fechaInscripcion: empresa.fechaInscripcion,
@@ -373,5 +404,227 @@ export class EmpresaFormComponent implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  // ============================================================
+  //  EXTRACCIÓN POR IA DEL RUP (drag & drop + precarga)
+  // ============================================================
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    if (this.rupEstado() === 'extracting') return;
+    this.isDragging.set(true);
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragging.set(false);
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragging.set(false);
+    if (this.rupEstado() === 'extracting') return;
+    const file = event.dataTransfer?.files?.[0];
+    if (file) this.procesarArchivo(file);
+  }
+
+  onArchivoSeleccionado(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) this.procesarArchivo(file);
+    // Permitir volver a seleccionar el mismo archivo
+    input.value = '';
+  }
+
+  reintentarExtraccion(): void {
+    if (this.ultimoArchivo) this.extraerRup(this.ultimoArchivo);
+  }
+
+  private procesarArchivo(file: File): void {
+    const esPdf =
+      file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    if (!esPdf) {
+      this.rupEstado.set('error');
+      this.rupError.set({
+        mensaje: 'El archivo debe ser un PDF del RUP. Selecciona un archivo .pdf válido.',
+        reintentable: false,
+      });
+      return;
+    }
+    this.archivoNombre.set(file.name);
+    this.extraerRup(file);
+  }
+
+  private extraerRup(file: File): void {
+    this.ultimoArchivo = file;
+    this.rupError.set(null);
+    this.rupEstado.set('extracting');
+
+    this.empresaService.extraerRup(file).subscribe({
+      next: (borrador) => {
+        this.aplicarBorrador(borrador);
+        this.rupCargado.set(true);
+        this.rupEstado.set('idle');
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('Error al extraer RUP con IA:', err);
+        if (err.status === 422) {
+          this.rupError.set({
+            mensaje:
+              'No pudimos leer este documento como un RUP. Asegúrate de subir el PDF del RUP completo y legible.',
+            reintentable: false,
+          });
+        } else if (err.status === 500) {
+          this.rupError.set({
+            mensaje:
+              'El servicio de IA no está disponible en este momento. Puedes reintentar la extracción.',
+            reintentable: true,
+          });
+        } else {
+          this.rupError.set({
+            mensaje: 'Ocurrió un error al procesar el RUP. Inténtalo de nuevo.',
+            reintentable: true,
+          });
+        }
+        this.rupEstado.set('error');
+      },
+    });
+  }
+
+  /** Precarga el formulario con el borrador devuelto por la IA. */
+  private aplicarBorrador(d: RupExtraido): void {
+    const ia = new Set<string>();
+    const set = (path: string, valor: unknown): void => {
+      if (valor === null || valor === undefined || valor === '') return;
+      const control = this.empresaForm.get(path);
+      if (!control) return;
+      control.setValue(valor, { emitEvent: false });
+      control.markAsPristine();
+      ia.add(path);
+    };
+
+    set('nit', d.nit);
+    set('razonSocial', d.razonSocial);
+    set('direccion', d.direccion);
+    set('telefono', d.telefono);
+    set('correo', d.correo);
+    set('numeroProponenteCcb', d.numeroProponenteCcb);
+    set('representanteLegal', d.representanteLegal);
+    set('identificacionRepresentanteLegal', d.identificacionRepresentanteLegal);
+    set('fechaInscripcion', this.normalizarFecha(d.fechaInscripcion));
+    set('fechaUltimaRenovacion', this.normalizarFecha(d.fechaUltimaRenovacion));
+
+    // tamañoEmpresa: solo aceptamos un valor válido del enum
+    const tamano = (d.tamanoEmpresa || '').toUpperCase() as TamanoEmpresa;
+    if (TAMANOS_VALIDOS.includes(tamano)) set('tamanoEmpresa', tamano);
+
+    // Experiencias: reemplazamos las filas por las extraídas
+    const exps = (d.experiencias || []).filter((e) => e !== null);
+    if (exps.length) {
+      this.experiencias.clear();
+      exps.forEach((exp, i) => {
+        this.agregarExperiencia({
+          contratista: exp.contratista || '',
+          entidadContratante: exp.entidadContratante || '',
+          valorSMMLV: exp.valorSMMLV ?? 0,
+          porcentajeParticipacion: exp.porcentajeParticipacion ?? 100,
+          codigosUNSPSC: exp.codigosUNSPSC || [],
+        });
+        // Marcamos como sugeridos por IA los campos que realmente trajeron dato
+        if (exp.contratista) ia.add(`experiencias.${i}.contratista`);
+        if (exp.entidadContratante) ia.add(`experiencias.${i}.entidadContratante`);
+        if (exp.valorSMMLV != null) ia.add(`experiencias.${i}.valorSMMLV`);
+        if (exp.porcentajeParticipacion != null) ia.add(`experiencias.${i}.porcentajeParticipacion`);
+        if (exp.codigosUNSPSC?.length) ia.add(`experiencias.${i}.codigosUNSPSC`);
+      });
+      this.experiencias.markAsPristine();
+    }
+
+    this.camposIA.set(ia);
+
+    // Cierres fiscales: se ofrecen para que el usuario elija cuál cargar
+    const cierres = (d.cierresFiscales || []).filter((c) => c !== null);
+    this.cierresExtraidos.set(cierres);
+    this.cierreCargado.set(null);
+
+    // Si solo hay un cierre, lo cargamos automáticamente
+    if (cierres.length === 1) {
+      this.cargarCierre(cierres[0]);
+    }
+
+    this.advertenciasIA.set(d.advertencias || []);
+  }
+
+  /** Carga un cierre fiscal extraído en la pestaña de Datos Financieros. */
+  cargarCierre(cierre: CierreFiscalExtraido): void {
+    const grupo = this.empresaForm.get('indicadores');
+    if (!grupo) return;
+
+    const ia = new Set(this.camposIA());
+    const setI = (key: string, valor: number | null): void => {
+      if (valor === null || valor === undefined) return;
+      const control = grupo.get(key);
+      if (!control) return;
+      control.setValue(valor, { emitEvent: false });
+      control.markAsPristine();
+      ia.add(`indicadores.${key}`);
+    };
+
+    setI('anioCierre', cierre.anioCierre);
+    setI('activoCorriente', cierre.activoCorriente);
+    setI('pasivoCorriente', cierre.pasivoCorriente);
+    setI('activoTotal', cierre.activoTotal);
+    setI('pasivoTotal', cierre.pasivoTotal);
+    setI('utilidadOperacional', cierre.utilidadOperacional);
+    setI('gastosInteres', cierre.gastosInteres);
+
+    this.camposIA.set(ia);
+    this.cierreCargado.set(cierre.anioCierre);
+
+    // Disparamos el cálculo de indicadores con los nuevos valores
+    this.calculatingIndicadores.set(true);
+    this.empresaService.calcularIndicadores(grupo.value).subscribe({
+      next: (res) => {
+        this.indicadoresCalculados.set(res);
+        this.calculatingIndicadores.set(false);
+      },
+      error: () => this.calculatingIndicadores.set(false),
+    });
+
+    this.activeTabId.set('financiero');
+  }
+
+  descartarBorradorIA(): void {
+    this.rupCargado.set(false);
+    this.rupEstado.set('idle');
+    this.rupError.set(null);
+    this.archivoNombre.set(null);
+    this.advertenciasIA.set([]);
+    this.cierresExtraidos.set([]);
+    this.cierreCargado.set(null);
+    this.camposIA.set(new Set());
+    this.ultimoArchivo = null;
+  }
+
+  descartarAdvertencias(): void {
+    this.advertenciasIA.set([]);
+  }
+
+  /**
+   * Indica si un campo fue precargado por la IA y el usuario aún no lo ha editado.
+   * Al editarlo (control `dirty`) el indicador desaparece automáticamente.
+   */
+  esSugeridoIA(path: string): boolean {
+    if (!this.camposIA().has(path)) return false;
+    const control = this.empresaForm.get(path);
+    return !!control && control.pristine;
+  }
+
+  /** Normaliza una fecha a YYYY-MM-DD para inputs type="date". */
+  private normalizarFecha(fecha: string | null): string | null {
+    if (!fecha) return null;
+    const match = /^\d{4}-\d{2}-\d{2}/.exec(fecha);
+    return match ? match[0] : fecha;
   }
 }

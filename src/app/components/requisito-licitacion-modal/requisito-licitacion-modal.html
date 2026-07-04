@@ -116,19 +116,21 @@
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Capital de Trabajo</label>
-            <input type="text"
+            <input type="text" inputmode="decimal"
               [value]="formatCurrency(form.get('capitalTrabajo')?.value)"
-              (input)="onCurrencyInput($event, 'capitalTrabajo')"
+              (focus)="onCurrencyFocus($event, 'capitalTrabajo')"
+              (blur)="onCurrencyBlur($event, 'capitalTrabajo')"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              placeholder="$ 0">
+              placeholder="$ 0,00">
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Patrimonio Requerido</label>
-            <input type="text"
+            <input type="text" inputmode="decimal"
               [value]="formatCurrency(form.get('patrimonio')?.value)"
-              (input)="onCurrencyInput($event, 'patrimonio')"
+              (focus)="onCurrencyFocus($event, 'patrimonio')"
+              (blur)="onCurrencyBlur($event, 'patrimonio')"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              placeholder="$ 0">
+              placeholder="$ 0,00">
           </div>
         </div>
       </div>
@@ -142,31 +144,31 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Índice de Liquidez</label>
-            <input type="number" formControlName="liquidez" step="0.01"
+            <input type="number" formControlName="liquidez" step="0.0001"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               placeholder="≥ 1.0">
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Nivel de Endeudamiento</label>
-            <input type="number" formControlName="endeudamiento" step="0.01"
+            <input type="number" formControlName="endeudamiento" step="0.0001"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               placeholder="≤ 0.7">
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Razón Cobertura Interés</label>
-            <input type="number" formControlName="razonCoberturaInteres" step="0.01"
+            <input type="number" formControlName="razonCoberturaInteres" step="0.0001"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               placeholder="≥ 1.0">
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Rentabilidad Patrimonio</label>
-            <input type="number" formControlName="rentabilidadPatrimonio" step="0.01"
+            <input type="number" formControlName="rentabilidadPatrimonio" step="0.0001"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               placeholder="0.00">
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Rentabilidad Activo</label>
-            <input type="number" formControlName="rentabilidadActivo" step="0.01"
+            <input type="number" formControlName="rentabilidadActivo" step="0.0001"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               placeholder="0.00">
           </div>

@@ -68,13 +68,16 @@
             <span class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-indigo-100 text-indigo-700 border border-indigo-200">
               {{ conf.tipoParticipacion === 'INDIVIDUAL' ? 'Individual' : (conf.tipoParticipacion === 'CONSORCIO' ? 'Consorcio' : 'Unión Temporal') }}
             </span>
+            @if (conf.nombre) {
+              <span class="text-sm font-bold text-gray-800">{{ conf.nombre }}</span>
+            }
             <div class="flex items-center gap-2 flex-wrap">
               @for (i of conf.integrantes; track i.id) {
                 <span class="inline-flex items-center gap-1.5 pl-1 pr-2.5 py-0.5 rounded-full bg-white border border-gray-200 text-xs">
                   <span class="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold">
-                    {{ iniciales(i.nombreEmpresa) }}
+                    {{ iniciales(nombreIntegrante(i)) }}
                   </span>
-                  <span class="font-medium text-gray-700">{{ i.nombreEmpresa }}</span>
+                  <span class="font-medium text-gray-700">{{ nombreIntegrante(i) }}</span>
                   <span class="text-gray-400 tabular-nums">{{ i.porcentajeParticipacion }}%</span>
                 </span>
               }

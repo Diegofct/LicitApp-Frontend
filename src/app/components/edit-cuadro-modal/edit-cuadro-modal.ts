@@ -27,6 +27,9 @@ export class EditCuadroModal implements OnInit {
   @Output() close = new EventEmitter<void>();
   @Output() saved = new EventEmitter<void>();
 
+  /** Salario Mínimo Mensual Legal Vigente en Colombia (2026). */
+  readonly SMMLV_2026 = 1750905;
+
   form!: FormGroup;
   loading = false;
 
@@ -72,6 +75,46 @@ export class EditCuadroModal implements OnInit {
     if (!dateStr) return '';
     const date = new Date(dateStr);
     return !isNaN(date.getTime()) ? date.toISOString().slice(0, 16) : '';
+  }
+
+  /** Formatea un valor numérico como moneda colombiana (sin decimales). */
+  formatCurrency(value: number | string | null | undefined): string {
+    if (value === null || value === undefined || value === '') return '';
+    const num = typeof value === 'string' ? parseFloat(value.replace(/[^\d.-]/g, '')) : value;
+    if (isNaN(num)) return '';
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(num);
+  }
+
+  /** Captura la digitación del presupuesto, lo almacena como número y recalcula el SMMLV. */
+  onMontoInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const digits = target.value.replace(/[^\d]/g, '');
+    const numValue = digits ? parseInt(digits, 10) : 0;
+
+    this.form.get('monto')?.setValue(numValue, { emitEvent: false });
+    target.value = numValue ? this.formatCurrency(numValue) : '';
+    this.calcularSMMLV(numValue);
+  }
+
+  /** valorSMMLV = Presupuesto / SMMLV vigente (redondeado a 2 decimales). */
+  private calcularSMMLV(monto: number): void {
+    const valor = monto && monto > 0 ? parseFloat((monto / this.SMMLV_2026).toFixed(2)) : 0;
+    this.form.get('valorSMMLV')?.setValue(valor, { emitEvent: false });
+  }
+
+  /** Valor SMMLV formateado para mostrar en el campo calculado. */
+  get valorSMMLVFormateado(): string {
+    const valor = this.form.get('valorSMMLV')?.value;
+    if (!valor) return '0,00';
+    return new Intl.NumberFormat('es-CO', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(valor);
   }
 
   onSubmit(): void {

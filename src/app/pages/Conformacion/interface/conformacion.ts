@@ -15,6 +15,8 @@ export interface IntegranteResponse {
 export interface ConformacionRequest {
   cuadroDeObraId: number;
   tipoParticipacion: TipoParticipacion;
+  /** Obligatorio para CONSORCIO y UNION_TEMPORAL; no aplica para INDIVIDUAL. Máx. 255 caracteres. */
+  nombre?: string;
   observaciones?: string;
   integrantes: IntegranteRequest[];
 }
@@ -23,6 +25,7 @@ export interface ConformacionResponse {
   id: number;
   cuadroDeObraId: number;
   tipoParticipacion: TipoParticipacion;
+  nombre?: string;
   fechaConformacion: string;
   observaciones?: string;
   integrantes: IntegranteResponse[];
