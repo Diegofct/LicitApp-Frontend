@@ -21,7 +21,8 @@
       <tbody class="bg-white divide-y divide-gray-200">
         @if (data && data.length > 0) {
           @for (item of data; track trackByFn($index, item)) {
-            <tr class="hover:bg-gray-50 transition-colors duration-150">
+            <tr class="hover:bg-gray-50 transition-colors duration-150"
+                [ngClass]="rowClassFn ? rowClassFn(item) : ''">
               @for (col of columns; track col.key) {
                 <td
                   [style.width]="col.width"
@@ -51,8 +52,8 @@
                         type="button"
                         [aria-label]="col.label || 'Acción'"
                         class="cursor-pointer inline-flex items-center p-2 text-green-600 hover:bg-blue-50 rounded-full transition-all duration-200">
-                        @if (col.actionIcon) {
-                          <i [class]="col.actionIcon" class="text-xl"></i>
+                        @if (col.actionIconFn || col.actionIcon) {
+                          <i [class]="col.actionIconFn ? col.actionIconFn(item) : col.actionIcon" class="text-xl"></i>
                         } @else {
                           <span>Acción</span>
                         }

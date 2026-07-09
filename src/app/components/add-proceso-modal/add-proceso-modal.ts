@@ -42,8 +42,8 @@ export class AddProcesoModal implements OnInit {
       departamento: ['', Validators.required],
       municipio: ['', Validators.required],
       experiencia: ['', Validators.required],
-      plazo: ['', Validators.required],
-      anticipo: ['', Validators.required],
+      plazo: [null, [Validators.required, Validators.min(0)]],
+      anticipo: [null, [Validators.required, Validators.min(0), Validators.max(100)]],
       observacion: [''],
       cuadroDeObraEstado: ['POR_PRESENTAR', Validators.required]
     });

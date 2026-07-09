@@ -1,4 +1,4 @@
-<header class="h-16 flex-shrink-0 bg-gray-900 border-b border-gray-700 shadow-md flex items-center justify-end px-4 sm:px-6">
+<header class="h-20 flex-shrink-0 bg-gray-900 border-b border-gray-700 shadow-md flex items-center justify-end px-4 sm:px-6">
   @if (usuario(); as u) {
     <div class="relative">
       <button
@@ -35,7 +35,7 @@
             type="button"
             (click)="logout()"
             role="menuitem"
-            class="flex w-full items-center gap-2 px-4 py-3 text-sm font-medium text-red-400 transition-colors hover:bg-gray-700/60 rounded-b-xl focus:outline-none">
+            class="cursor-pointer flex w-full items-center gap-2 px-4 py-3 text-sm font-medium text-red-400 transition-colors hover:bg-gray-700/60 rounded-b-xl focus:outline-none">
             <i class="bx bx-log-out text-lg"></i>
             Cerrar sesión
           </button>

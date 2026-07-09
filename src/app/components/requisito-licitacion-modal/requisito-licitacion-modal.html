@@ -89,12 +89,22 @@
               rows="2"
               placeholder="Describa la experiencia secundaria"></textarea>
           </div>
-          <div class="space-y-1 md:col-span-2">
-            <div class="max-w-[200px]">
+          <div class="space-y-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+            <div>
               <label class="block text-sm font-medium text-gray-700">Nº de Contratos</label>
               <input type="number" formControlName="contrato"
                 class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 placeholder="1">
+            </div>
+            <!-- (RF5) Plazo del proceso en meses, precargado desde el Cuadro de Obra -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Plazo del Proceso</label>
+              <div class="relative">
+                <input type="number" min="0" formControlName="plazo"
+                  class="w-full px-4 py-2 pr-16 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  placeholder="0">
+                <span class="absolute right-3 top-2.5 text-gray-400 font-medium text-sm">meses</span>
+              </div>
             </div>
           </div>
         </div>
@@ -102,10 +112,25 @@
 
       <!-- Sección: Capital de Trabajo y Patrimonio Requerido -->
       <div class="mb-8">
-        <h3 class="flex items-center gap-2 text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 border-b pb-2">
-          <i class="bx bx-stats"></i>
-          Capital de Trabajo y Patrimonio Requerido
-        </h3>
+        <div class="flex items-center justify-between flex-wrap gap-2 border-b pb-2 mb-4">
+          <h3 class="flex items-center gap-2 text-sm font-semibold text-blue-600 uppercase tracking-wider">
+            <i class="bx bx-stats"></i>
+            Capital de Trabajo y Patrimonio Requerido
+          </h3>
+          <!-- (RF4) Rango de Presupuesto Oficial en SMMLV (solo informativo) -->
+          @if (rangoSmmlv(); as r) {
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+              [ngClass]="r === 'RANGO_1'
+                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                : 'bg-indigo-50 text-indigo-700 border border-indigo-200'"
+              [title]="'Presupuesto Oficial del proceso: ' + (valorSmmlv() | number:'1.0-0') + ' SMMLV (umbral: 40.000)'">
+              <i class="bx bx-bar-chart-alt-2"></i>
+              {{ r === 'RANGO_1' ? 'Rango 1 · < 40.000 SMMLV' : 'Rango 2 · ≥ 40.000 SMMLV' }}
+            </span>
+          } @else {
+            <span class="text-xs text-gray-400">SMMLV no disponible</span>
+          }
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Presupuesto PC</label>
@@ -114,14 +139,24 @@
               class="w-full px-4 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-600 cursor-not-allowed outline-none font-medium"
               readonly>
           </div>
+          <!-- (RF1) Capital de Trabajo: calculado y de solo lectura -->
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Capital de Trabajo</label>
-            <input type="text" inputmode="decimal"
+            <label class="block text-sm font-medium text-blue-700">Capital de Trabajo Requerido</label>
+            <input type="text"
               [value]="formatCurrency(form.get('capitalTrabajo')?.value)"
-              (focus)="onCurrencyFocus($event, 'capitalTrabajo')"
-              (blur)="onCurrencyBlur($event, 'capitalTrabajo')"
-              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              placeholder="$ 0,00">
+              class="w-full px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 font-bold cursor-not-allowed outline-none"
+              readonly>
+            @if (desgloseCapitalTrabajo(); as d) {
+              <p class="text-xs text-gray-500 mt-1 italic">
+                @if (d.rama === 'A') {
+                  Rama A: (POE − Anticipo) × 33%
+                } @else {
+                  Rama B: (POE − Anticipo) / plazo × n (n = {{ d.n }})
+                }
+              </p>
+            } @else {
+              <p class="text-xs text-gray-400 mt-1 italic">Ingrese presupuesto y plazo para calcular</p>
+            }
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Patrimonio Requerido</label>
@@ -144,39 +179,48 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Índice de Liquidez</label>
-            <input type="number" formControlName="liquidez" step="0.0001"
-              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-              placeholder="≥ 1.0">
+            <select formControlName="liquidez"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white">
+              @for (op of opciones0a2; track op) {
+                <option [ngValue]="op">{{ op.toFixed(2) }}</option>
+              }
+            </select>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Nivel de Endeudamiento</label>
-            <input type="number" formControlName="endeudamiento" step="0.0001"
-              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-              placeholder="≤ 0.7">
+            <select formControlName="endeudamiento"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white">
+              @for (op of opciones0a1; track op) {
+                <option [ngValue]="op">{{ op.toFixed(2) }}</option>
+              }
+            </select>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Razón Cobertura Interés</label>
-            <input type="number" formControlName="razonCoberturaInteres" step="0.0001"
-              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-              placeholder="≥ 1.0">
+            <select formControlName="razonCoberturaInteres"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white">
+              @for (op of opciones0a1; track op) {
+                <option [ngValue]="op">{{ op.toFixed(2) }}</option>
+              }
+            </select>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Rentabilidad Patrimonio</label>
-            <input type="number" formControlName="rentabilidadPatrimonio" step="0.0001"
-              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-              placeholder="0.00">
+            <select formControlName="rentabilidadPatrimonio"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white">
+              @for (op of opciones0a1; track op) {
+                <option [ngValue]="op">{{ op.toFixed(2) }}</option>
+              }
+            </select>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Rentabilidad Activo</label>
-            <input type="number" formControlName="rentabilidadActivo" step="0.0001"
-              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-              placeholder="0.00">
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">N (Nivel/Factor)</label>
-            <input type="number" formControlName="n" step="0.1"
-              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-              placeholder="1.0">
+            <select formControlName="rentabilidadActivo"
+              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white">
+              @for (op of opciones0a1; track op) {
+                <option [ngValue]="op">{{ op.toFixed(2) }}</option>
+              }
+            </select>
           </div>
         </div>
       </div>
@@ -199,7 +243,7 @@
             <p class="text-xs text-gray-500 mt-1">Este porcentaje afecta el cálculo de la capacidad residual.</p>
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-emerald-700">Capacidad Residual (Calculada)</label>
+            <label class="block text-sm font-medium text-emerald-700">Capacidad Residual Requerida</label>
             <input type="text"
               [value]="formatCurrency(form.get('kresidualProceso')?.value)"
               class="w-full px-4 py-2 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 font-bold cursor-not-allowed outline-none"

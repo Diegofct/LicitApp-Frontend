@@ -15,7 +15,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Busqueda SECOP', route: '/busqueda-secop', icon: 'bx-search', roles: ['ANALISTA', 'ADMIN'] },
   { label: 'Cuadro de Obra', route: '/cuadro-de-obra', icon: 'bx-building-house', roles: ['ANALISTA', 'ADMIN'] },
-  { label: 'Análisis', route: '/analisis-cumplimiento', icon: 'bx-analyse', roles: ['ANALISTA', 'ADMIN'] },
+  { label: 'Evaluación de Viabilidad', route: '/evaluacion-viabilidad', icon: 'bx-analyse', roles: ['ANALISTA', 'ADMIN'] },
   { label: 'Empresas', route: '/empresas', icon: 'bx-group', roles: ['ANALISTA', 'ADMIN'] },
   { label: 'Seguimiento', route: '/seguimiento', icon: 'bx-line-chart', roles: ['ANALISTA', 'PROPIETARIO', 'ADMIN'] },
   { label: 'Resultados', route: '/resultados', icon: 'bx-trophy', roles: ['ANALISTA', 'PROPIETARIO', 'ADMIN'] },

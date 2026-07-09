@@ -31,7 +31,7 @@ export const routes: Routes = [
                 loadComponent: () => import('./pages/CuadroDeObra/cuadro-de-obra/cuadro-de-obra').then(m => m.CuadroDeObra)
             },
             {
-                path: 'analisis-cumplimiento',
+                path: 'evaluacion-viabilidad',
                 canActivate: [roleGuard([...OPERATIVOS])],
                 loadComponent: () => import('./pages/AnalisisCumplimiento/analisis-cumplimiento/analisis-cumplimiento').then(m => m.AnalisisCumplimiento)
             },

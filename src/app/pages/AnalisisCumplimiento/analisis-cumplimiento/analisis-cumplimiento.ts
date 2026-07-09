@@ -52,7 +52,7 @@ export class AnalisisCumplimiento implements OnInit {
     this.cargarProcesos();
     this.cargarEmpresas();
 
-    // Soporta deep-link tipo /analisis-cumplimiento?cuadroId=123&conformacion=1
+    // Soporta deep-link tipo /evaluacion-viabilidad?cuadroId=123&conformacion=1
     const params = this.route.snapshot.queryParamMap;
     const cuadroIdParam = params.get('cuadroId');
     const conformacionFlag = params.get('conformacion');
