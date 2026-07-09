@@ -16,14 +16,20 @@ export class LicitacionesService {
    * Obtiene una lista paginada de licitaciones de obra pública desde el backend.
    * @param page El número de página a solicitar (basado en 0).
    * @param size El número de registros por página.
+   * @param entidad Filtro opcional por nombre de entidad (server-side).
    * @returns Un Observable que emite un objeto de respuesta paginada.
    */
-  obtenerLicitacionesObraPublica(page: number, size: number): Observable<PaginatedResponse<Licitacion>> {
-    const params = new HttpParams()
+  obtenerLicitacionesObraPublica(page: number, size: number, entidad?: string): Observable<PaginatedResponse<Licitacion>> {
+    let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString())
       .set('sort', 'fechaPublicacion,desc')
       .append('sort', 'id,desc'); // Ordenamiento secundario para asegurar estabilidad en la paginación
+
+    const entidadTrim = entidad?.trim();
+    if (entidadTrim) {
+      params = params.set('entidad', entidadTrim);
+    }
 
     return this.http.get<PaginatedResponse<Licitacion>>(this.apiUrl, { params });
   }

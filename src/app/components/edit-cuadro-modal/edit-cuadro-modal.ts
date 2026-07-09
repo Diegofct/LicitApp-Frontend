@@ -64,8 +64,8 @@ export class EditCuadroModal implements OnInit {
       valorSMMLV: [this.item.valorSMMLV, [Validators.required]],
       tipoProyecto: [this.item.tipoProyecto, Validators.required],
       experiencia: [this.item.experiencia, Validators.required],
-      plazo: [this.item.plazo, Validators.required],
-      anticipo: [this.item.anticipo, Validators.required],
+      plazo: [this.item.plazo, [Validators.required, Validators.min(0)]],
+      anticipo: [this.item.anticipo, [Validators.required, Validators.min(0), Validators.max(100)]],
       observacion: [this.item.observacion || ''],
       cuadroDeObraEstado: [this.item.cuadroDeObraEstado, Validators.required],
     });
@@ -210,7 +210,7 @@ export class EditCuadroModal implements OnInit {
     this.showConfirmPresentacion.set(false);
     this.pendingPayload = null;
     this.close.emit();
-    this.router.navigate(['/analisis-cumplimiento'], {
+    this.router.navigate(['/evaluacion-viabilidad'], {
       queryParams: { cuadroId: this.item.id, conformacion: 1 },
     });
   }

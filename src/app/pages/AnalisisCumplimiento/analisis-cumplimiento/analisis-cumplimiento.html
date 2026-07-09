@@ -1,13 +1,13 @@
 <div class="p-4 sm:p-6 md:p-8">
   <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Análisis de Cumplimiento</h1>
-    <p class="text-gray-500 mt-2">Evalúa empresas frente a los requisitos de licitaciones activas.</p>
+    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Evaluación de Viabilidad</h1>
+    <p class="text-gray-500 mt-2">Evalúa la viabilidad de empresas frente a los requisitos de licitaciones.</p>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
     <!-- LADO IZQUIERDO: CONFIGURACIÓN -->
-    <div class="lg:col-span-1 space-y-6">
+    <div class="lg:col-span-4 space-y-6 lg:sticky lg:top-6 lg:self-start">
       <!-- PASO 1: SELECCIÓN DE PROCESO -->
       <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <div class="flex items-center gap-3 mb-4">
@@ -56,8 +56,8 @@
                     <span class="font-bold text-gray-700">{{ requisitos()?.general }}</span>
                   </div>
                   <div class="flex justify-between text-xs">
-                    <span class="text-gray-500">SMMLV Req:</span>
-                    <span class="font-bold text-gray-700">{{ requisitos()?.n }}</span>
+                    <span class="text-gray-500">Plazo (meses):</span>
+                    <span class="font-bold text-gray-700">{{ requisitos()?.plazo }}</span>
                   </div>
                   <div class="flex justify-between text-xs">
                     <span class="text-gray-500">K Residual Req:</span>
@@ -120,16 +120,16 @@
       >
         @if (loadingAnalisis()) {
           <i class="bx bx-loader-alt animate-spin text-xl"></i>
-          Analizando...
+          Evaluando...
         } @else {
           <i class="bx bx-radar text-xl"></i>
-          Ejecutar Análisis
+          Ejecutar Evaluación
         }
       </button>
     </div>
 
-    <!-- LADO DERECHO: EMPRESAS Y RESULTADOS -->
-    <div class="lg:col-span-2 space-y-8">
+    <!-- LADO DERECHO: EMPRESAS -->
+    <div class="lg:col-span-8 space-y-8">
 
       <!-- PASO 2: SELECCIÓN DE EMPRESAS -->
       <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -200,13 +200,18 @@
           </table>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- RESULTADOS Y CONFORMACIÓN (ancho completo) -->
+  <div class="mt-8 space-y-8">
 
       <!-- RESULTADOS -->
       @if (resultados().length > 0) {
         <div class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
             <i class="bx bx-line-chart text-2xl text-indigo-600"></i>
-            Resultados del Análisis
+            Resultados de la Evaluación
           </h3>
 
           <div class="grid grid-cols-1 gap-6">
@@ -236,12 +241,18 @@
                 <!-- Detalle de Indicadores -->
                 <div class="p-6">
                   <div class="overflow-x-auto">
-                    <table class="w-full text-xs text-left">
+                    <table class="w-full text-xs text-left table-fixed min-w-[520px]">
+                      <colgroup>
+                        <col class="w-[40%]">
+                        <col class="w-[18%]">
+                        <col class="w-[18%]">
+                        <col class="w-[24%]">
+                      </colgroup>
                       <thead class="text-gray-400 font-bold uppercase border-b border-gray-100">
                         <tr>
-                          <th class="pb-3">Indicador / Requisito</th>
-                          <th class="pb-3">Requerido</th>
-                          <th class="pb-3">Obtenido</th>
+                          <th class="pb-3 pr-3">Indicador / Requisito</th>
+                          <th class="pb-3 pr-3">Requerido</th>
+                          <th class="pb-3 pr-3">Obtenido</th>
                           <th class="pb-3 text-center">Estado</th>
                         </tr>
                       </thead>
@@ -249,8 +260,8 @@
                         @for (det of res.detalles; track $index) {
                           @let estado = estadoDetalle(det);
                           <tr>
-                            <td class="py-4">
-                              <div class="font-bold text-gray-700">{{ det.indicador }}</div>
+                            <td class="py-4 pr-3 align-top">
+                              <div class="font-bold text-gray-700 break-words">{{ det.indicador }}</div>
                               @if (det.observacion) {
                                 <div class="text-[10px] mt-0.5 italic"
                                   [ngClass]="{
@@ -259,14 +270,14 @@
                                   }">{{ det.observacion }}</div>
                               }
                             </td>
-                            <td class="py-4 text-gray-600 font-medium">{{ formatValor(det.valorRequerido) }}</td>
-                            <td class="py-4 font-bold"
+                            <td class="py-4 pr-3 text-gray-600 font-medium tabular-nums break-words whitespace-normal align-top">{{ formatValor(det.valorRequerido) }}</td>
+                            <td class="py-4 pr-3 font-bold tabular-nums break-words whitespace-normal align-top"
                               [ngClass]="{
                                 'text-gray-300': det.valorObtenido === null,
                                 'text-gray-800': det.valorObtenido !== null
                               }">{{ valorObtenidoDisplay(det) }}</td>
-                            <td class="py-4 text-center">
-                              <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                            <td class="py-4 text-center align-top">
+                              <span class="inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide whitespace-normal text-center"
                                 [ngClass]="{
                                   'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200': estado === 'cumple',
                                   'bg-amber-100 text-amber-700 ring-1 ring-amber-200': estado === 'verificar',
@@ -459,6 +470,5 @@
           </app-conformacion-proponente>
         </div>
       }
-    </div>
   </div>
 </div>

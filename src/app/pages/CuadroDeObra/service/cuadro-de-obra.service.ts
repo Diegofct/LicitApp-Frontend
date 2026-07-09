@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { PaginatedResponse } from '../../Licitaciones/interface/paginated-response';
-import { CuadroDeObraItem, RequisitoLicitacion } from '../interface/cuadro-de-obra';
+import { CuadroDeObraItem, CuadroDeObraRef, RequisitoLicitacion } from '../interface/cuadro-de-obra';
 
 @Injectable({
   providedIn: 'root',
@@ -27,6 +27,15 @@ export class CuadroDeObraService {
       .set('sort', 'id,desc');
 
     return this.http.get<PaginatedResponse<CuadroDeObraItem>>(this.apiUrl, { params });
+  }
+
+  /**
+   * Obtiene la lista liviana (sin paginar) de procesos ya agregados al cuadro de obra.
+   * Se usa para resaltar en la tabla de licitaciones qué procesos ya fueron guardados
+   * y para abrir su detalle en modo lectura (cruce por numeroProceso).
+   */
+  obtenerRefs(): Observable<CuadroDeObraRef[]> {
+    return this.http.get<CuadroDeObraRef[]>(`${this.apiUrl}/refs`);
   }
 
   /**

@@ -22,6 +22,19 @@
   ></app-tabs>
 
   <div class="mt-6">
+    <!-- Leyenda de la marca "nos presentamos" (RF1); el color no es el único indicador -->
+    <div class="flex items-center gap-4 text-xs text-gray-600 mb-3">
+      <span class="inline-flex items-center gap-1.5">
+        <i class="bx bxs-check-circle text-green-600 text-base"></i>
+        Nos presentamos
+      </span>
+      <span class="inline-flex items-center gap-1.5">
+        <i class="bx bxs-x-circle text-rose-600 text-base"></i>
+        No nos presentamos
+      </span>
+      <span class="text-gray-400">· Clic en la columna “Presentación” para alternar.</span>
+    </div>
+
     <!-- Contenedor que envuelve la tabla y la paginación -->
     <div class="w-full overflow-hidden rounded-lg shadow-md bg-white relative">
 
@@ -46,6 +59,7 @@
         <app-modern-table
           [columns]="columnasCuadro()"
           [data]="datos()"
+          [rowClassFn]="rowClass"
           (actionClicked)="onActionClicked($event)"
         ></app-modern-table>
       </div>
@@ -86,18 +100,6 @@
       (close)="showAnalizarModal.set(false)"
       (saved)="loadCuadroDeObra()">
     </app-analizar-pliego-modal>
-  }
-
-  <!-- Modal de Confirmación de Eliminación -->
-  @if (showDeleteConfirm()) {
-    <app-confirm-modal
-      title="Eliminar Proceso"
-      message="¿Estás seguro de que deseas eliminar este proceso del Cuadro de Obra? Esta acción no se puede deshacer."
-      confirmText="Sí, eliminar"
-      cancelText="Cancelar"
-      (confirm)="confirmDeletion()"
-      (cancel)="showDeleteConfirm.set(false)">
-    </app-confirm-modal>
   }
 
   <!-- Modal para Agregar Proceso -->

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, catchError, finalize, of } from 'rxjs';
@@ -29,6 +29,21 @@ export class RequisitoLicitacionModal implements OnInit {
   isEditMode = signal(false);
   private requisitoId: number | null = null;
 
+  // (RF7) Opciones de los índices financieros en pasos de 0.05.
+  readonly opciones0a1: number[] = this.generarOpciones(1);
+  readonly opciones0a2: number[] = this.generarOpciones(2);
+
+  // Valor del proceso en SMMLV (RF4), tomado del Cuadro de Obra.
+  readonly valorSmmlv = signal(0);
+  /** (RF4) Rango de Presupuesto Oficial en SMMLV. `null` si no hay valor válido. */
+  readonly rangoSmmlv = computed<'RANGO_1' | 'RANGO_2' | null>(() => {
+    const v = this.valorSmmlv();
+    if (v <= 0) return null;
+    return v >= 40000 ? 'RANGO_2' : 'RANGO_1';
+  });
+  /** (RF5) Desglose del cálculo del Capital de Trabajo: rama aplicada y n usado. */
+  readonly desgloseCapitalTrabajo = signal<{ rama: 'A' | 'B'; n: number | null } | null>(null);
+
   ngOnInit(): void {
     this.initForm();
     this.setupCalculos();
@@ -49,15 +64,17 @@ export class RequisitoLicitacionModal implements OnInit {
       especifica2: ['', [Validators.required]],
       secundaria: ['', [Validators.required]],
       contrato: [1, [Validators.required, Validators.min(1)]],
+      plazo: [null, [Validators.required, Validators.min(0)]], // (RF5) meses, precargado desde el cuadro
       presupuesto: [0, [Validators.required, Validators.min(0)]],
       patrimonio: [0, [Validators.required, Validators.min(0)]],
-      capitalTrabajo: [0, [Validators.required, Validators.min(0)]],
-      n: [1, [Validators.required, Validators.min(0.1)]],
-      liquidez: [0, [Validators.required, Validators.min(0)]],
-      endeudamiento: [0, [Validators.required, Validators.min(0)]],
-      razonCoberturaInteres: [0, [Validators.required, Validators.min(0)]],
-      rentabilidadPatrimonio: [0, [Validators.required, Validators.min(0)]],
-      rentabilidadActivo: [0, [Validators.required, Validators.min(0)]],
+      // (RF1) Calculado y de solo lectura, como la capacidad residual.
+      capitalTrabajo: [{ value: 0, disabled: true }, [Validators.required, Validators.min(0)]],
+      // (RF7) rangos: 0–2 liquidez; 0–1 el resto.
+      liquidez: [0, [Validators.required, Validators.min(0), Validators.max(2)]],
+      endeudamiento: [0, [Validators.required, Validators.min(0), Validators.max(1)]],
+      razonCoberturaInteres: [0, [Validators.required, Validators.min(0), Validators.max(1)]],
+      rentabilidadPatrimonio: [0, [Validators.required, Validators.min(0), Validators.max(1)]],
+      rentabilidadActivo: [0, [Validators.required, Validators.min(0), Validators.max(1)]],
       kresidualProceso: [{ value: 0, disabled: true }, [Validators.required, Validators.min(0)]],
       poeAnticipo: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
     });
@@ -76,7 +93,7 @@ export class RequisitoLicitacionModal implements OnInit {
         if (requisitos && this.tieneRegistroValido(requisitos)) {
           this.applyExistingData(requisitos);
         } else {
-          this.cargarPresupuestoDesdeCuadro();
+          this.cargarDatosDesdeCuadro();
         }
       });
   }
@@ -90,27 +107,95 @@ export class RequisitoLicitacionModal implements OnInit {
     this.requisitoId = data.id ?? null;
     this.form.patchValue(data);
     this.calcularCapacidadResidual();
+    this.calcularCapitalTrabajo();
+    // (RF4) El valorSMMLV no viene con los requisitos: se toma del Cuadro de Obra.
+    this.cargarValorSmmlv();
   }
 
-  private cargarPresupuestoDesdeCuadro(): void {
-    if (this.monto) {
-      this.form.patchValue({ presupuesto: this.monto });
-      this.calcularCapacidadResidual();
-      return;
-    }
-
+  /** (RF4) Carga el valor del proceso en SMMLV para derivar el rango informativo. */
+  private cargarValorSmmlv(): void {
     this.cuadroService.obtenerCuadroDeObraPorId(this.cuadroObraId).subscribe({
-      next: (cuadro) => {
-        this.form.patchValue({ presupuesto: cuadro.monto });
-        this.calcularCapacidadResidual();
-      },
-      error: (err) => console.error('Error al cargar presupuesto:', err),
+      next: (cuadro) => this.valorSmmlv.set(cuadro.valorSMMLV ?? 0),
+      error: (err) => console.error('Error al cargar el valor SMMLV del cuadro:', err),
     });
   }
 
+  /**
+   * (RF5) Al crear requisitos por primera vez, precarga desde el Cuadro de Obra el
+   * presupuesto, el % de anticipo y el plazo (meses) ya digitados para el proceso.
+   */
+  private cargarDatosDesdeCuadro(): void {
+    this.cuadroService.obtenerCuadroDeObraPorId(this.cuadroObraId).subscribe({
+      next: (cuadro) => {
+        this.valorSmmlv.set(cuadro.valorSMMLV ?? 0); // (RF4)
+        this.form.patchValue({
+          presupuesto: this.monto ?? cuadro.monto,
+          poeAnticipo: cuadro.anticipo ?? 0,
+          plazo: cuadro.plazo ?? null,
+        });
+        this.calcularCapacidadResidual();
+        this.calcularCapitalTrabajo();
+      },
+      error: (err) => console.error('Error al cargar datos del cuadro:', err),
+    });
+  }
+
+  /** (RF7) Genera [0, 0.05, … , max] para los selects de índices financieros. */
+  private generarOpciones(max: number): number[] {
+    const pasos = Math.round(max / 0.05);
+    return Array.from({ length: pasos + 1 }, (_, i) => Math.round(i * 5) / 100);
+  }
+
   private setupCalculos(): void {
-    this.form.get('poeAnticipo')?.valueChanges.subscribe(() => this.calcularCapacidadResidual());
-    this.form.get('presupuesto')?.valueChanges.subscribe(() => this.calcularCapacidadResidual());
+    // (RF3) El Capital de Trabajo se recalcula al cambiar plazo, presupuesto o % anticipo.
+    const recalcular = () => {
+      this.calcularCapacidadResidual();
+      this.calcularCapitalTrabajo();
+    };
+    this.form.get('poeAnticipo')?.valueChanges.subscribe(recalcular);
+    this.form.get('presupuesto')?.valueChanges.subscribe(recalcular);
+    this.form.get('plazo')?.valueChanges.subscribe(() => this.calcularCapitalTrabajo());
+  }
+
+  /** (RF2) Meses de apalancamiento (n): 12–24→4, 24–36→8, … (0 si plazo < 12). */
+  private mesesApalancamiento(plazo: number): number {
+    return plazo < 12 ? 0 : Math.floor(plazo / 12) * 4;
+  }
+
+  /**
+   * (RF1/RF2/RF5) Calcula el Capital de Trabajo requerido según el plazo del contrato:
+   * - Rama A (plazo < 12): (POE − Anticipo) × 33%.
+   * - Rama B (plazo ≥ 12): ((POE − Anticipo) / plazo) × n.
+   * Escribe el resultado en el control read-only y publica el desglose (rama/n).
+   */
+  private calcularCapitalTrabajo(): void {
+    const presupuesto = this.form.get('presupuesto')?.value || 0;
+    const poeAnticipo = this.form.get('poeAnticipo')?.value || 0;
+    const plazo = this.form.get('plazo')?.value || 0;
+    const anticipo = presupuesto * (poeAnticipo / 100);
+    const base = presupuesto - anticipo;
+
+    if (presupuesto <= 0 || plazo <= 0) {
+      this.form.get('capitalTrabajo')?.setValue(0, { emitEvent: false });
+      this.desgloseCapitalTrabajo.set(null);
+      return;
+    }
+
+    let ctd: number;
+    let rama: 'A' | 'B';
+    let n: number | null = null;
+
+    if (plazo < 12) {
+      rama = 'A';
+      ctd = base * 0.33;
+    } else {
+      rama = 'B';
+      n = this.mesesApalancamiento(plazo);
+      ctd = (base / plazo) * n;
+    }
+
+    this.form.get('capitalTrabajo')?.setValue(ctd, { emitEvent: false });
+    this.desgloseCapitalTrabajo.set({ rama, n });
   }
 
   /** Formatea un monto como moneda COP con 2 decimales (los montos son decimales). */
@@ -157,7 +242,10 @@ export class RequisitoLicitacionModal implements OnInit {
     this.form.get(controlName)?.setValue(value, { emitEvent: false });
     input.value = this.formatCurrency(value);
 
-    if (controlName === 'presupuesto') this.calcularCapacidadResidual();
+    if (controlName === 'presupuesto') {
+      this.calcularCapacidadResidual();
+      this.calcularCapitalTrabajo();
+    }
   }
 
   private calcularCapacidadResidual(): void {

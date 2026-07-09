@@ -3,7 +3,9 @@
 
     <!-- Header -->
     <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-      <h2 class="text-xl font-bold text-gray-800">Añadir al Cuadro de Obra</h2>
+      <h2 class="text-xl font-bold text-gray-800">
+        {{ readonly ? 'Detalle del Cuadro de Obra' : 'Añadir al Cuadro de Obra' }}
+      </h2>
       <button (click)="close.emit()" type="button" aria-label="Cerrar" class="text-gray-400 hover:text-gray-600 transition-colors">
         <i class="bx bx-x text-2xl"></i>
       </button>
@@ -16,8 +18,8 @@
         <!-- Datos de la Licitación (Solo lectura para contexto) -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
           <div>
-            <span class="block text-xs font-semibold text-blue-600 uppercase">ID Proceso</span>
-            <p class="text-sm font-medium text-blue-900">{{ licitacion.idDelProceso }}</p>
+            <span class="block text-xs font-semibold text-blue-600 uppercase">Nº de Proceso</span>
+            <p class="text-sm font-medium text-blue-900">{{ licitacion.numero }}</p>
           </div>
           <div>
             <span class="block text-xs font-semibold text-blue-600 uppercase">Entidad</span>
@@ -44,16 +46,20 @@
 
           <!-- Monto -->
           <div>
-            <label for="monto" class="block text-sm font-medium text-gray-700 mb-1">Monto (Presupuesto)</label>
-            <input id="monto" type="number" formControlName="monto" placeholder="0.00"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+            <label for="monto" class="block text-sm font-medium text-gray-700 mb-1">Presupuesto</label>
+            <input id="monto" type="text" inputmode="decimal"
+              [value]="formatCurrency(form.get('monto')?.value)"
+              (focus)="onCurrencyFocus($event, 'monto')"
+              (blur)="onCurrencyBlur($event, 'monto')"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              placeholder="$ 0,00">
           </div>
 
           <!-- Valor SMMLV -->
           <div>
             <label for="valorSMMLV" class="block text-sm font-medium text-gray-700 mb-1">Valor SMMLV</label>
-            <input id="valorSMMLV" type="number" step="0.01" formControlName="valorSMMLV" placeholder="0.00"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+            <input id="valorSMMLV" type="number" step="0.01" formControlName="valorSMMLV" placeholder="0.00" readonly
+              class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed outline-none">
           </div>
 
           <!-- Tipo Proyecto -->
@@ -69,18 +75,24 @@
             </select>
           </div>
 
-          <!-- Plazo -->
+          <!-- Plazo (RF4): solo número; "meses" fijo -->
           <div>
             <label for="plazo" class="block text-sm font-medium text-gray-700 mb-1">Plazo</label>
-            <input id="plazo" type="text" formControlName="plazo" placeholder="Ej: 6 meses"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+            <div class="relative">
+              <input id="plazo" type="number" min="0" formControlName="plazo" placeholder="0"
+                class="w-full px-4 py-2 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+              <span class="absolute right-3 top-2.5 text-gray-400 font-medium text-sm">meses</span>
+            </div>
           </div>
 
-          <!-- Anticipo -->
+          <!-- Anticipo (RF4): solo número; "%" fijo -->
           <div>
-            <label for="anticipo" class="block text-sm font-medium text-gray-700 mb-1">Anticipo (%)</label>
-            <input id="anticipo" type="text" formControlName="anticipo" placeholder="Ej: 30%"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+            <label for="anticipo" class="block text-sm font-medium text-gray-700 mb-1">Anticipo</label>
+            <div class="relative">
+              <input id="anticipo" type="number" min="0" max="100" formControlName="anticipo" placeholder="0"
+                class="w-full px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+              <span class="absolute right-3 top-2.5 text-gray-400 font-medium">%</span>
+            </div>
           </div>
         </div>
 
@@ -109,16 +121,18 @@
     <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
       <button (click)="close.emit()" type="button"
         class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
-        Cancelar
+        {{ readonly ? 'Cerrar' : 'Cancelar' }}
       </button>
-      <button [disabled]="form.invalid || loading" (click)="onSubmit()" type="button"
-        class="cursor-pointer px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
-        @if (loading) {
-          <i class="bx bx-loader-alt animate-spin me-2"></i> Procesando...
-        } @else {
-          Guardar en Cuadro
-        }
-      </button>
+      @if (!readonly) {
+        <button [disabled]="form.invalid || loading" (click)="onSubmit()" type="button"
+          class="cursor-pointer px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+          @if (loading) {
+            <i class="bx bx-loader-alt animate-spin me-2"></i> Procesando...
+          } @else {
+            Guardar en Cuadro
+          }
+        </button>
+      }
     </div>
   </div>
 </div>

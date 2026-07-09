@@ -40,7 +40,6 @@ export class AnalizarPliegoModal implements OnInit {
       contrato: [data?.contrato || 1, [Validators.required, Validators.min(1)]],
       capitalTrabajo: [data?.capitalTrabajo || 0, [Validators.required, Validators.min(0)]],
       patrimonio: [data?.patrimonio || 0, [Validators.required, Validators.min(0)]],
-      n: [data?.n || 1, [Validators.required, Validators.min(0.1)]],
       kresidualProceso: [data?.kresidualProceso || 0, [Validators.required, Validators.min(0)]],
       poeAnticipo: [data?.poeAnticipo || 0, [Validators.required, Validators.min(0), Validators.max(100)]],
     });

@@ -1,15 +1,21 @@
 import { Component, Input, PipeTransform, Output, EventEmitter } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 
+export type TableData = { [key: string]: any };
+
 export interface TableColumn {
   key: string;
   label: string;
   type?: 'text' | 'date' | 'datetime' | 'currency' | 'link' | 'action' | 'badge';
   width?: string;
   actionIcon?: string;
+  /**
+   * Clase(s) del ícono de acción calculadas por fila. Cuando está presente, prima
+   * sobre `actionIcon` y permite variar ícono/color según los datos de la fila
+   * (p. ej. resaltar estados). Mantiene la tabla genérica.
+   */
+  actionIconFn?: (row: TableData) => string;
 }
-
-export type TableData = { [key: string]: any };
 
 @Component({
   selector: 'app-modern-table',
@@ -34,6 +40,12 @@ export class ModernTable {
    * Por defecto es true.
    */
   @Input() showEmptyState: boolean = true;
+
+  /**
+   * Función opcional que devuelve clases CSS para una fila según sus datos.
+   * Permite resaltar filas (p. ej. estados) sin acoplar la tabla a un caso de uso.
+   */
+  @Input() rowClassFn?: (row: TableData) => string;
 
   /**
    * Emite el objeto de la fila cuando se hace clic en una acción.
