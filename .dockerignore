@@ -1,0 +1,29 @@
+# Dependencias y artefactos: se reconstruyen dentro de la imagen (npm ci + build).
+node_modules
+dist
+.angular
+
+# Control de versiones y metadatos.
+.git
+.gitignore
+.github
+
+# Configuración de editor / herramientas.
+.vscode
+.idea
+.editorconfig
+
+# Docker (no hace falta dentro del contexto de build).
+Dockerfile
+.dockerignore
+
+# Documentación y specs: no afectan al build del SPA.
+specs
+README.md
+CLAUDE.md
+.claude
+
+# Logs y temporales.
+*.log
+npm-debug.log*
+.DS_Store
