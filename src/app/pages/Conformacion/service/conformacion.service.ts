@@ -2,12 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ConformacionRequest, ConformacionResponse } from '../interface/conformacion';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ConformacionProponenteService {
-  private readonly apiUrl = 'http://localhost:8080/api/v1/analisis/consorcios';
+  private readonly apiUrl = `${environment.apiBaseUrl}/analisis/consorcios`;
   private readonly http = inject(HttpClient);
 
   /**

@@ -6,9 +6,10 @@ import { ModernTable, TableColumn, TableData } from '../../../components/modern-
 import { Pagination } from '../../../components/pagination/pagination';
 import { AddToCuadroModal } from '../../../components/add-to-cuadro-modal/add-to-cuadro-modal';
 import { LicitacionesService } from '../service/licitaciones.service';
+import { RevisionLicitacionService } from '../service/revision-licitacion.service';
 import { Licitacion } from '../interface/licitaciones';
 import { CuadroDeObraService } from '../../CuadroDeObra/service/cuadro-de-obra.service';
-import { CuadroDeObraItem } from '../../CuadroDeObra/interface/cuadro-de-obra';
+import { CuadroDeObraItem, CuadroDeObraRef } from '../../CuadroDeObra/interface/cuadro-de-obra';
 import { AlertService } from '../../../services/alert.service';
 
 @Component({
@@ -20,10 +21,9 @@ import { AlertService } from '../../../services/alert.service';
 })
 export class Licitaciones implements OnInit {
   private readonly licitacionesService = inject(LicitacionesService);
+  private readonly revisionService = inject(RevisionLicitacionService);
   private readonly cuadroService = inject(CuadroDeObraService);
   private readonly alertService = inject(AlertService);
-
-  private readonly REVISADOS_KEY = 'licitaciones:revisados';
 
   // --- CONFIGURACIÓN DE LA TABLA ---
   columnasLicitaciones: TableColumn[] = [
@@ -52,11 +52,11 @@ export class Licitaciones implements OnInit {
   filtroEntidad = signal('');
   private readonly entidadInput$ = new Subject<string>();
 
-  // --- CRUCE CON EL CUADRO DE OBRA (numeroProceso -> id) ---
+  // --- CRUCE CON EL CUADRO DE OBRA (idDelProceso -> id) ---
   refs = signal<Map<string, number>>(new Map());
 
-  // --- FILAS "REVISADAS" (persistidas en localStorage) ---
-  revisados = signal<Set<string>>(this.loadRevisados());
+  // --- FILAS "REVISADAS" (compartidas por el equipo, por idDelProceso) ---
+  revisados = signal<Set<string>>(new Set());
 
   // --- ESTADO DEL MODAL CON SIGNALS ---
   showModal = signal(false);
@@ -78,6 +78,7 @@ export class Licitaciones implements OnInit {
   ngOnInit(): void {
     this.loadLicitaciones();
     this.loadRefs();
+    this.loadRevisiones();
   }
 
   loadLicitaciones(): void {
@@ -111,13 +112,35 @@ export class Licitaciones implements OnInit {
       });
   }
 
-  /** Carga los procesos ya presentes en el Cuadro de Obra para el resaltado (RF1/RF2). */
+  /**
+   * Carga los procesos ya presentes en el Cuadro de Obra para el resaltado (RF1/RF2).
+   * Los procesos sin idDelProceso se descartan: se cargaron a mano, no existen en SECOP
+   * y por tanto no pueden corresponder a ninguna fila de esta tabla.
+   */
   private loadRefs(): void {
     this.cuadroService.obtenerRefs().subscribe({
-      next: (refs) => this.refs.set(new Map(refs.map((r) => [r.numeroProceso, r.id]))),
+      next: (refs) =>
+        this.refs.set(
+          new Map(
+            refs
+              .filter((r): r is CuadroDeObraRef & { idDelProceso: string } => !!r.idDelProceso)
+              .map((r) => [r.idDelProceso, r.id]),
+          ),
+        ),
       error: (err) => {
         console.error('No se pudieron cargar las referencias del Cuadro de Obra:', err);
         this.refs.set(new Map());
+      },
+    });
+  }
+
+  /** Carga el conjunto compartido de licitaciones revisadas (RF2). */
+  private loadRevisiones(): void {
+    this.revisionService.obtenerRevisiones().subscribe({
+      next: (ids) => this.revisados.set(new Set(ids)),
+      error: (err) => {
+        console.error('No se pudieron cargar las licitaciones revisadas:', err);
+        this.revisados.set(new Set());
       },
     });
   }
@@ -136,9 +159,9 @@ export class Licitaciones implements OnInit {
    * prioridad sobre "revisada" (ámbar) cuando ambas condiciones coinciden.
    */
   rowClass = (row: TableData): string => {
-    const numero = (row as Licitacion).numero;
-    if (this.refs().has(numero)) return 'bg-green-50 hover:bg-green-100';
-    if (this.revisados().has(numero)) return 'bg-amber-50 hover:bg-amber-100';
+    const id = (row as Licitacion).idDelProceso;
+    if (this.refs().has(id)) return 'bg-green-50 hover:bg-green-100';
+    if (this.revisados().has(id)) return 'bg-amber-50 hover:bg-amber-100';
     return '';
   };
 
@@ -146,12 +169,12 @@ export class Licitaciones implements OnInit {
     const licitacion = event.row as Licitacion;
 
     if (event.column.key === 'revisar') {
-      this.toggleRevisado(licitacion.numero);
+      this.toggleRevisado(licitacion.idDelProceso);
       return;
     }
 
     // Columna "Cuadro": si ya está agregada, se abre en modo lectura; si no, editable.
-    const cuadroId = this.refs().get(licitacion.numero);
+    const cuadroId = this.refs().get(licitacion.idDelProceso);
     if (cuadroId != null) {
       this.abrirDetalleExistente(licitacion, cuadroId);
     } else {
@@ -179,36 +202,49 @@ export class Licitaciones implements OnInit {
 
   onModalSaved(response: CuadroDeObraItem): void {
     // Nos quedamos en la tabla y marcamos la fila como "agregada" al instante (CA3).
-    const numero = this.selectedLicitacion()?.numero;
-    if (numero && response?.id != null) {
+    const idDelProceso = this.selectedLicitacion()?.idDelProceso;
+    if (idDelProceso && response?.id != null) {
       const map = new Map(this.refs());
-      map.set(numero, response.id);
+      map.set(idDelProceso, response.id);
       this.refs.set(map);
     }
     this.showModal.set(false);
   }
 
-  toggleRevisado(numero: string): void {
+  /**
+   * Alterna la marca "Revisado" (compartida). Actualiza el set de inmediato (optimista)
+   * y persiste en el servidor; si el HTTP falla, revierte y avisa, para no dejar en
+   * pantalla un estado que no llegó a guardarse.
+   */
+  toggleRevisado(idDelProceso: string): void {
+    if (!idDelProceso) return;
+
+    const estabaRevisada = this.revisados().has(idDelProceso);
     const set = new Set(this.revisados());
-    if (set.has(numero)) {
-      set.delete(numero);
+    if (estabaRevisada) {
+      set.delete(idDelProceso);
     } else {
-      set.add(numero);
+      set.add(idDelProceso);
     }
     this.revisados.set(set);
-    try {
-      localStorage.setItem(this.REVISADOS_KEY, JSON.stringify([...set]));
-    } catch (e) {
-      console.error('No se pudo persistir el estado de revisión:', e);
-    }
-  }
 
-  private loadRevisados(): Set<string> {
-    try {
-      const raw = localStorage.getItem(this.REVISADOS_KEY);
-      return new Set(raw ? (JSON.parse(raw) as string[]) : []);
-    } catch {
-      return new Set();
-    }
+    const peticion$ = estabaRevisada
+      ? this.revisionService.desmarcarRevisada(idDelProceso)
+      : this.revisionService.marcarRevisada(idDelProceso);
+
+    peticion$.subscribe({
+      error: (err) => {
+        console.error('No se pudo actualizar el estado de revisión:', err);
+        // Revertir al estado previo.
+        const revert = new Set(this.revisados());
+        if (estabaRevisada) {
+          revert.add(idDelProceso);
+        } else {
+          revert.delete(idDelProceso);
+        }
+        this.revisados.set(revert);
+        this.alertService.error('No se pudo guardar la marca de revisión. Intenta de nuevo.');
+      },
+    });
   }
 }

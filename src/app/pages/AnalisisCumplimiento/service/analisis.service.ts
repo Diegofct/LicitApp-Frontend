@@ -2,12 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AnalisisRequest, AnalisisResponse } from '../interface/analisis';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AnalisisCumplimientoService {
-  private readonly apiUrl = 'http://localhost:8080/api/v1/analisis';
+  private readonly apiUrl = `${environment.apiBaseUrl}/analisis`;
   private readonly http = inject(HttpClient);
 
   /**

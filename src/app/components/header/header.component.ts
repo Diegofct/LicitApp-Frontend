@@ -15,7 +15,6 @@ import { ROL_LABEL, Rol } from '../../auth/interface/auth';
 const ROL_BADGE: Record<Rol, string> = {
   ADMIN: 'bg-indigo-500/20 text-indigo-300',
   ANALISTA: 'bg-emerald-500/20 text-emerald-300',
-  PROPIETARIO: 'bg-amber-500/20 text-amber-300',
 };
 
 @Component({

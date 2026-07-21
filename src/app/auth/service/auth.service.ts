@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { LoginRequest, LoginResponse, Rol, Usuario } from '../interface/auth';
+import { environment } from '../../../environments/environment';
 
 /**
  * Centraliza la sesión del usuario: login, logout, token, rehidratación y rol.
@@ -12,7 +13,7 @@ import { LoginRequest, LoginResponse, Rol, Usuario } from '../interface/auth';
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly apiUrl = 'http://localhost:8080/api/v1/auth';
+  private readonly apiUrl = `${environment.apiBaseUrl}/auth`;
   private readonly TOKEN_KEY = 'licitapp_token';
 
   private readonly http = inject(HttpClient);
@@ -27,8 +28,8 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this._usuario() !== null);
   /** Rol del usuario actual o null. */
   readonly rol = computed<Rol | null>(() => this._usuario()?.rol ?? null);
-  /** true si el rol puede ejecutar acciones de escritura (todos menos PROPIETARIO). */
-  readonly puedeEscribir = computed(() => this.rol() !== 'PROPIETARIO');
+  /** true si hay una sesión válida; todos los roles autenticados pueden escribir. */
+  readonly puedeEscribir = computed(() => this.isAuthenticated());
 
   /**
    * Autentica al usuario contra el backend y persiste el token.
@@ -92,9 +93,9 @@ export class AuthService {
     return rol !== null && roles.includes(rol);
   }
 
-  /** Ruta de inicio según el rol (PROPIETARIO no puede ver Búsqueda SECOP). */
+  /** Ruta de inicio tras autenticarse (común a todos los roles). */
   rutaInicial(): string {
-    return this.rol() === 'PROPIETARIO' ? '/resultados' : '/busqueda-secop';
+    return '/busqueda-secop';
   }
 
   private guardarToken(token: string): void {
