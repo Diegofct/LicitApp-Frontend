@@ -4,8 +4,9 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../service/auth.service';
 import { AlertService } from '../../services/alert.service';
+import { environment } from '../../../environments/environment';
 
-const API_BASE = 'http://localhost:8080/api/v1';
+const API_BASE = environment.apiBaseUrl;
 
 /**
  * Interceptor funcional:

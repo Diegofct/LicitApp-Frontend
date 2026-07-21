@@ -155,7 +155,9 @@ export class AddToCuadroModal implements OnInit {
     }
 
     this.loading = true;
-    const rawData = this.form.value;
+    // La identidad SECOP viaja en el payload pero no se muestra ni se edita: el backend
+    // la necesita para distinguir procesos que comparten numeroProceso.
+    const rawData = { ...this.form.value, idDelProceso: this.licitacion.idDelProceso };
 
     this.cuadroService.agregarACuadroDeObra(rawData).subscribe({
       next: (response) => {

@@ -4,7 +4,7 @@ import { Tab, Tabs } from '../../../components/tabs/tabs';
 import { ModernTable, TableColumn, TableData } from '../../../components/modern-table/modern-table';
 import { Pagination } from '../../../components/pagination/pagination';
 import { CuadroDeObraService } from '../service/cuadro-de-obra.service';
-import { CuadroDeObraItem } from '../interface/cuadro-de-obra';
+import { CuadroDeObraItem, PresentacionMarca } from '../interface/cuadro-de-obra';
 import { AlertService } from '../../../services/alert.service';
 import { EditCuadroModal } from '../../../components/edit-cuadro-modal/edit-cuadro-modal';
 import { AddProcesoModal } from '../../../components/add-proceso-modal/add-proceso-modal';
@@ -62,7 +62,7 @@ export class CuadroDeObra implements OnInit {
       type: 'action',
       width: '120px',
       actionIconFn: (row) => {
-        const estado = this.presentacion().get((row as CuadroDeObraItem).numeroProceso);
+        const estado = this.marcaPresentacion(row as CuadroDeObraItem);
         if (estado === 'SI') return 'bx bxs-check-circle text-green-600';
         if (estado === 'NO') return 'bx bxs-x-circle text-rose-600';
         return 'bx bx-circle text-gray-300';
@@ -108,10 +108,6 @@ export class CuadroDeObra implements OnInit {
   loading = signal(false);
 
   datos = signal<CuadroDeObraItem[]>([]);
-
-  // --- MARCA "NOS PRESENTAMOS" (RF1, persistida en localStorage por numeroProceso) ---
-  private readonly PRESENTACION_KEY = 'cuadro-de-obra:presentacion';
-  presentacion = signal<Map<string, 'SI' | 'NO'>>(this.loadPresentacion());
 
   // --- ESTADO DE LOS MODALS ---
   showAddModal = signal(false);
@@ -162,7 +158,7 @@ export class CuadroDeObra implements OnInit {
 
     // (RF1) La marca "nos presentamos" no abre modal: solo alterna el estado de la fila.
     if (event.column.key === 'presentacion') {
-      this.togglePresentacion(item.numeroProceso);
+      this.togglePresentacion(item);
       return;
     }
 
@@ -187,42 +183,42 @@ export class CuadroDeObra implements OnInit {
    * Sin marca no aplica color.
    */
   rowClass = (row: TableData): string => {
-    const estado = this.presentacion().get((row as CuadroDeObraItem).numeroProceso);
+    const estado = this.marcaPresentacion(row as CuadroDeObraItem);
     if (estado === 'SI') return 'bg-green-50 hover:bg-green-100';
     if (estado === 'NO') return 'bg-rose-50 hover:bg-rose-100';
     return '';
   };
 
-  /** Cicla la marca de presentación de una fila: sin marca → Sí → No → sin marca. */
-  togglePresentacion(numeroProceso: string): void {
-    const map = new Map(this.presentacion());
-    const actual = map.get(numeroProceso);
-    if (actual === undefined) {
-      map.set(numeroProceso, 'SI');
-    } else if (actual === 'SI') {
-      map.set(numeroProceso, 'NO');
-    } else {
-      map.delete(numeroProceso);
-    }
-    this.presentacion.set(map);
-    this.persistPresentacion(map);
+  /** Marca "nos presentamos" del registro (compartida), o `null` si no tiene. */
+  private marcaPresentacion(item: CuadroDeObraItem): PresentacionMarca | null {
+    return item.presentacion;
   }
 
-  private loadPresentacion(): Map<string, 'SI' | 'NO'> {
-    try {
-      const raw = localStorage.getItem(this.PRESENTACION_KEY);
-      const obj = raw ? (JSON.parse(raw) as Record<string, 'SI' | 'NO'>) : {};
-      return new Map(Object.entries(obj));
-    } catch {
-      return new Map();
-    }
+  /**
+   * Cicla la marca de presentación de una fila: sin marca → Sí → No → sin marca. La marca
+   * es compartida por el equipo: se persiste en el servidor y se actualiza la fila con la
+   * respuesta. Si el PATCH falla, la fila no cambia y se avisa.
+   */
+  togglePresentacion(item: CuadroDeObraItem): void {
+    const siguiente = this.siguienteMarca(item.presentacion);
+    this.cuadroDeObraService.actualizarPresentacion(item.id, siguiente).subscribe({
+      next: (actualizado) => this.reemplazarFila(actualizado),
+      error: (err) => {
+        console.error('No se pudo actualizar la marca de presentación:', err);
+        this.alertService.error('No se pudo guardar la marca. Intenta de nuevo.');
+      },
+    });
   }
 
-  private persistPresentacion(map: Map<string, 'SI' | 'NO'>): void {
-    try {
-      localStorage.setItem(this.PRESENTACION_KEY, JSON.stringify(Object.fromEntries(map)));
-    } catch (e) {
-      console.error('No se pudo persistir la marca de presentación:', e);
-    }
+  /** sin marca → Sí → No → sin marca. */
+  private siguienteMarca(actual: PresentacionMarca | null): PresentacionMarca | null {
+    if (actual === null) return 'SI';
+    if (actual === 'SI') return 'NO';
+    return null;
+  }
+
+  /** Reemplaza la fila por su versión actualizada, con nueva referencia (OnPush). */
+  private reemplazarFila(actualizado: CuadroDeObraItem): void {
+    this.datos.update((filas) => filas.map((f) => (f.id === actualizado.id ? actualizado : f)));
   }
 }

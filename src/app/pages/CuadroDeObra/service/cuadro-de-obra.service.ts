@@ -2,14 +2,19 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { PaginatedResponse } from '../../Licitaciones/interface/paginated-response';
-import { CuadroDeObraItem, CuadroDeObraRef, RequisitoLicitacion } from '../interface/cuadro-de-obra';
+import {
+  CuadroDeObraItem,
+  CuadroDeObraRef,
+  PresentacionMarca,
+  RequisitoLicitacion,
+} from '../interface/cuadro-de-obra';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CuadroDeObraService {
-  // TODO: Mover la URL a un archivo de environment.
-  private readonly apiUrl = 'http://localhost:8080/api/v1/cuadro-de-obra';
+  private readonly apiUrl = `${environment.apiBaseUrl}/cuadro-de-obra`;
   private readonly http = inject(HttpClient);
 
   /**
@@ -32,7 +37,7 @@ export class CuadroDeObraService {
   /**
    * Obtiene la lista liviana (sin paginar) de procesos ya agregados al cuadro de obra.
    * Se usa para resaltar en la tabla de licitaciones qué procesos ya fueron guardados
-   * y para abrir su detalle en modo lectura (cruce por numeroProceso).
+   * y para abrir su detalle en modo lectura (cruce por idDelProceso).
    */
   obtenerRefs(): Observable<CuadroDeObraRef[]> {
     return this.http.get<CuadroDeObraRef[]>(`${this.apiUrl}/refs`);
@@ -62,6 +67,18 @@ export class CuadroDeObraService {
    */
   actualizarCuadroDeObra(id: number, data: CuadroDeObraItem): Observable<CuadroDeObraItem> {
     return this.http.put<CuadroDeObraItem>(`${this.apiUrl}/${id}`, data);
+  }
+
+  /**
+   * Actualiza la marca "nos presentamos" del cuadro (compartida por el equipo).
+   * @param id ID del registro.
+   * @param presentacion `SI`/`NO`, o `null` para limpiar la marca.
+   */
+  actualizarPresentacion(
+    id: number,
+    presentacion: PresentacionMarca | null,
+  ): Observable<CuadroDeObraItem> {
+    return this.http.patch<CuadroDeObraItem>(`${this.apiUrl}/${id}/presentacion`, { presentacion });
   }
 
   /**

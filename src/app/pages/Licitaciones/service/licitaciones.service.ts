@@ -3,13 +3,13 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Licitacion } from '../interface/licitaciones';
 import { PaginatedResponse } from '../interface/paginated-response';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class LicitacionesService {
-  // TODO: Mover la URL a un archivo de environment.
-  private readonly apiUrl = 'http://localhost:8080/api/v1/licitaciones/obra-publica';
+  private readonly apiUrl = `${environment.apiBaseUrl}/licitaciones/obra-publica`;
   private readonly http = inject(HttpClient);
 
   /**

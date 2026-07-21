@@ -7,13 +7,13 @@ import {
   ItemHistorialResultado,
   ResumenResultados,
 } from '../interface/resultados';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ResultadosService {
-  // TODO: Mover la URL a un archivo de environment.
-  private readonly apiUrl = 'http://localhost:8080/api/v1/resultados';
+  private readonly apiUrl = `${environment.apiBaseUrl}/resultados`;
   private readonly http = inject(HttpClient);
 
   /**
