@@ -1,8 +1,8 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-  <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all">
+  <div class="bg-white rounded-xl shadow-2xl modal-panel max-w-2xl transform transition-all">
 
     <!-- Header -->
-    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+    <div class="shrink-0 px-4 sm:px-6 py-4 border-b border-gray-100 flex justify-between items-start gap-3 bg-gray-50/50">
       <h2 class="text-xl font-bold text-gray-800">
         {{ readonly ? 'Detalle del Cuadro de Obra' : 'Añadir al Cuadro de Obra' }}
       </h2>
@@ -12,7 +12,7 @@
     </div>
 
     <!-- Body (Scrollable) -->
-    <div class="p-6 overflow-y-auto">
+    <div class="p-4 sm:p-6 overflow-y-auto">
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
 
         <!-- Datos de la Licitación (Solo lectura para contexto) -->
@@ -118,7 +118,7 @@
     </div>
 
     <!-- Footer Buttons -->
-    <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+    <div class="shrink-0 px-4 sm:px-6 py-4 border-t border-gray-100 bg-gray-50 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
       <button (click)="close.emit()" type="button"
         class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
         {{ readonly ? 'Cerrar' : 'Cancelar' }}

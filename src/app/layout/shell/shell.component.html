@@ -1,13 +1,32 @@
 <div class="flex h-screen bg-gray-100 font-roboto overflow-hidden">
+  <!-- Backdrop del drawer: solo <768px. Al tocarlo cierra el sidebar. -->
+  @if (isSidebarOpen()) {
+    <div
+      (click)="sidebar.toggle()"
+      aria-hidden="true"
+      class="fixed inset-0 z-30 bg-black/50 md:hidden">
+    </div>
+  }
+
+  <!--
+    <768px: drawer superpuesto (fixed, fuera del flujo) que entra y sale con
+    -translate-x-full, así no le roba ancho al contenido.
+    >=768px: vuelve a ser columna del layout (md:static) con el colapso
+    w-64/w-20 de siempre.
+    max-md:w-64! fuerza el ancho completo del drawer en móvil por encima del
+    w-20 condicional, que es un concepto exclusivo de desktop.
+  -->
   <app-sidebar
+    #sidebar
     (sidebarToggled)="onSidebarToggle($event)"
     [class.w-64]="isSidebarOpen()"
     [class.w-20]="!isSidebarOpen()"
-    class="flex-shrink-0 transition-all duration-300 overflow-hidden">
+    [class.-translate-x-full]="!isSidebarOpen()"
+    class="fixed inset-y-0 left-0 z-40 max-md:w-64! md:static md:translate-x-0 flex-shrink-0 transition-all duration-300 overflow-hidden">
   </app-sidebar>
 
   <div class="flex-1 min-w-0 flex flex-col overflow-hidden">
-    <app-header></app-header>
+    <app-header (menuToggle)="sidebar.toggle()"></app-header>
     <main class="flex-1 min-w-0 overflow-y-auto">
       <router-outlet></router-outlet>
     </main>

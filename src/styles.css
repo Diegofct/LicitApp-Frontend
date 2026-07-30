@@ -1,3 +1,61 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+ * Utilidades de modal (spec: specs/responsive-global.md, Fase 0)
+ *
+ * Encapsulan el patrón P8: un panel de modal necesita `max-height` + columna
+ * flex + `overflow: hidden` JUNTOS, o el header y el footer quedan fuera del
+ * cálculo de altura y los botones de acción se salen del viewport.
+ *
+ * Uso:
+ *   <div class="modal-overlay bg-black/50">
+ *     <div class="modal-panel max-w-2xl bg-white rounded-2xl shadow-2xl">
+ *       <div class="shrink-0">…header…</div>
+ *       <div class="modal-body">…contenido scrolleable…</div>
+ *       <div class="shrink-0">…footer…</div>
+ *     </div>
+ *   </div>
+ *
+ * El ancho (`max-w-*`) y el aspecto (fondo, borde, sombra) se siguen definiendo
+ * con clases Tailwind en el template: estas utilidades solo fijan la estructura.
+ * --------------------------------------------------------------------------- */
+
+@utility modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+@utility modal-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* dvh y no vh: en Safari/Chrome móvil vh incluye la barra de URL */
+  max-height: 90dvh;
+  overflow: hidden;
+}
+
+@utility modal-body {
+  flex: 1 1 0%;
+  /* min-height:0 es lo que permite que un hijo flex scrollee en vez de crecer */
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Barra de progreso indeterminada del modal "Analizar Pliego con IA".
+ * Antes vivía en un <style> dentro de analizar-pliego-modal.html. */
+@keyframes progress-indeterminate {
+  0% { transform: translateX(-100%); width: 30%; }
+  50% { transform: translateX(100%); width: 30%; }
+  100% { transform: translateX(400%); width: 30%; }
+}
+
+@utility animate-progress-indeterminate {
+  animation: progress-indeterminate 2s infinite linear;
+}

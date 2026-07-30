@@ -1,17 +1,17 @@
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-  <div class="w-full max-w-3xl bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+<div class="modal-overlay bg-black/50 backdrop-blur-sm">
+  <div class="modal-panel max-w-3xl bg-white rounded-xl shadow-2xl animate-in fade-in zoom-in duration-200">
     <!-- Header -->
-    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-      <div class="flex items-center gap-3">
-        <div class="p-2 rounded-lg"
+    <div class="shrink-0 flex items-start justify-between gap-3 px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+      <div class="flex items-start gap-3 min-w-0">
+        <div class="shrink-0 p-2 rounded-lg"
           [class.bg-blue-100]="!isEditMode()"
           [class.text-blue-600]="!isEditMode()"
           [class.bg-emerald-100]="isEditMode()"
           [class.text-emerald-600]="isEditMode()">
           <i class="bx text-2xl" [class.bx-list-check]="!isEditMode()" [class.bx-edit-alt]="isEditMode()"></i>
         </div>
-        <div>
-          <h2 class="text-xl font-bold text-gray-800">
+        <div class="min-w-0">
+          <h2 class="text-lg sm:text-xl font-bold text-gray-800">
             {{ isEditMode() ? 'Actualizar Requisitos de Licitación' : 'Requisitos de Licitación' }}
           </h2>
           @if (isEditMode()) {
@@ -22,14 +22,14 @@
           }
         </div>
       </div>
-      <button (click)="close.emit()" class="text-gray-400 hover:text-gray-600 transition-colors">
+      <button (click)="close.emit()" aria-label="Cerrar" class="cursor-pointer shrink-0 -mr-1 p-1.5 text-gray-400 hover:text-gray-600 transition-colors">
         <i class="bx bx-x text-3xl"></i>
       </button>
     </div>
 
     @if (loadingData()) {
       <!-- Skeleton de carga mientras se verifican requisitos existentes -->
-      <div class="p-6 max-h-[80vh] overflow-y-auto">
+      <div class="modal-body p-4 sm:p-6">
         <div class="flex flex-col items-center justify-center py-12 gap-3">
           <i class="bx bx-loader-alt animate-spin text-4xl text-blue-500"></i>
           <p class="text-sm text-gray-500">Verificando requisitos existentes...</p>
@@ -52,7 +52,7 @@
       </div>
     } @else {
     <!-- Formulario -->
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="p-6 max-h-[80vh] overflow-y-auto">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body p-4 sm:p-6">
 
       <!-- Sección: Experiencia -->
       <div class="mb-8">
@@ -171,7 +171,7 @@
       </div>
 
       <!-- Sección: Indicadores Financieros -->
-      <div class="mb-8 p-5 bg-indigo-50/30 rounded-xl border border-indigo-100">
+      <div class="mb-8 p-4 sm:p-5 bg-indigo-50/30 rounded-xl border border-indigo-100">
         <h3 class="flex items-center gap-2 text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-4">
           <i class="bx bx-calculator"></i>
           Indicadores Financieros de Capacidad y Organización
@@ -257,13 +257,13 @@
     }
 
     <!-- Footer Actions -->
-    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+    <div class="shrink-0 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 px-4 sm:px-6 py-4 border-t border-gray-100 bg-gray-50/50">
       <button (click)="close.emit()" type="button"
-        class="cursor-pointer px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
+        class="cursor-pointer w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
         Cancelar
       </button>
       <button (click)="onSubmit()" [disabled]="form.invalid || saving() || loadingData()"
-        class="cursor-pointer flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        class="cursor-pointer w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium text-white rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         [ngClass]="isEditMode()
           ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
           : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'">

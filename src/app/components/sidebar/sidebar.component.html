@@ -1,10 +1,10 @@
 <!-- Sidebar -->
 <div class="flex flex-col bg-gray-900 text-white h-full w-full">
   <!-- Sidebar Header -->
-  <div class="relative flex items-center justify-center h-20 shadow-md">
+  <div class="relative flex items-center justify-center h-16 md:h-20 shadow-md">
     <h1 [ngClass]="{'opacity-0': !open(), 'w-0': !open(), 'w-auto': open()}" class="text-3xl text-indigo-500 transition-all duration-300 overflow-hidden whitespace-nowrap">LicitApp</h1>
-    <!-- Mobile Menu Button -->
-    <button (click)="toggle()" type="button" aria-label="Abrir menú móvil" class="absolute right-4 text-white focus:outline-none md:hidden">
+    <!-- Mobile Menu Button: en móvil el drawer solo se ve abierto, así que aquí cierra -->
+    <button (click)="toggle()" type="button" aria-label="Cerrar menú" class="absolute right-2 p-3 text-white focus:outline-none md:hidden">
       <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
       </svg>
@@ -18,10 +18,15 @@
   </div>
 
   <!-- Navigation Links -->
-  <ul class="flex flex-col py-4 flex-grow justify-center">
+  <!-- overflow-x-hidden es obligatorio junto al overflow-y-auto: por spec CSS, si un
+       eje es visible y el otro no, el visible se computa como auto y aparecía un scroll
+       horizontal al encoger el sidebar (las etiquetas se ocultan con opacity-0, que no
+       quita ancho). El recorte horizontal es el mismo que ya hacía el host. -->
+  <ul class="flex flex-col py-4 flex-grow justify-start md:justify-center overflow-y-auto overflow-x-hidden">
     @for (item of navItems(); track item.route) {
       <li>
         <a [routerLink]="item.route"
+           (click)="onNavigate()"
            routerLinkActive="bg-gray-800 text-indigo-500"
            class="flex items-center h-12 text-gray-400 hover:text-indigo-500 hover:bg-gray-800 rounded-lg mx-3 px-3">
           <span class="inline-flex items-center justify-center h-12 w-12 text-lg">

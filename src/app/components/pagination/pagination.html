@@ -14,7 +14,11 @@
       </span>
     </div>
 
-    <!-- Controles de navegación -->
+    <!-- Controles de navegación.
+         El wrapper con overflow-x-auto es la red de seguridad: con muchas páginas
+         o números de 3-4 dígitos los controles nunca desbordan el body, scrollean
+         dentro de su propia caja. -->
+    <div class="w-full sm:w-auto overflow-x-auto flex justify-center sm:justify-end">
     <nav class="flex-shrink-0 relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Paginación">
       <!-- Botón Anterior -->
       <button
@@ -22,7 +26,7 @@
         [disabled]="currentPage === 1"
         type="button"
         aria-label="Página anterior"
-        class="cursor-pointer relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+        class="cursor-pointer relative inline-flex items-center px-3 py-3 sm:px-2 sm:py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
       >
         <span class="sr-only">Anterior</span>
         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -41,7 +45,7 @@
             'z-10 bg-blue-50 border-blue-500 text-blue-600': page === currentPage,
             'bg-white border-gray-300 text-gray-700 hover:bg-gray-50': page !== currentPage
           }"
-          class="cursor-pointer relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-colors duration-200"
+          class="cursor-pointer relative inline-flex items-center px-3 py-3 sm:px-4 sm:py-2 border text-sm font-medium transition-colors duration-200"
         >
           {{ page }}
         </button>
@@ -53,7 +57,7 @@
         [disabled]="currentPage === totalPages"
         type="button"
         aria-label="Página siguiente"
-        class="cursor-pointer relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+        class="cursor-pointer relative inline-flex items-center px-3 py-3 sm:px-2 sm:py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
       >
         <span class="sr-only">Siguiente</span>
         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -61,5 +65,6 @@
         </svg>
       </button>
     </nav>
+    </div>
   </div>
 }
