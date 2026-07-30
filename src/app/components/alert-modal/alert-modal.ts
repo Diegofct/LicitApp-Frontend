@@ -50,19 +50,19 @@ const STYLES: Record<AlertType, AlertStyle> = {
       <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
            (click)="onBackdrop($event)">
         <div role="alertdialog" aria-modal="true"
-             class="bg-white rounded-xl shadow-2xl w-full max-w-md transform transition-all animate-in zoom-in-95 duration-200"
+             class="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90dvh] overflow-y-auto transform transition-all animate-in zoom-in-95 duration-200"
              (click)="$event.stopPropagation()">
-          <div class="p-6">
+          <div class="p-4 sm:p-6">
             <div class="flex items-center justify-center w-14 h-14 mx-auto rounded-full mb-4"
                  [ngClass]="styles().iconBg">
               <i class="bx text-3xl"
                  [ngClass]="[styles().iconColor, styles().icon]"></i>
             </div>
-            <h3 class="text-xl font-bold text-center text-gray-900 mb-2">{{ a.title }}</h3>
-            <p class="text-sm text-center text-gray-600 mb-6 whitespace-pre-line">{{ a.message }}</p>
+            <h3 class="text-lg sm:text-xl font-bold text-center text-gray-900 mb-2">{{ a.title }}</h3>
+            <p class="text-sm text-center text-gray-600 mb-6 whitespace-pre-line break-words">{{ a.message }}</p>
 
             <button (click)="dismiss()"
-                    class="cursor-pointer w-full px-4 py-2.5 text-sm font-medium text-white rounded-lg shadow-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
+                    class="cursor-pointer w-full px-4 py-3 sm:py-2.5 text-sm font-medium text-white rounded-lg shadow-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
                     [ngClass]="[styles().button, styles().ring]">
               Entendido
             </button>

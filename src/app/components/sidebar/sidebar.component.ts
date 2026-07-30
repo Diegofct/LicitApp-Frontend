@@ -74,4 +74,15 @@ export class SidebarComponent implements OnInit {
     this.open.update(v => !v);
     this.sidebarToggled.emit(this.open());
   }
+
+  /**
+   * Cierra el drawer después de navegar cuando está superpuesto (<= 768px).
+   * En desktop no hace nada: allí el sidebar es una columna fija del layout.
+   */
+  onNavigate() {
+    if (this.isBrowser && window.innerWidth <= 768 && this.open()) {
+      this.open.set(false);
+      this.sidebarToggled.emit(false);
+    }
+  }
 }

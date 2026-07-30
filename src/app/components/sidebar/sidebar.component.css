@@ -1,5 +1,7 @@
 :host {
   display: block;
-  height: 100vh;
+  /* dvh y no vh: en Safari/Chrome móvil vh incluye la barra de URL y el
+   * sidebar sobresalía del viewport real. */
+  height: 100dvh;
   transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }

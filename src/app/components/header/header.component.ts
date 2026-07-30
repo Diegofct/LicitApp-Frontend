@@ -2,7 +2,9 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  EventEmitter,
   HostListener,
+  Output,
   computed,
   inject,
   signal,
@@ -25,6 +27,13 @@ const ROL_BADGE: Record<Rol, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderComponent {
+  /**
+   * Pide abrir/cerrar el sidebar. Solo se emite desde el botón de menú visible
+   * en <768px, donde el sidebar es un drawer fuera de pantalla. El header no
+   * conoce el estado del sidebar: solo avisa, el shell decide.
+   */
+  @Output() menuToggle = new EventEmitter<void>();
+
   private readonly auth = inject(AuthService);
   private readonly host = inject(ElementRef<HTMLElement>);
 

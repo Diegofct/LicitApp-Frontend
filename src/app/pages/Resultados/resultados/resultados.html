@@ -5,7 +5,7 @@
   <!-- ============================================================ -->
   <div class="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
     <div>
-      <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Resultados</h1>
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Resultados</h1>
       <p class="text-gray-500 mt-2">Resumen de tus procesos de licitación e historial de procesos cerrados.</p>
     </div>
     @if (resumen(); as r) {
@@ -46,8 +46,8 @@
           <p class="text-sm text-indigo-200 mt-1">Sobre procesos cerrados</p>
 
           <div class="flex items-center justify-between gap-4 mt-4 flex-1">
-            <div>
-              <p class="text-5xl font-extrabold tabular-nums leading-none">
+            <div class="min-w-0">
+              <p class="text-4xl sm:text-5xl font-extrabold tabular-nums leading-none">
                 {{ r.tasaExitoPorcentaje | number:'1.0-2' }}<span class="text-2xl font-bold">%</span>
               </p>
               <p class="text-xs text-indigo-200 mt-3">
@@ -57,8 +57,10 @@
             </div>
 
             <!-- Anillo de progreso -->
-            <div class="relative shrink-0">
-              <svg width="120" height="120" viewBox="0 0 120 120" class="-rotate-90">
+            <!-- El anillo escala con clases en vez de width/height fijos: a 390px
+                 un SVG de 120px junto al número de tasa desbordaba la card. -->
+            <div class="relative shrink-0 w-20 h-20 sm:w-[120px] sm:h-[120px]">
+              <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
                 <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="10"></circle>
                 <circle
                   cx="60" cy="60" r="52" fill="none"
@@ -315,10 +317,10 @@
       (click)="cerrarObservacion()">
 
       <div
-        class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+        class="modal-panel bg-white rounded-2xl shadow-2xl max-w-lg"
         (click)="$event.stopPropagation()">
 
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div class="shrink-0 px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
           <div class="flex items-center gap-3 min-w-0">
             <span class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 inline-flex items-center justify-center shrink-0">
               <i class="bx bx-message-detail text-xl"></i>
@@ -337,11 +339,11 @@
           </button>
         </div>
 
-        <div class="px-6 py-5">
-          <p class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{{ obs.observacion }}</p>
+        <div class="modal-body px-4 sm:px-6 py-5">
+          <p class="text-sm text-gray-700 whitespace-pre-line break-words leading-relaxed">{{ obs.observacion }}</p>
         </div>
 
-        <div class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
+        <div class="shrink-0 px-4 sm:px-6 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
           <button
             type="button"
             (click)="cerrarObservacion()"

@@ -51,7 +51,7 @@
       <!-- Cinta superior degradada -->
       <div class="h-1.5 w-full bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-400"></div>
 
-      <div class="p-6 md:p-8">
+      <div class="p-4 sm:p-6 md:p-8">
         <div class="flex items-start gap-4 mb-6">
           <div
             class="shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200"
@@ -314,7 +314,7 @@
       ></app-tabs>
     </div>
 
-    <form [formGroup]="empresaForm" (ngSubmit)="onSubmit()" class="p-6 md:p-8 lg:p-10">
+    <form [formGroup]="empresaForm" (ngSubmit)="onSubmit()" class="p-4 sm:p-6 md:p-8 lg:p-10">
 
       <!-- TAB 1: INFORMACIÓN GENERAL -->
       <div [hidden]="activeTabId() !== 'general'" class="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -542,7 +542,7 @@
 
           <!-- Inputs section -->
           <div class="flex-1 space-y-8">
-            <div class="bg-gray-50/50 rounded-3xl p-8 border border-gray-100 shadow-inner">
+            <div class="bg-gray-50/50 rounded-3xl p-4 sm:p-6 lg:p-8 border border-gray-100 shadow-inner">
               <div class="flex items-center gap-3 mb-6">
                 <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
                   <i class="bx bx-dollar-circle text-2xl"></i>
@@ -594,8 +594,8 @@
 
           <!-- Calculated section -->
           <div class="w-full lg:w-80 xl:w-96">
-            <div class="sticky top-6 bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-3xl p-8 text-white shadow-xl shadow-indigo-200">
-              <div class="flex items-center justify-between mb-8">
+            <div class="lg:sticky lg:top-6 bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-3xl p-4 sm:p-6 lg:p-8 text-white shadow-xl shadow-indigo-200">
+              <div class="flex flex-wrap items-center justify-between gap-3 mb-8">
                 <h3 class="text-xl font-bold flex items-center gap-2">
                   <i class="bx bx-calculator"></i> Indicadores Calculados
                 </h3>
@@ -668,7 +668,7 @@
 
           <!-- Inputs section -->
           <div class="flex-1 space-y-8">
-            <div class="bg-gray-50/50 rounded-3xl p-8 border border-gray-100 shadow-inner">
+            <div class="bg-gray-50/50 rounded-3xl p-4 sm:p-6 lg:p-8 border border-gray-100 shadow-inner">
               <div class="flex items-center gap-3 mb-6">
                 <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
                   <i class="bx bx-bar-chart-alt-2 text-2xl"></i>
@@ -748,8 +748,8 @@
 
           <!-- Result section -->
           <div class="w-full lg:w-80 xl:w-96">
-            <div class="sticky top-6 bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-8 text-white shadow-xl shadow-slate-200">
-              <div class="flex items-center justify-between mb-8">
+            <div class="lg:sticky lg:top-6 bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-4 sm:p-6 lg:p-8 text-white shadow-xl shadow-slate-200">
+              <div class="flex flex-wrap items-center justify-between gap-3 mb-8">
                 <h3 class="text-xl font-bold flex items-center gap-2">
                   <i class="bx bx-calculator"></i> Resultado K Residual
                 </h3>
@@ -787,7 +787,7 @@
 
       <!-- TAB 3: EXPERIENCIA -->
       <div [hidden]="activeTabId() !== 'experiencia'" class="animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div class="flex items-center justify-between mb-8">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-8">
           <div>
             <h3 class="text-xl font-bold text-gray-800 tracking-tight">Experiencia y Contratos</h3>
             <p class="text-sm text-gray-500">Registre los contratos que respaldan la experiencia técnica</p>
