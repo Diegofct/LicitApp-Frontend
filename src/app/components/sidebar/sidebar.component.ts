@@ -11,13 +11,22 @@ interface NavItem {
   roles: Rol[];
 }
 
-/** Navegación con los roles que pueden ver cada opción. */
+/**
+ * Navegación con los roles que pueden ver cada opción.
+ *
+ * El orden sigue el flujo real de trabajo del licitador, no un agrupamiento
+ * temático: Empresas va primero porque sin proponentes cargados la Evaluación
+ * de Viabilidad no tiene contra qué comparar, y Sobre 2 va después de
+ * Seguimiento porque la oferta económica se decide una vez el proceso quedó
+ * hábil. Usuarios queda al final por ser administración, ajena al flujo.
+ */
 const NAV_ITEMS: NavItem[] = [
+  { label: 'Empresas', route: '/empresas', icon: 'bx-group', roles: ['ANALISTA', 'ADMIN'] },
   { label: 'Busqueda SECOP', route: '/busqueda-secop', icon: 'bx-search', roles: ['ANALISTA', 'ADMIN'] },
   { label: 'Cuadro de Obra', route: '/cuadro-de-obra', icon: 'bx-building-house', roles: ['ANALISTA', 'ADMIN'] },
   { label: 'Evaluación de Viabilidad', route: '/evaluacion-viabilidad', icon: 'bx-analyse', roles: ['ANALISTA', 'ADMIN'] },
-  { label: 'Empresas', route: '/empresas', icon: 'bx-group', roles: ['ANALISTA', 'ADMIN'] },
   { label: 'Seguimiento', route: '/seguimiento', icon: 'bx-line-chart', roles: ['ANALISTA', 'ADMIN'] },
+  { label: 'Sobre 2', route: '/sobre-2', icon: 'bx-calculator', roles: ['ANALISTA', 'ADMIN'] },
   { label: 'Resultados', route: '/resultados', icon: 'bx-trophy', roles: ['ANALISTA', 'ADMIN'] },
   { label: 'Usuarios', route: '/usuarios', icon: 'bx-user-circle', roles: ['ADMIN'] },
 ];

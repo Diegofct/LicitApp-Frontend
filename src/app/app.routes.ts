@@ -36,6 +36,11 @@ export const routes: Routes = [
                 loadComponent: () => import('./pages/AnalisisCumplimiento/analisis-cumplimiento/analisis-cumplimiento').then(m => m.AnalisisCumplimiento)
             },
             {
+                path: 'sobre-2',
+                canActivate: [roleGuard([...OPERATIVOS])],
+                loadComponent: () => import('./pages/Sobre2/sobre-2/sobre-2').then(m => m.Sobre2)
+            },
+            {
                 path: 'empresas',
                 canActivateChild: [roleGuard([...OPERATIVOS])],
                 children: [

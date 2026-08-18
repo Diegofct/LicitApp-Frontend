@@ -1,0 +1,174 @@
+<div class="modal-overlay bg-black/60 backdrop-blur-sm z-[120]" (click)="onBackdrop($event)">
+  <div
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="oferente-modal-titulo"
+    class="modal-panel max-w-xl bg-white rounded-2xl shadow-2xl"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div
+      class="shrink-0 px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-indigo-50 via-white to-white flex items-center justify-between gap-3"
+    >
+      <div class="flex items-center gap-3">
+        <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-indigo-600/10 text-indigo-600">
+          <i class="bx text-2xl" [ngClass]="esEdicion() ? 'bx-edit' : 'bx-user-plus'"></i>
+        </div>
+        <div>
+          <h3 id="oferente-modal-titulo" class="text-lg font-bold text-gray-900">
+            {{ esEdicion() ? 'Editar oferente' : 'Agregar oferente' }}
+          </h3>
+          <p class="text-xs text-gray-500">
+            Oferta económica presentada por un competidor del proceso.
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        (click)="close.emit()"
+        [disabled]="saving()"
+        class="cursor-pointer text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+        aria-label="Cerrar"
+      >
+        <i class="bx bx-x text-2xl"></i>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <form [formGroup]="form" (ngSubmit)="guardar()" class="modal-body p-4 sm:p-6 space-y-5">
+      @if (esDeSecop()) {
+        <div class="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+          <i class="bx bx-info-circle text-amber-600 text-lg shrink-0 mt-0.5"></i>
+          <p class="text-xs text-amber-800 leading-relaxed">
+            Este oferente vino de <strong>SECOP</strong>. Lo que edites aquí
+            <strong>se sobrescribe en la próxima importación</strong> del proceso.
+          </p>
+        </div>
+      }
+
+      <!-- Nombre: es el identificador visible (el NIT casi nunca existe en consorcios/UT) -->
+      <div>
+        <label for="of-nombre" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+          Nombre del oferente <span class="text-red-500 normal-case font-normal">(obligatorio)</span>
+        </label>
+        <input
+          id="of-nombre"
+          type="text"
+          formControlName="nombreOferente"
+          maxlength="500"
+          placeholder="Razón social, consorcio o unión temporal"
+          class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
+          [class.border-red-300]="isInvalid('nombreOferente')"
+        />
+        @if (isInvalid('nombreOferente')) {
+          <p class="text-[11px] text-red-600 mt-1 flex items-center gap-1">
+            <i class="bx bx-error-circle"></i> El nombre es obligatorio (máximo 500 caracteres).
+          </p>
+        }
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Valor -->
+        <div>
+          <label for="of-valor" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+            Valor de la oferta <span class="text-red-500 normal-case font-normal">(obligatorio)</span>
+          </label>
+          <input
+            id="of-valor"
+            type="number"
+            min="1"
+            step="1"
+            formControlName="valorOferta"
+            placeholder="0"
+            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm tabular-nums"
+            [class.border-red-300]="isInvalid('valorOferta')"
+          />
+          @if (isInvalid('valorOferta')) {
+            <p class="text-[11px] text-red-600 mt-1 flex items-center gap-1">
+              <i class="bx bx-error-circle"></i> Debe ser un valor mayor que cero.
+            </p>
+          } @else if (porcentajeEstimado() !== null) {
+            <p class="text-[11px] text-gray-400 mt-1">
+              Equivale al
+              <span class="font-semibold text-gray-600">{{ porcentajeEstimado() | number: '1.2-2' }} %</span>
+              del presupuesto oficial.
+            </p>
+          }
+        </div>
+
+        <!-- NIT -->
+        <div>
+          <label for="of-nit" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+            NIT <span class="text-gray-300 font-normal normal-case">(opcional)</span>
+          </label>
+          <input
+            id="of-nit"
+            type="text"
+            formControlName="nitOferente"
+            maxlength="32"
+            placeholder="Los consorcios y UT no suelen tenerlo"
+            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Moneda -->
+        <div>
+          <label for="of-moneda" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+            Moneda <span class="text-gray-300 font-normal normal-case">(opcional)</span>
+          </label>
+          <input
+            id="of-moneda"
+            type="text"
+            formControlName="moneda"
+            maxlength="16"
+            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
+          />
+        </div>
+
+        <!-- Validez -->
+        <div>
+          <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+            Entra en las fórmulas
+          </span>
+          <label
+            class="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 cursor-pointer"
+          >
+            <input type="checkbox" formControlName="valida" class="w-4 h-4 accent-indigo-600" />
+            <span class="text-sm text-gray-700">Oferta válida</span>
+          </label>
+          <p class="text-[11px] text-gray-400 mt-1">
+            Desmárcala si la entidad la rechazó: se conserva como rastro, pero no pondera.
+          </p>
+        </div>
+      </div>
+    </form>
+
+    <!-- Footer -->
+    <div
+      class="shrink-0 px-4 sm:px-6 py-4 border-t border-gray-100 bg-gray-50/60 flex flex-col-reverse sm:flex-row sm:justify-end gap-3"
+    >
+      <button
+        type="button"
+        (click)="close.emit()"
+        [disabled]="saving()"
+        class="cursor-pointer px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors disabled:opacity-50"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        (click)="guardar()"
+        [disabled]="form.invalid || saving()"
+        class="cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-lg shadow-indigo-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+      >
+        @if (saving()) {
+          <i class="bx bx-loader-alt animate-spin text-lg"></i> Guardando…
+        } @else {
+          <i class="bx bx-save text-lg"></i> {{ esEdicion() ? 'Guardar cambios' : 'Agregar oferente' }}
+        }
+      </button>
+    </div>
+  </div>
+</div>

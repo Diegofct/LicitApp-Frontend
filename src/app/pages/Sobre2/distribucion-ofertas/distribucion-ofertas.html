@@ -1,0 +1,255 @@
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+  <!-- Encabezado -->
+  <div class="px-4 sm:px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+    <div>
+      <h2 class="text-base font-bold text-gray-900 flex items-center gap-2">
+        <i class="bx bx-bar-chart-alt-2 text-indigo-600 text-xl"></i>
+        Distribución de las ofertas
+      </h2>
+      <p class="text-xs text-gray-500 mt-1">
+        Dónde cae tu valor frente a la competencia y frente a lo que premia cada método.
+      </p>
+    </div>
+    @if (hayDatos()) {
+      <p class="text-[11px] text-gray-400">
+        Eje en % del presupuesto oficial · altura de la barra = número de ofertas
+      </p>
+    }
+  </div>
+
+  @if (!hayDatos()) {
+    <!-- Vacío: sin ofertas válidas no hay nada honesto que dibujar -->
+    <div class="px-6 py-12 flex flex-col items-center text-center">
+      <i class="bx bx-bar-chart-alt-2 text-5xl text-gray-200"></i>
+      <p class="mt-3 text-sm font-medium text-gray-500">Aún no hay ofertas válidas que graficar</p>
+      <p class="text-xs text-gray-400 mt-1 max-w-sm">
+        Importa los oferentes desde SECOP o agrégalos manualmente para ver la distribución.
+      </p>
+    </div>
+  } @else {
+    <!-- El lienzo scrollea dentro de su propia caja: el body nunca lo hace en horizontal. -->
+    <div class="overflow-x-auto">
+      <div class="relative min-w-[640px] px-2 pt-2 pb-1">
+        <svg
+          [attr.viewBox]="'0 0 ' + ancho + ' ' + alto"
+          class="w-full h-auto"
+          role="img"
+          aria-label="Distribución de las ofertas del proceso sobre el eje de valor, con los valores de referencia de cada método de ponderación."
+        >
+          <!-- Densidad de ofertas válidas (contexto en gris) -->
+          <g>
+            @for (bin of bins(); track bin.indice) {
+              <rect
+                [attr.x]="bin.x"
+                [attr.y]="bin.y"
+                [attr.width]="bin.ancho"
+                [attr.height]="bin.alto"
+                [attr.fill]="colorOferta"
+                fill-opacity="0.45"
+                rx="2"
+              ></rect>
+            }
+          </g>
+
+          <!-- Etiqueta directa: solo el bin más poblado (nunca un número por barra) -->
+          @if (binDestacado(); as top) {
+            <text
+              [attr.x]="top.x + top.ancho / 2"
+              [attr.y]="top.y - 6"
+              text-anchor="middle"
+              class="fill-gray-500"
+              style="font-size: 10px; font-weight: 600"
+            >
+              {{ top.cantidad }}
+            </text>
+          }
+
+          <!-- Línea base (hairline sólido, recesivo) -->
+          <line
+            [attr.x1]="x0"
+            [attr.y1]="lineaBase"
+            [attr.x2]="x1"
+            [attr.y2]="lineaBase"
+            stroke="#cbd5e1"
+            stroke-width="1"
+          ></line>
+
+          <!-- Ofertas excluidas: existen, pero no cuentan -->
+          @for (ex of marcasExcluidas(); track $index) {
+            <line
+              [attr.x1]="ex.x"
+              [attr.y1]="lineaBase + 3"
+              [attr.x2]="ex.x"
+              [attr.y2]="lineaBase + 11"
+              [attr.stroke]="colorOfertaInvalida"
+              stroke-width="2"
+            ></line>
+          }
+
+          <!-- Rótulos del eje -->
+          @for (t of ticks(); track $index) {
+            <text
+              [attr.x]="t.x"
+              [attr.y]="yTicks"
+              text-anchor="middle"
+              class="fill-gray-400"
+              style="font-size: 10px; font-variant-numeric: tabular-nums"
+            >
+              {{ t.texto }}
+            </text>
+          }
+
+          <!-- Marcadores de método, con etiqueta directa en carriles -->
+          @for (m of marcasMetodo(); track m.metodo) {
+            <g
+              tabindex="0"
+              class="outline-none cursor-pointer"
+              [attr.aria-label]="m.nombre + ', TRM ' + m.rangoTrm + ', ' + formatoMoneda(m.valorReferencia)"
+              (pointerenter)="mostrarMetodo(m)"
+              (pointerleave)="ocultarTooltip()"
+              (focus)="mostrarMetodo(m)"
+              (blur)="ocultarTooltip()"
+            >
+              <polyline
+                [attr.points]="m.guia"
+                fill="none"
+                [attr.stroke]="m.color"
+                stroke-width="1.5"
+                stroke-opacity="0.55"
+              ></polyline>
+              <text
+                [attr.x]="m.labelX"
+                [attr.y]="m.labelY"
+                text-anchor="middle"
+                class="fill-gray-700"
+                style="font-size: 11px; font-weight: 600"
+              >
+                {{ m.texto }}
+              </text>
+              <!-- Rombo con anillo de superficie: legible aunque dos métodos casi coincidan -->
+              <circle
+                [attr.cx]="m.x"
+                [attr.cy]="topeFranja"
+                r="5.5"
+                [attr.fill]="m.color"
+                stroke="#ffffff"
+                stroke-width="2"
+              ></circle>
+              <line
+                [attr.x1]="m.x"
+                [attr.y1]="topeFranja"
+                [attr.x2]="m.x"
+                [attr.y2]="lineaBase"
+                [attr.stroke]="m.color"
+                stroke-width="2"
+                stroke-opacity="0.8"
+              ></line>
+            </g>
+          }
+
+          <!-- Candidato: forma propia + tinta, nunca un quinto color de serie -->
+          @if (xCandidato(); as xc) {
+            <g
+              tabindex="0"
+              class="outline-none cursor-pointer"
+              [attr.aria-label]="'Tu oferta: ' + formatoMoneda(valorCandidato() ?? 0)"
+              (pointerenter)="mostrarCandidato()"
+              (pointerleave)="ocultarTooltip()"
+              (focus)="mostrarCandidato()"
+              (blur)="ocultarTooltip()"
+            >
+              <line
+                [attr.x1]="xc"
+                [attr.y1]="topeFranja - 8"
+                [attr.x2]="xc"
+                [attr.y2]="yRombo"
+                [attr.stroke]="colorCandidato"
+                stroke-width="2"
+              ></line>
+              <rect
+                [attr.x]="xc - 5"
+                [attr.y]="yRombo - 5"
+                width="10"
+                height="10"
+                [attr.fill]="colorCandidato"
+                stroke="#ffffff"
+                stroke-width="2"
+                [attr.transform]="'rotate(45 ' + xc + ' ' + yRombo + ')'"
+              ></rect>
+              <text
+                [attr.x]="labelXCandidato()"
+                [attr.y]="yRombo + 20"
+                text-anchor="middle"
+                class="fill-gray-900"
+                style="font-size: 11px; font-weight: 700"
+              >
+                Tu oferta · {{ formatoCompacto(valorCandidato() ?? 0) }}
+              </text>
+            </g>
+          }
+
+          <!-- Zonas de hover/foco de la densidad: contiguas y por encima de todo -->
+          @for (bin of bins(); track bin.indice) {
+            <rect
+              [attr.x]="bin.x - 1"
+              [attr.y]="topeFranja - 10"
+              [attr.width]="bin.ancho + 2"
+              [attr.height]="lineaBase - topeFranja + 22"
+              fill="transparent"
+              tabindex="0"
+              class="outline-none cursor-crosshair"
+              [attr.aria-label]="bin.cantidad + ' ofertas entre ' + formatoCompacto(bin.desde) + ' y ' + formatoCompacto(bin.hasta)"
+              (pointerenter)="mostrarBin(bin)"
+              (pointerleave)="ocultarTooltip()"
+              (focus)="mostrarBin(bin)"
+              (blur)="ocultarTooltip()"
+            ></rect>
+          }
+        </svg>
+
+        <!-- Tooltip: enriquece, nunca es la única vía (todo está en la tabla y en las tarjetas) -->
+        @if (tooltip(); as tt) {
+          <div
+            class="pointer-events-none absolute -top-1 z-10 -translate-x-1/2 max-w-[15rem] rounded-xl bg-gray-900 px-3 py-2 text-white shadow-xl"
+            [style.left.%]="tt.xPct < 12 ? 12 : tt.xPct > 88 ? 88 : tt.xPct"
+          >
+            <div class="flex items-center gap-2">
+              <span class="inline-block h-0.5 w-3 rounded-full" [style.background-color]="tt.color"></span>
+              <span class="text-xs font-bold">{{ tt.titulo }}</span>
+            </div>
+            @for (linea of tt.lineas; track $index) {
+              <p class="text-[11px] text-gray-300 leading-snug truncate">{{ linea }}</p>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Leyenda: siempre presente con más de una serie -->
+    <div class="px-4 sm:px-6 py-3 border-t border-gray-100 bg-gray-50/60 flex flex-wrap items-center gap-x-5 gap-y-2">
+      @for (l of leyenda(); track l.nombre) {
+        <span class="inline-flex items-center gap-2 text-[11px] text-gray-600">
+          <span class="inline-block h-0.5 w-4 rounded-full" [style.background-color]="l.color"></span>
+          {{ l.nombre }}
+          <span class="text-gray-400">(TRM {{ l.rangoTrm }})</span>
+        </span>
+      }
+      <span class="inline-flex items-center gap-2 text-[11px] text-gray-600">
+        <span class="inline-block h-2 w-3 rounded-sm" [style.background-color]="colorOferta" style="opacity: 0.45"></span>
+        Ofertas de la competencia
+      </span>
+      @if (marcasExcluidas().length > 0) {
+        <span class="inline-flex items-center gap-2 text-[11px] text-gray-600">
+          <span class="inline-block h-0.5 w-4 rounded-full" [style.background-color]="colorOfertaInvalida"></span>
+          Excluidas ({{ marcasExcluidas().length }})
+        </span>
+      }
+      @if (xCandidato() !== null) {
+        <span class="inline-flex items-center gap-2 text-[11px] text-gray-900 font-semibold">
+          <span class="inline-block h-2 w-2 rotate-45" [style.background-color]="colorCandidato"></span>
+          Tu oferta
+        </span>
+      }
+    </div>
+  }
+</div>
