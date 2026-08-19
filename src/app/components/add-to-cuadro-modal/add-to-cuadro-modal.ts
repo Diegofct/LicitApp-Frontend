@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Licitacion } from '../../pages/Licitaciones/interface/licitaciones';
+import { DocumentoProceso, Licitacion, formatTamanoDocumento } from '../../pages/Licitaciones/interface/licitaciones';
+import { LicitacionesService } from '../../pages/Licitaciones/service/licitaciones.service';
 import { CuadroDeObraService } from '../../pages/CuadroDeObra/service/cuadro-de-obra.service';
 import { CuadroDeObraItem } from '../../pages/CuadroDeObra/interface/cuadro-de-obra';
 import { AlertService } from '../../services/alert.service';
@@ -15,6 +16,7 @@ import { AlertService } from '../../services/alert.service';
 export class AddToCuadroModal implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly cuadroService = inject(CuadroDeObraService);
+  private readonly licitacionesService = inject(LicitacionesService);
   private readonly alertService = inject(AlertService);
 
   private readonly SMMLV_2026 = 1750905; // Valor SMMLV 2026
@@ -32,10 +34,15 @@ export class AddToCuadroModal implements OnInit {
   form!: FormGroup;
   loading = false;
 
+  /** Documentos del proceso publicados en SECOP; el pliego llega de primeras. */
+  readonly documentos = signal<DocumentoProceso[]>([]);
+  readonly cargandoDocumentos = signal(false);
+
   ngOnInit(): void {
     this.initForm();
     this.setupMontoListener();
     this.calculateInitialSMMLV();
+    this.cargarDocumentos();
 
     // Modo lectura: precargamos los datos guardados y deshabilitamos el formulario.
     if (this.readonly && this.existente) {
@@ -58,16 +65,52 @@ export class AddToCuadroModal implements OnInit {
       departamento: [depto],
       municipio: [muni],
       monto: [this.licitacion.cuantia, [Validators.required, Validators.min(0)]],
-      fechaCierre: ['', Validators.required],
+      // Precargados desde SECOP, pero editables: la fecha viene sin hora y el plazo no
+      // siempre se puede convertir a meses, así que el analista los confirma contra el pliego.
+      fechaCierre: [this.aDatetimeLocal(this.licitacion.fechaCierre), Validators.required],
       valorSMMLV: [{ value: null, disabled: false }, [Validators.required]],
       tipoProyecto: ['', Validators.required],
       experiencia: ['', Validators.required],
-      plazo: [null, [Validators.required, Validators.min(0)]],
+      plazo: [this.licitacion.plazoMeses ?? null, [Validators.required, Validators.min(0)]],
       anticipo: [null, [Validators.required, Validators.min(0), Validators.max(100)]],
       observacion: [''],
       cuadroDeObraEstado: ['POR_PRESENTAR']
     });
   }
+
+  /**
+   * Recorta el ISO del backend a lo que acepta un input datetime-local (YYYY-MM-DDTHH:mm).
+   * SECOP publica la fecha de recepción siempre a las 00:00, así que la hora resultante es
+   * un marcador de posición, no el vencimiento real.
+   */
+  private aDatetimeLocal(iso: string | null | undefined): string {
+    if (!iso) return '';
+    return iso.length >= 16 ? iso.substring(0, 16) : iso;
+  }
+
+  /**
+   * Trae los documentos del proceso para tener el pliego a mano justo cuando hay que
+   * transcribir la experiencia. Es información de apoyo: si falla, el modal sigue usable.
+   */
+  private cargarDocumentos(): void {
+    const portafolio = this.licitacion.idDelPortafolio;
+    if (!portafolio) return;
+
+    this.cargandoDocumentos.set(true);
+    this.licitacionesService.obtenerDocumentos(portafolio).subscribe({
+      next: (docs) => {
+        this.documentos.set(docs);
+        this.cargandoDocumentos.set(false);
+      },
+      error: (err) => {
+        console.error('Error al cargar los documentos del proceso:', err);
+        this.cargandoDocumentos.set(false);
+      },
+    });
+  }
+
+  /** Tamaño legible para la lista de documentos. */
+  readonly formatTamano = formatTamanoDocumento;
 
   private setupMontoListener(): void {
     this.form.get('monto')?.valueChanges.subscribe(monto => {

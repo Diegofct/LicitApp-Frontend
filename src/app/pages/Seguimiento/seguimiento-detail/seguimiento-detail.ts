@@ -17,6 +17,7 @@ import { ConformacionProponenteService } from '../../Conformacion/service/confor
 import { ConformacionResponse, IntegranteResponse } from '../../Conformacion/interface/conformacion';
 import { EmpresaService } from '../../Empresa/service/empresa.service';
 import { Empresa } from '../../Empresa/interface/empresa';
+import { LicitacionesService } from '../../Licitaciones/service/licitaciones.service';
 import { SeguimientoService } from '../service/seguimiento.service';
 import {
   SeguimientoEvento,
@@ -71,6 +72,7 @@ export class SeguimientoDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly cuadroService = inject(CuadroDeObraService);
   private readonly seguimientoService = inject(SeguimientoService);
+  private readonly licitacionesService = inject(LicitacionesService);
   private readonly conformacionService = inject(ConformacionProponenteService);
   private readonly empresaService = inject(EmpresaService);
   private readonly alertService = inject(AlertService);
@@ -82,6 +84,8 @@ export class SeguimientoDetailComponent implements OnInit {
   readonly conformacion = signal<ConformacionResponse | null>(null);
   readonly empresas = signal<Empresa[]>([]);
   readonly showRegistrar = signal(false);
+  /** Enlace al proceso en SECOP II, para revisar en qué evento va. */
+  readonly urlProceso = signal<string | null>(null);
 
   readonly eventosOrdenados = computed<EventoExtendido[]>(() => {
     const seg = this.seguimiento();
@@ -129,6 +133,7 @@ export class SeguimientoDetailComponent implements OnInit {
     }).subscribe({
       next: ({ cuadro, seguimiento, conformacion, empresas }) => {
         this.cuadro.set(cuadro);
+        this.cargarUrlProceso(cuadro);
         this.seguimiento.set(seguimiento);
         this.conformacion.set(conformacion);
         this.empresas.set(empresas);
@@ -138,6 +143,20 @@ export class SeguimientoDetailComponent implements OnInit {
         this.loading.set(false);
         this.alertService.error('No se pudo cargar el detalle del proceso.');
       },
+    });
+  }
+
+  /**
+   * Resuelve el enlace al proceso en SECOP II. Va fuera del forkJoin porque depende del cuadro
+   * ya cargado, y así tampoco retrasa el pintado de la pantalla. Los cuadros dados de alta a
+   * mano no tienen identificador SECOP: en ese caso no se muestra el enlace.
+   */
+  private cargarUrlProceso(cuadro: CuadroDeObraItem): void {
+    if (!cuadro.idDelProceso) return;
+
+    this.licitacionesService.obtenerUrlProceso(cuadro.idDelProceso).subscribe({
+      next: (res) => this.urlProceso.set(res.url),
+      error: (err) => console.error('Error al resolver la URL del proceso en SECOP:', err),
     });
   }
 

@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, catchError, finalize, of } from 'rxjs';
 import { CuadroDeObraService } from '../../pages/CuadroDeObra/service/cuadro-de-obra.service';
-import { RequisitoLicitacion } from '../../pages/CuadroDeObra/interface/cuadro-de-obra';
+import { CuadroDeObraItem, RequisitoLicitacion } from '../../pages/CuadroDeObra/interface/cuadro-de-obra';
+import { LicitacionesService } from '../../pages/Licitaciones/service/licitaciones.service';
+import { DocumentoProceso, formatTamanoDocumento } from '../../pages/Licitaciones/interface/licitaciones';
 import { AlertService } from '../../services/alert.service';
 
 @Component({
@@ -15,6 +17,7 @@ import { AlertService } from '../../services/alert.service';
 export class RequisitoLicitacionModal implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly cuadroService = inject(CuadroDeObraService);
+  private readonly licitacionesService = inject(LicitacionesService);
   private readonly alertService = inject(AlertService);
 
   @Input({ required: true }) cuadroObraId!: number;
@@ -29,9 +32,21 @@ export class RequisitoLicitacionModal implements OnInit {
   isEditMode = signal(false);
   private requisitoId: number | null = null;
 
-  // (RF7) Opciones de los índices financieros en pasos de 0.05.
-  readonly opciones0a1: number[] = this.generarOpciones(1);
-  readonly opciones0a2: number[] = this.generarOpciones(2);
+  /**
+   * Valores que exigen las matrices de indicadores de los pliegos tipo (CCE-EICP-FM-12, -45,
+   * -72, -98, -117). Alimentan los datalist como sugerencias, no como catálogo cerrado: una
+   * entidad fuera de pliego tipo puede exigir otros.
+   *
+   * Sustituyen a los antiguos selects en pasos de 0.05, que dejaban fuera los valores reales:
+   * ROE y ROA se exigen entre 0,01 y 0,05, y la cobertura de intereses llega a 1,5.
+   */
+  readonly sugerencias: Record<string, number[]> = {
+    liquidez: [1.03, 1.1, 1.19, 1.2, 1.25, 1.3, 1.4],
+    endeudamiento: [0.65, 0.7, 0.73, 0.74, 0.75],
+    razonCoberturaInteres: [0, 0.5, 1, 1.5, 2, 3],
+    rentabilidadPatrimonio: [0, 0.02, 0.03, 0.04, 0.05],
+    rentabilidadActivo: [0, 0.01, 0.02, 0.03],
+  };
 
   // Valor del proceso en SMMLV (RF4), tomado del Cuadro de Obra.
   readonly valorSmmlv = signal(0);
@@ -41,6 +56,14 @@ export class RequisitoLicitacionModal implements OnInit {
     if (v <= 0) return null;
     return v >= 40000 ? 'RANGO_2' : 'RANGO_1';
   });
+  /**
+   * Matrices de indicadores publicadas en el proceso. Son la fuente de los valores exigidos:
+   * el Documento Base solo trae las fórmulas y remite a la Matriz 2.
+   */
+  readonly matrices = signal<DocumentoProceso[]>([]);
+  readonly cargandoMatrices = signal(false);
+  readonly formatTamano = formatTamanoDocumento;
+
   /** (RF5) Desglose del cálculo del Capital de Trabajo: rama aplicada y n usado. */
   readonly desgloseCapitalTrabajo = signal<{ rama: 'A' | 'B'; n: number | null } | null>(null);
 
@@ -59,20 +82,25 @@ export class RequisitoLicitacionModal implements OnInit {
 
   private initForm(): void {
     this.form = this.fb.group({
+      // Solo la experiencia general es obligatoria: se precarga con la que ya se escribió al
+      // agregar el proceso al Cuadro de Obra. Las demás quedan para desglosar cuando el
+      // pliego lo exija, en vez de forzar a repartir el mismo texto en cuatro campos.
       general: ['', [Validators.required]],
-      especifica1: ['', [Validators.required]],
-      especifica2: ['', [Validators.required]],
-      secundaria: ['', [Validators.required]],
+      especifica1: [''],
+      especifica2: [''],
+      secundaria: [''],
       contrato: [1, [Validators.required, Validators.min(1)]],
       plazo: [null, [Validators.required, Validators.min(0)]], // (RF5) meses, precargado desde el cuadro
       presupuesto: [0, [Validators.required, Validators.min(0)]],
       patrimonio: [0, [Validators.required, Validators.min(0)]],
       // (RF1) Calculado y de solo lectura, como la capacidad residual.
       capitalTrabajo: [{ value: 0, disabled: true }, [Validators.required, Validators.min(0)]],
-      // (RF7) rangos: 0–2 liquidez; 0–1 el resto.
-      liquidez: [0, [Validators.required, Validators.min(0), Validators.max(2)]],
+      // Los topes acotan lo que es fracción por definición (endeudamiento y rentabilidades) y
+      // así atrapan el error de digitar 70 en vez de 0,70. La razón de cobertura de intereses
+      // no lleva tope: son veces, no fracción, y los pliegos exigen 1,5 o más.
+      liquidez: [0, [Validators.required, Validators.min(0), Validators.max(5)]],
       endeudamiento: [0, [Validators.required, Validators.min(0), Validators.max(1)]],
-      razonCoberturaInteres: [0, [Validators.required, Validators.min(0), Validators.max(1)]],
+      razonCoberturaInteres: [0, [Validators.required, Validators.min(0)]],
       rentabilidadPatrimonio: [0, [Validators.required, Validators.min(0), Validators.max(1)]],
       rentabilidadActivo: [0, [Validators.required, Validators.min(0), Validators.max(1)]],
       kresidualProceso: [{ value: 0, disabled: true }, [Validators.required, Validators.min(0)]],
@@ -115,23 +143,31 @@ export class RequisitoLicitacionModal implements OnInit {
   /** (RF4) Carga el valor del proceso en SMMLV para derivar el rango informativo. */
   private cargarValorSmmlv(): void {
     this.cuadroService.obtenerCuadroDeObraPorId(this.cuadroObraId).subscribe({
-      next: (cuadro) => this.valorSmmlv.set(cuadro.valorSMMLV ?? 0),
+      next: (cuadro) => {
+        this.valorSmmlv.set(cuadro.valorSMMLV ?? 0);
+        this.cargarMatrices(cuadro);
+      },
       error: (err) => console.error('Error al cargar el valor SMMLV del cuadro:', err),
     });
   }
 
   /**
    * (RF5) Al crear requisitos por primera vez, precarga desde el Cuadro de Obra el
-   * presupuesto, el % de anticipo y el plazo (meses) ya digitados para el proceso.
+   * presupuesto, el % de anticipo, el plazo (meses) y la experiencia ya digitados para el
+   * proceso. La experiencia solo se copia si el campo está vacío, para no pisar lo que el
+   * analista haya alcanzado a escribir mientras cargaba el cuadro.
    */
   private cargarDatosDesdeCuadro(): void {
     this.cuadroService.obtenerCuadroDeObraPorId(this.cuadroObraId).subscribe({
       next: (cuadro) => {
         this.valorSmmlv.set(cuadro.valorSMMLV ?? 0); // (RF4)
+        this.cargarMatrices(cuadro);
+        const generalActual = (this.form.get('general')?.value ?? '').trim();
         this.form.patchValue({
           presupuesto: this.monto ?? cuadro.monto,
           poeAnticipo: cuadro.anticipo ?? 0,
           plazo: cuadro.plazo ?? null,
+          ...(generalActual ? {} : { general: cuadro.experiencia ?? '' }),
         });
         this.calcularCapacidadResidual();
         this.calcularCapitalTrabajo();
@@ -140,10 +176,25 @@ export class RequisitoLicitacionModal implements OnInit {
     });
   }
 
-  /** (RF7) Genera [0, 0.05, … , max] para los selects de índices financieros. */
-  private generarOpciones(max: number): number[] {
-    const pasos = Math.round(max / 0.05);
-    return Array.from({ length: pasos + 1 }, (_, i) => Math.round(i * 5) / 100);
+  /**
+   * Trae del proceso las matrices de indicadores para tenerlas a un clic mientras se
+   * transcriben los valores. Es información de apoyo: si falla, el formulario sigue usable.
+   * Los cuadros dados de alta a mano no tienen identificador SECOP y no muestran el bloque.
+   */
+  private cargarMatrices(cuadro: CuadroDeObraItem): void {
+    if (!cuadro.idDelProceso || this.matrices().length > 0) return;
+
+    this.cargandoMatrices.set(true);
+    this.licitacionesService.obtenerDocumentosPorProceso(cuadro.idDelProceso).subscribe({
+      next: (docs) => {
+        this.matrices.set(docs.filter((d) => d.esMatrizIndicadores));
+        this.cargandoMatrices.set(false);
+      },
+      error: (err) => {
+        console.error('Error al cargar las matrices de indicadores del proceso:', err);
+        this.cargandoMatrices.set(false);
+      },
+    });
   }
 
   private setupCalculos(): void {

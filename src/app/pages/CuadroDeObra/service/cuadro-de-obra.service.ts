@@ -117,17 +117,6 @@ export class CuadroDeObraService {
   }
 
   /**
-   * Envía un archivo al backend para ser analizado por la IA y extraer requisitos.
-   * @param id ID del registro del cuadro de obra.
-   * @param file Archivo del pliego de condiciones.
-   */
-  analizarPliego(id: number, file: File): Observable<RequisitoLicitacion> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<RequisitoLicitacion>(`${this.apiUrl}/${id}/extraer-requisitos`, formData);
-  }
-
-  /**
    * Obtiene los requisitos de licitación para un registro del cuadro de obra.
    * @param id ID del registro.
    */
