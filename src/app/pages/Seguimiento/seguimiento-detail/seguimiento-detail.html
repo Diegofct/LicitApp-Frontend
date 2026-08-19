@@ -28,13 +28,26 @@
             <h1 class="text-2xl font-bold text-gray-900 tracking-tight leading-tight">{{ c.entidadContratante }}</h1>
             <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ c.descripcionObjeto }}</p>
           </div>
-          <button
-            type="button"
-            (click)="showRegistrar.set(true)"
-            class="cursor-pointer shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5"
-          >
-            <i class="bx bx-plus-circle text-lg"></i> Registrar evento
-          </button>
+          <div class="shrink-0 flex items-center gap-2">
+            <!-- Enlace al proceso en SECOP II: permite ver en qué evento va sin salir a buscarlo -->
+            @if (urlProceso(); as url) {
+              <a
+                [href]="url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-blue-200 bg-white text-blue-600 hover:bg-blue-50 text-sm font-semibold transition-all"
+              >
+                <i class="bx bx-link-external text-lg"></i> Ver en SECOP II
+              </a>
+            }
+            <button
+              type="button"
+              (click)="showRegistrar.set(true)"
+              class="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5"
+            >
+              <i class="bx bx-plus-circle text-lg"></i> Registrar evento
+            </button>
+          </div>
         </div>
 
         <!-- Datos clave -->

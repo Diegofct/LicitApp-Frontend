@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Tab, Tabs } from '../../../components/tabs/tabs';
 import { ModernTable, TableColumn, TableData } from '../../../components/modern-table/modern-table';
@@ -9,7 +9,6 @@ import { AlertService } from '../../../services/alert.service';
 import { EditCuadroModal } from '../../../components/edit-cuadro-modal/edit-cuadro-modal';
 import { AddProcesoModal } from '../../../components/add-proceso-modal/add-proceso-modal';
 import { RequisitoLicitacionModal } from '../../../components/requisito-licitacion-modal/requisito-licitacion-modal';
-import { AnalizarPliegoModal } from '../../../components/analizar-pliego-modal/analizar-pliego-modal';
 
 @Component({
   selector: 'app-cuadro-de-obra',
@@ -22,7 +21,6 @@ import { AnalizarPliegoModal } from '../../../components/analizar-pliego-modal/a
     EditCuadroModal,
     AddProcesoModal,
     RequisitoLicitacionModal,
-    AnalizarPliegoModal,
   ],
   templateUrl: './cuadro-de-obra.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -80,25 +78,10 @@ export class CuadroDeObra implements OnInit {
     },
   ];
 
-  columnasCuadro = computed(() => {
-    const cols = [...this.baseColumnas];
-    
-    // Agregar acción de análisis solo en la pestaña "Por Presentar"
-    if (this.activeTabId() === 'por-presentar') {
-      cols.push({ 
-        key: 'analizar', 
-        label: '', 
-        type: 'action', 
-        actionIcon: 'bx bx-bot text-purple-600',
-        width: '50px'
-      });
-    }
-
-    cols.push(
-      { key: 'editar', label: '', type: 'action', actionIcon: 'bx bx-edit text-blue-600' }
-    );
-    return cols;
-  });
+  columnasCuadro: TableColumn[] = [
+    ...this.baseColumnas,
+    { key: 'editar', label: '', type: 'action', actionIcon: 'bx bx-edit text-blue-600' },
+  ];
 
   // --- ESTADO DE LA PAGINACIÓN CON SIGNALS ---
   currentPage = signal(1);
@@ -113,7 +96,6 @@ export class CuadroDeObra implements OnInit {
   showAddModal = signal(false);
   showEditModal = signal(false);
   showRequisitosModal = signal(false);
-  showAnalizarModal = signal(false);
   selectedItem = signal<CuadroDeObraItem | null>(null);
 
   ngOnInit(): void {
@@ -168,8 +150,6 @@ export class CuadroDeObra implements OnInit {
       this.showEditModal.set(true);
     } else if (event.column.key === 'requisitos') {
       this.showRequisitosModal.set(true);
-    } else if (event.column.key === 'analizar') {
-      this.showAnalizarModal.set(true);
     }
   }
 

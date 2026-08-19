@@ -69,21 +69,21 @@
               placeholder="Describa la experiencia general requerida"></textarea>
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Específica 1</label>
+            <label class="block text-sm font-medium text-gray-700">Específica 1 <span class="text-gray-400 font-normal">(opcional)</span></label>
             <textarea formControlName="especifica1"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none bg-gray-50/30"
               rows="2"
               placeholder="Describa la experiencia específica 1"></textarea>
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Específica 2</label>
+            <label class="block text-sm font-medium text-gray-700">Específica 2 <span class="text-gray-400 font-normal">(opcional)</span></label>
             <textarea formControlName="especifica2"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none bg-gray-50/30"
               rows="2"
               placeholder="Describa la experiencia específica 2"></textarea>
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Secundaria</label>
+            <label class="block text-sm font-medium text-gray-700">Secundaria <span class="text-gray-400 font-normal">(opcional)</span></label>
             <textarea formControlName="secundaria"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none bg-gray-50/30"
               rows="2"
@@ -176,51 +176,93 @@
           <i class="bx bx-calculator"></i>
           Indicadores Financieros de Capacidad y Organización
         </h3>
+        <p class="text-xs text-gray-500 -mt-2 mb-4">
+          Se digitan como fracción, no como porcentaje: un endeudamiento del 70 % se escribe
+          <span class="font-medium">0,70</span> y una rentabilidad del 2 %,
+          <span class="font-medium">0,02</span>. La razón de cobertura de intereses es un número
+          de veces (por ejemplo <span class="font-medium">1,5</span>), no una fracción.
+        </p>
+
+        <!-- Matriz de indicadores del proceso: es donde el pliego tipo fija estos valores -->
+        @if (cargandoMatrices()) {
+          <p class="text-xs text-gray-500 mb-4">Buscando la matriz de indicadores del proceso...</p>
+        } @else if (matrices().length > 0) {
+          <div class="mb-4 rounded-lg border border-indigo-200 bg-white/70 px-3 py-2">
+            <p class="text-xs text-gray-600 mb-1 flex items-center gap-1.5">
+              <i class="bx bx-table text-indigo-600"></i>
+              Los valores exigidos están en este documento del proceso:
+            </p>
+            <ul class="space-y-1">
+              @for (doc of matrices(); track doc.idDocumento) {
+                <li>
+                  <a [href]="doc.url" target="_blank" rel="noopener"
+                    class="text-sm text-indigo-700 hover:underline inline-flex items-center gap-1.5">
+                    {{ doc.nombre }}
+                    @if (formatTamano(doc.tamanoBytes)) {
+                      <span class="text-xs text-gray-400">({{ formatTamano(doc.tamanoBytes) }})</span>
+                    }
+                    <i class="bx bx-link-external text-gray-400"></i>
+                  </a>
+                </li>
+              }
+            </ul>
+          </div>
+        }
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Índice de Liquidez</label>
-            <select formControlName="liquidez"
+            <input type="number" formControlName="liquidez" step="0.01" min="0" max="5"
+              list="sug-liquidez" inputmode="decimal"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white">
-              @for (op of opciones0a2; track op) {
-                <option [ngValue]="op">{{ op.toFixed(2) }}</option>
+            <datalist id="sug-liquidez">
+              @for (op of sugerencias['liquidez']; track op) {
+                <option [value]="op"></option>
               }
-            </select>
+            </datalist>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Nivel de Endeudamiento</label>
-            <select formControlName="endeudamiento"
+            <input type="number" formControlName="endeudamiento" step="0.01" min="0" max="1"
+              list="sug-endeudamiento" inputmode="decimal"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white">
-              @for (op of opciones0a1; track op) {
-                <option [ngValue]="op">{{ op.toFixed(2) }}</option>
+            <datalist id="sug-endeudamiento">
+              @for (op of sugerencias['endeudamiento']; track op) {
+                <option [value]="op"></option>
               }
-            </select>
+            </datalist>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Razón Cobertura Interés</label>
-            <select formControlName="razonCoberturaInteres"
+            <input type="number" formControlName="razonCoberturaInteres" step="0.1" min="0"
+              list="sug-razonCoberturaInteres" inputmode="decimal"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white">
-              @for (op of opciones0a1; track op) {
-                <option [ngValue]="op">{{ op.toFixed(2) }}</option>
+            <datalist id="sug-razonCoberturaInteres">
+              @for (op of sugerencias['razonCoberturaInteres']; track op) {
+                <option [value]="op"></option>
               }
-            </select>
+            </datalist>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Rentabilidad Patrimonio</label>
-            <select formControlName="rentabilidadPatrimonio"
+            <input type="number" formControlName="rentabilidadPatrimonio" step="0.01" min="0" max="1"
+              list="sug-rentabilidadPatrimonio" inputmode="decimal"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white">
-              @for (op of opciones0a1; track op) {
-                <option [ngValue]="op">{{ op.toFixed(2) }}</option>
+            <datalist id="sug-rentabilidadPatrimonio">
+              @for (op of sugerencias['rentabilidadPatrimonio']; track op) {
+                <option [value]="op"></option>
               }
-            </select>
+            </datalist>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Rentabilidad Activo</label>
-            <select formControlName="rentabilidadActivo"
+            <input type="number" formControlName="rentabilidadActivo" step="0.01" min="0" max="1"
+              list="sug-rentabilidadActivo" inputmode="decimal"
               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white">
-              @for (op of opciones0a1; track op) {
-                <option [ngValue]="op">{{ op.toFixed(2) }}</option>
+            <datalist id="sug-rentabilidadActivo">
+              @for (op of sugerencias['rentabilidadActivo']; track op) {
+                <option [value]="op"></option>
               }
-            </select>
+            </datalist>
           </div>
         </div>
       </div>
