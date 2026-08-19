@@ -27,7 +27,13 @@
 
   <div class="flex-1 min-w-0 flex flex-col overflow-hidden">
     <app-header (menuToggle)="sidebar.toggle()"></app-header>
-    <main class="flex-1 min-w-0 overflow-y-auto">
+    <!--
+      `relative`: convierte al <main> en bloque contenedor de sus descendientes
+      `position:absolute` (sr-only, tooltips, adornos). Sin él, un absoluto sin
+      ancestro posicionado se ancla al documento, escapa de este scroll y abre un
+      segundo scroll de ventana con un hueco en blanco al final de la página.
+    -->
+    <main class="relative flex-1 min-w-0 overflow-y-auto">
       <router-outlet></router-outlet>
     </main>
   </div>
