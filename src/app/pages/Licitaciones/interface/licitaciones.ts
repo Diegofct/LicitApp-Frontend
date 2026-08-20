@@ -18,6 +18,8 @@ export interface Licitacion {
   plazoMeses: number | null;
   /** Identificador de portafolio (CO1.BDOS.*), llave para consultar los documentos. */
   idDelPortafolio: string | null;
+  /** Evento en el que va el proceso según SECOP. Viene con el listado, sin llamada extra. */
+  fase: string | null;
 }
 
 /** Archivo publicado por la entidad dentro del proceso (pliego, estudios previos, anexos). */
@@ -34,10 +36,45 @@ export interface DocumentoProceso {
   esMatrizIndicadores: boolean;
 }
 
-/** Enlace al proceso en SECOP II; `url` es null cuando SECOP no lo publica. */
-export interface UrlProcesoResponse {
+/**
+ * Una adjudicación del proceso. Los procesos por lotes tienen varias, una por lote.
+ * En esos, `valor` llega en null: SECOP no publica qué lote ganó cada proveedor.
+ */
+export interface Adjudicacion {
+  proveedor: string;
+  valor: number | null;
+  fecha: string | null;
+}
+
+/**
+ * Fase y desenlace de un proceso en SECOP II. El backend lo resuelve contra la API en cada
+ * consulta: no hay nada de esto guardado, así que funciona igual con procesos antiguos.
+ */
+export interface EstadoProceso {
   idDelProceso: string;
+  fase: string | null;
+  estadoResumen: string | null;
+  estadoDelProcedimiento: string | null;
   url: string | null;
+  adjudicado: boolean;
+  /** Cuántos proponentes se presentaron. Es 0 mientras la recepción de ofertas siga abierta. */
+  numeroDeOferentes: number | null;
+  numeroDeLotes: number | null;
+  /** Adjudicado por lotes: hay varios ganadores y ninguno trae valor. */
+  adjudicacionPorLotes: boolean;
+  /** Última publicación de la entidad: si es posterior al análisis, hubo adenda. */
+  fechaUltimaPublicacion: string | null;
+  adjudicaciones: Adjudicacion[];
+}
+
+/** Criterios del listado de Búsqueda SECOP. El presupuesto viaja en pesos, no en SMMLV. */
+export interface FiltrosLicitaciones {
+  entidad?: string;
+  departamento?: string;
+  presupuestoMin?: number | null;
+  presupuestoMax?: number | null;
+  soloVigentes?: boolean;
+  orden?: 'PUBLICACION' | 'CIERRE';
 }
 
 /** Tamaño legible de un documento; cadena vacía si SECOP no lo publica. */
