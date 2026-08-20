@@ -1,7 +1,12 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DocumentoProceso, Licitacion, UrlProcesoResponse } from '../interface/licitaciones';
+import {
+  DocumentoProceso,
+  EstadoProceso,
+  FiltrosLicitaciones,
+  Licitacion,
+} from '../interface/licitaciones';
 import { PaginatedResponse } from '../interface/paginated-response';
 import { environment } from '../../../../environments/environment';
 
@@ -11,29 +16,57 @@ import { environment } from '../../../../environments/environment';
 export class LicitacionesService {
   private readonly apiUrl = `${environment.apiBaseUrl}/licitaciones/obra-publica`;
   private readonly documentosUrl = `${environment.apiBaseUrl}/licitaciones/documentos`;
-  private readonly urlProcesoUrl = `${environment.apiBaseUrl}/licitaciones/url-proceso`;
+  private readonly estadoProcesoUrl = `${environment.apiBaseUrl}/licitaciones/estado-proceso`;
+  private readonly departamentosUrl = `${environment.apiBaseUrl}/licitaciones/departamentos`;
   private readonly http = inject(HttpClient);
 
   /**
-   * Obtiene una lista paginada de licitaciones de obra pública desde el backend.
+   * Lista paginada de licitaciones de obra pública. Todos los filtros son opcionales y se
+   * aplican en la API de SECOP, no en memoria.
+   *
+   * Nota: el orden ya no viaja como `sort` de Spring. El backend nunca lo usó —construye su
+   * propio `$order` para SoQL—, así que se manda explícito en `orden`.
+   *
    * @param page El número de página a solicitar (basado en 0).
    * @param size El número de registros por página.
-   * @param entidad Filtro opcional por nombre de entidad (server-side).
-   * @returns Un Observable que emite un objeto de respuesta paginada.
+   * @param filtros Criterios opcionales; el presupuesto va en pesos.
    */
-  obtenerLicitacionesObraPublica(page: number, size: number, entidad?: string): Observable<PaginatedResponse<Licitacion>> {
+  obtenerLicitacionesObraPublica(
+    page: number,
+    size: number,
+    filtros: FiltrosLicitaciones = {},
+  ): Observable<PaginatedResponse<Licitacion>> {
     let params = new HttpParams()
       .set('page', page.toString())
-      .set('size', size.toString())
-      .set('sort', 'fechaPublicacion,desc')
-      .append('sort', 'id,desc'); // Ordenamiento secundario para asegurar estabilidad en la paginación
+      .set('size', size.toString());
 
-    const entidadTrim = entidad?.trim();
-    if (entidadTrim) {
-      params = params.set('entidad', entidadTrim);
+    const entidad = filtros.entidad?.trim();
+    if (entidad) {
+      params = params.set('entidad', entidad);
+    }
+    const departamento = filtros.departamento?.trim();
+    if (departamento) {
+      params = params.set('departamento', departamento);
+    }
+    if (filtros.presupuestoMin != null) {
+      params = params.set('presupuestoMin', filtros.presupuestoMin.toString());
+    }
+    if (filtros.presupuestoMax != null) {
+      params = params.set('presupuestoMax', filtros.presupuestoMax.toString());
+    }
+    if (filtros.soloVigentes) {
+      params = params.set('soloVigentes', 'true');
+    }
+    if (filtros.orden) {
+      params = params.set('orden', filtros.orden);
     }
 
     return this.http.get<PaginatedResponse<Licitacion>>(this.apiUrl, { params });
+  }
+
+  /** Departamentos disponibles para el filtro, tal como los escribe SECOP. */
+  obtenerDepartamentos(): Observable<string[]> {
+    return this.http.get<string[]>(this.departamentosUrl);
   }
 
   /**
@@ -56,12 +89,12 @@ export class LicitacionesService {
   }
 
   /**
-   * Enlace al proceso en SECOP II. No se guarda en base de datos: el backend lo resuelve
-   * contra la API, así que también funciona con procesos antiguos ya cerrados. Si SECOP no
-   * publica la URL, `url` llega en null.
+   * Fase y desenlace del proceso en SECOP II, con su URL incluida. Nada de esto se guarda en
+   * base de datos: el backend lo resuelve contra la API, así que también funciona con procesos
+   * antiguos ya cerrados. Devuelve `null` si SECOP no conoce el identificador.
    */
-  obtenerUrlProceso(idDelProceso: string): Observable<UrlProcesoResponse> {
+  obtenerEstadoProceso(idDelProceso: string): Observable<EstadoProceso | null> {
     const params = new HttpParams().set('idDelProceso', idDelProceso);
-    return this.http.get<UrlProcesoResponse>(this.urlProcesoUrl, { params });
+    return this.http.get<EstadoProceso | null>(this.estadoProcesoUrl, { params });
   }
 }

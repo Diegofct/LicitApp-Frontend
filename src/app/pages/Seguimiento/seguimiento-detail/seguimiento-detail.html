@@ -23,6 +23,15 @@
               <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200">
                 Presentado
               </span>
+              <!-- Fase publicada por SECOP: evita tener que abrir el proceso para saber en qué va -->
+              @if (estadoProceso()?.fase; as fase) {
+                <span
+                  class="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-sky-100 text-sky-700 border border-sky-200"
+                  title="Fase actual del proceso según SECOP II"
+                >
+                  {{ fase }}
+                </span>
+              }
               <span class="text-[11px] text-gray-400">N° {{ c.numeroProceso }}</span>
             </div>
             <h1 class="text-2xl font-bold text-gray-900 tracking-tight leading-tight">{{ c.entidadContratante }}</h1>
@@ -72,6 +81,82 @@
           }
         </div>
       </div>
+
+      <!-- Desenlace segun SECOP. Se muestra y se propone; el cambio de estado lo decide el
+           analista, porque al ganador solo se le puede cruzar por nombre. -->
+      @if (estadoProceso(); as est) {
+        @if (est.adjudicado) {
+          <div class="px-5 sm:px-6 py-4 bg-amber-50/40 border-t border-amber-100">
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+              <div class="min-w-0">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-amber-600">
+                  Resultado publicado en SECOP II
+                </p>
+
+                @if (est.adjudicacionPorLotes) {
+                  <p class="text-sm font-bold text-gray-800 mt-1">
+                    Adjudicado por lotes · {{ est.numeroDeLotes }} lotes ·
+                    {{ est.adjudicaciones.length }} ganadores
+                  </p>
+                  <div class="flex flex-wrap gap-1.5 mt-2">
+                    @for (a of est.adjudicaciones; track a.proveedor) {
+                      <span class="px-2 py-0.5 rounded-full bg-white border border-amber-200 text-xs font-medium text-gray-700">
+                        {{ a.proveedor }}
+                      </span>
+                    }
+                  </div>
+                  <p class="text-[11px] text-gray-500 mt-2">
+                    SECOP no publica qué lote ganó cada proponente, así que aquí no se muestra un
+                    valor por ganador. El desglose por lote está en el proceso.
+                  </p>
+                } @else {
+                  @for (a of est.adjudicaciones; track a.proveedor) {
+                    <p class="text-sm font-bold text-gray-800 mt-1">{{ a.proveedor }}</p>
+                    <p class="text-sm text-gray-600 tabular-nums mt-0.5">
+                      {{ a.valor | currency:'COP':'symbol-narrow':'1.0-0' }}
+                      @if (a.fecha) {
+                        <span class="text-gray-400">· {{ a.fecha | date:'dd MMM yyyy' }}</span>
+                      }
+                    </p>
+                  }
+                }
+
+                @if (est.numeroDeOferentes) {
+                  <p class="text-[11px] text-gray-500 mt-2">
+                    Se presentaron {{ est.numeroDeOferentes }} oferentes.
+                  </p>
+                }
+              </div>
+
+              @if (puedeAplicarResultado()) {
+                <div class="shrink-0">
+                  <p class="text-[11px] text-gray-500 mb-2 lg:max-w-[15rem]">
+                    ¿Es nuestra propuesta la que aparece arriba? Confírmalo y se cierra el cuadro.
+                  </p>
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      [disabled]="aplicandoResultado()"
+                      (click)="aplicarResultado('ADJUDICADO')"
+                      class="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all"
+                    >
+                      <i class="bx bx-trophy text-base"></i> Ganamos
+                    </button>
+                    <button
+                      type="button"
+                      [disabled]="aplicandoResultado()"
+                      (click)="aplicarResultado('NO_ADJUDICADO')"
+                      class="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 text-sm font-semibold transition-all"
+                    >
+                      No ganamos
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      }
 
       <!-- Conformación resumida -->
       @if (conformacion(); as conf) {

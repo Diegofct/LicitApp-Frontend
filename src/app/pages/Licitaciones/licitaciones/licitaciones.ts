@@ -1,13 +1,14 @@
-import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, debounceTime } from 'rxjs';
 import { ModernTable, TableColumn, TableData } from '../../../components/modern-table/modern-table';
 import { Pagination } from '../../../components/pagination/pagination';
 import { AddToCuadroModal } from '../../../components/add-to-cuadro-modal/add-to-cuadro-modal';
 import { LicitacionesService } from '../service/licitaciones.service';
 import { RevisionLicitacionService } from '../service/revision-licitacion.service';
-import { Licitacion } from '../interface/licitaciones';
+import { FiltrosLicitaciones, Licitacion } from '../interface/licitaciones';
+import { SMMLV_VIGENTE } from '../../../services/smmlv';
 import { CuadroDeObraService } from '../../CuadroDeObra/service/cuadro-de-obra.service';
 import { CuadroDeObraItem, CuadroDeObraRef } from '../../CuadroDeObra/interface/cuadro-de-obra';
 import { AlertService } from '../../../services/alert.service';
@@ -33,6 +34,8 @@ export class Licitaciones implements OnInit {
     { key: 'ubicacion', label: 'Ubicación', width: '200px' },
     { key: 'cuantia', label: 'Cuantía', type: 'currency', width: '150px' },
     { key: 'fechaPublicacion', label: 'Fecha Pub.', type: 'date', width: '150px' },
+    { key: 'fechaCierre', label: 'Cierre', type: 'date', width: '150px' },
+    { key: 'fase', label: 'Fase', width: '210px' },
     { key: 'urlSecop', label: 'URL', type: 'link', width: '100px' },
     { key: 'acciones', label: 'Cuadro', type: 'action', actionIcon: 'bx bx-plus-circle', width: '90px' },
     { key: 'revisar', label: 'Revisado', type: 'action', actionIcon: 'bx bx-bookmark', width: '90px' },
@@ -48,9 +51,23 @@ export class Licitaciones implements OnInit {
   datosLicitaciones = signal<Licitacion[]>([]);
   loading = signal(false);
 
-  // --- FILTRO POR ENTIDAD (server-side, con debounce) ---
+  // --- FILTROS (todos server-side; el backend los traduce a SoQL) ---
   filtroEntidad = signal('');
-  private readonly entidadInput$ = new Subject<string>();
+  filtroDepartamento = signal('');
+  /**
+   * Presupuesto en SMMLV, que es como lo piensa el licitador: los rangos de la Matriz 2 estan
+   * definidos en esa unidad. Al backend viaja convertido a pesos.
+   */
+  presupuestoMinSmmlv = signal<number | null>(null);
+  presupuestoMaxSmmlv = signal<number | null>(null);
+  /** Oculta los procesos con la fecha de cierre ya vencida: cerca del 30% del listado. */
+  soloVigentes = signal(false);
+  orden = signal<'PUBLICACION' | 'CIERRE'>('PUBLICACION');
+  /** Opciones del desplegable, tal como las escribe SECOP. */
+  departamentos = signal<string[]>([]);
+
+  /** Debounce solo para lo que se escribe; los selects y el interruptor recargan al instante. */
+  private readonly filtroTexto$ = new Subject<void>();
 
   // --- CRUCE CON EL CUADRO DE OBRA (idDelProceso -> id) ---
   refs = signal<Map<string, number>>(new Map());
@@ -65,28 +82,73 @@ export class Licitaciones implements OnInit {
   modalReadonly = signal(false);
 
   constructor() {
-    // Reinicia a la primera página y recarga al cambiar el filtro de entidad.
-    this.entidadInput$
-      .pipe(debounceTime(350), distinctUntilChanged(), takeUntilDestroyed())
-      .subscribe((value) => {
-        this.filtroEntidad.set(value);
-        this.currentPage.set(1);
-        this.loadLicitaciones();
-      });
+    // Reinicia a la primera página y recarga cuando cambia lo que se está escribiendo.
+    this.filtroTexto$
+      .pipe(debounceTime(350), takeUntilDestroyed())
+      .subscribe(() => this.aplicarFiltros());
   }
 
   ngOnInit(): void {
     this.loadLicitaciones();
     this.loadRefs();
     this.loadRevisiones();
+    this.loadDepartamentos();
   }
+
+  /** Si SECOP no responde, el desplegable queda vacío y los demás filtros siguen sirviendo. */
+  private loadDepartamentos(): void {
+    this.licitacionesService.obtenerDepartamentos().subscribe({
+      next: (deptos) => this.departamentos.set(deptos),
+      error: (err) => console.error('No se pudieron cargar los departamentos:', err),
+    });
+  }
+
+  /** Criterios actuales. El presupuesto se convierte de SMMLV a pesos, que es lo que espera la API. */
+  private filtrosActuales(): FiltrosLicitaciones {
+    const min = this.presupuestoMinSmmlv();
+    const max = this.presupuestoMaxSmmlv();
+    return {
+      entidad: this.filtroEntidad(),
+      departamento: this.filtroDepartamento(),
+      presupuestoMin: min != null ? Math.round(min * SMMLV_VIGENTE) : null,
+      presupuestoMax: max != null ? Math.round(max * SMMLV_VIGENTE) : null,
+      soloVigentes: this.soloVigentes(),
+      orden: this.orden(),
+    };
+  }
+
+  /** Cualquier cambio de filtro vuelve a la página 1: la anterior ya no significa lo mismo. */
+  aplicarFiltros(): void {
+    this.currentPage.set(1);
+    this.loadLicitaciones();
+  }
+
+  limpiarFiltros(): void {
+    this.filtroEntidad.set('');
+    this.filtroDepartamento.set('');
+    this.presupuestoMinSmmlv.set(null);
+    this.presupuestoMaxSmmlv.set(null);
+    this.soloVigentes.set(false);
+    this.orden.set('PUBLICACION');
+    this.aplicarFiltros();
+  }
+
+  readonly hayFiltrosActivos = computed(
+    () =>
+      !!this.filtroEntidad() ||
+      !!this.filtroDepartamento() ||
+      this.presupuestoMinSmmlv() != null ||
+      this.presupuestoMaxSmmlv() != null ||
+      this.soloVigentes() ||
+      this.orden() !== 'PUBLICACION'
+  );
 
   loadLicitaciones(): void {
     this.loading.set(true);
     const apiPage = this.currentPage() - 1;
 
     this.licitacionesService
-      .obtenerLicitacionesObraPublica(apiPage, this.pageSize(), this.filtroEntidad())
+      .obtenerLicitacionesObraPublica(apiPage, this.pageSize(), this.filtrosActuales())
       .subscribe({
         next: (response) => {
           this.datosLicitaciones.set(response.content);
@@ -146,7 +208,34 @@ export class Licitaciones implements OnInit {
   }
 
   onEntidadInput(value: string): void {
-    this.entidadInput$.next(value);
+    this.filtroEntidad.set(value);
+    this.filtroTexto$.next();
+  }
+
+  onPresupuestoInput(cota: 'min' | 'max', value: string): void {
+    const numero = value.trim() === '' ? null : Number(value);
+    const limpio = numero != null && Number.isFinite(numero) && numero >= 0 ? numero : null;
+    if (cota === 'min') {
+      this.presupuestoMinSmmlv.set(limpio);
+    } else {
+      this.presupuestoMaxSmmlv.set(limpio);
+    }
+    this.filtroTexto$.next();
+  }
+
+  onDepartamentoChange(value: string): void {
+    this.filtroDepartamento.set(value);
+    this.aplicarFiltros();
+  }
+
+  onOrdenChange(value: string): void {
+    this.orden.set(value === 'CIERRE' ? 'CIERRE' : 'PUBLICACION');
+    this.aplicarFiltros();
+  }
+
+  onSoloVigentesChange(value: boolean): void {
+    this.soloVigentes.set(value);
+    this.aplicarFiltros();
   }
 
   onPageChange(newPage: number): void {

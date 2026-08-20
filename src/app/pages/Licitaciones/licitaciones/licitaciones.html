@@ -29,6 +29,93 @@
     </div>
   </div>
 
+  <!-- Filtros adicionales. Todos se resuelven en la API de SECOP, no en memoria. -->
+  <div class="flex flex-wrap items-end gap-3 mb-4">
+    <div>
+      <label for="f-departamento" class="block text-[11px] font-semibold text-gray-500 mb-1">
+        Departamento
+      </label>
+      <select
+        id="f-departamento"
+        [value]="filtroDepartamento()"
+        (change)="onDepartamentoChange($any($event.target).value)"
+        class="py-2 pl-3 pr-8 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+      >
+        <option value="">Todos</option>
+        @for (d of departamentos(); track d) {
+          <option [value]="d">{{ d }}</option>
+        }
+      </select>
+    </div>
+
+    <div>
+      <label for="f-presu-min" class="block text-[11px] font-semibold text-gray-500 mb-1">
+        Presupuesto (SMMLV)
+      </label>
+      <div class="flex items-center gap-1.5">
+        <input
+          id="f-presu-min"
+          type="number"
+          min="0"
+          step="100"
+          [value]="presupuestoMinSmmlv()"
+          (input)="onPresupuestoInput('min', $any($event.target).value)"
+          placeholder="Desde"
+          aria-label="Presupuesto mínimo en SMMLV"
+          class="w-28 py-2 px-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+        />
+        <span class="text-gray-400 text-sm">–</span>
+        <input
+          type="number"
+          min="0"
+          step="100"
+          [value]="presupuestoMaxSmmlv()"
+          (input)="onPresupuestoInput('max', $any($event.target).value)"
+          placeholder="Hasta"
+          aria-label="Presupuesto máximo en SMMLV"
+          class="w-28 py-2 px-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+        />
+      </div>
+    </div>
+
+    <div>
+      <label for="f-orden" class="block text-[11px] font-semibold text-gray-500 mb-1">Ordenar por</label>
+      <select
+        id="f-orden"
+        [value]="orden()"
+        (change)="onOrdenChange($any($event.target).value)"
+        class="py-2 pl-3 pr-8 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+      >
+        <option value="PUBLICACION">Publicación reciente</option>
+        <option value="CIERRE">Cierra primero</option>
+      </select>
+    </div>
+
+    <label class="inline-flex items-center gap-2 py-2 cursor-pointer select-none">
+      <input
+        type="checkbox"
+        [checked]="soloVigentes()"
+        (change)="onSoloVigentesChange($any($event.target).checked)"
+        class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+      />
+      <span class="text-sm text-gray-700">Solo con plazo vigente</span>
+    </label>
+
+    @if (hayFiltrosActivos()) {
+      <button
+        type="button"
+        (click)="limpiarFiltros()"
+        class="cursor-pointer inline-flex items-center gap-1.5 py-2 px-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+      >
+        <i class="bx bx-x text-lg"></i> Limpiar filtros
+      </button>
+    }
+
+    <p class="ml-auto text-sm text-gray-500 tabular-nums self-center">
+      {{ totalElements() }} procesos
+    </p>
+  </div>
+
   <!-- Contenedor que envuelve la tabla y la paginación para un estilo unificado -->
   <div class="w-full overflow-hidden rounded-lg shadow-md bg-white relative">
 

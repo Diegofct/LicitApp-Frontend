@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CuadroDeObraService } from '../../pages/CuadroDeObra/service/cuadro-de-obra.service';
 import { AlertService } from '../../services/alert.service';
+import { SMMLV_VIGENTE } from '../../services/smmlv';
 
 @Component({
   selector: 'app-add-proceso-modal',
@@ -16,7 +17,8 @@ export class AddProcesoModal implements OnInit {
   private readonly alertService = inject(AlertService);
 
   /** Salario Mínimo Mensual Legal Vigente en Colombia (2026). */
-  readonly SMMLV_2026 = 1750905;
+  /** Reexportado para el template; el valor vive en services/smmlv.ts. */
+  readonly SMMLV_2026 = SMMLV_VIGENTE;
 
   @Output() close = new EventEmitter<void>();
   @Output() saved = new EventEmitter<void>();

@@ -18,6 +18,7 @@ import { ConformacionResponse, IntegranteResponse } from '../../Conformacion/int
 import { EmpresaService } from '../../Empresa/service/empresa.service';
 import { Empresa } from '../../Empresa/interface/empresa';
 import { LicitacionesService } from '../../Licitaciones/service/licitaciones.service';
+import { EstadoProceso } from '../../Licitaciones/interface/licitaciones';
 import { SeguimientoService } from '../service/seguimiento.service';
 import {
   SeguimientoEvento,
@@ -84,8 +85,24 @@ export class SeguimientoDetailComponent implements OnInit {
   readonly conformacion = signal<ConformacionResponse | null>(null);
   readonly empresas = signal<Empresa[]>([]);
   readonly showRegistrar = signal(false);
+  /**
+   * Fase y desenlace del proceso segun SECOP. Se resuelve en vivo contra la API: no hay nada
+   * guardado, asi que tambien funciona con los seguimientos que ya existian.
+   */
+  readonly estadoProceso = signal<EstadoProceso | null>(null);
   /** Enlace al proceso en SECOP II, para revisar en qué evento va. */
-  readonly urlProceso = signal<string | null>(null);
+  readonly urlProceso = computed(() => this.estadoProceso()?.url ?? null);
+  /** Evita doble clic mientras se aplica el resultado al cuadro. */
+  readonly aplicandoResultado = signal(false);
+
+  /**
+   * El desenlace solo se ofrece si SECOP dice que el proceso ya se adjudico y el cuadro sigue
+   * en PRESENTADO: son las unicas transiciones que el backend acepta desde ahi.
+   */
+  readonly puedeAplicarResultado = computed(() => {
+    const estado = this.estadoProceso();
+    return !!estado?.adjudicado && this.cuadro()?.cuadroDeObraEstado === 'PRESENTADO';
+  });
 
   readonly eventosOrdenados = computed<EventoExtendido[]>(() => {
     const seg = this.seguimiento();
@@ -133,7 +150,7 @@ export class SeguimientoDetailComponent implements OnInit {
     }).subscribe({
       next: ({ cuadro, seguimiento, conformacion, empresas }) => {
         this.cuadro.set(cuadro);
-        this.cargarUrlProceso(cuadro);
+        this.cargarEstadoProceso(cuadro);
         this.seguimiento.set(seguimiento);
         this.conformacion.set(conformacion);
         this.empresas.set(empresas);
@@ -147,17 +164,85 @@ export class SeguimientoDetailComponent implements OnInit {
   }
 
   /**
-   * Resuelve el enlace al proceso en SECOP II. Va fuera del forkJoin porque depende del cuadro
-   * ya cargado, y así tampoco retrasa el pintado de la pantalla. Los cuadros dados de alta a
-   * mano no tienen identificador SECOP: en ese caso no se muestra el enlace.
+   * Resuelve la fase y el desenlace del proceso en SECOP II. Va fuera del forkJoin porque
+   * depende del cuadro ya cargado, y así tampoco retrasa el pintado de la pantalla. Los
+   * cuadros dados de alta a mano no tienen identificador SECOP: ahí no se muestra el bloque.
    */
-  private cargarUrlProceso(cuadro: CuadroDeObraItem): void {
+  private cargarEstadoProceso(cuadro: CuadroDeObraItem): void {
     if (!cuadro.idDelProceso) return;
 
-    this.licitacionesService.obtenerUrlProceso(cuadro.idDelProceso).subscribe({
-      next: (res) => this.urlProceso.set(res.url),
-      error: (err) => console.error('Error al resolver la URL del proceso en SECOP:', err),
+    this.licitacionesService.obtenerEstadoProceso(cuadro.idDelProceso).subscribe({
+      next: (estado) => this.estadoProceso.set(estado),
+      error: (err) => console.error('Error al resolver el estado del proceso en SECOP:', err),
     });
+  }
+
+  /**
+   * Cierra el cuadro con lo que SECOP publica. Lo decide el analista, no la aplicación: el
+   * ganador solo se puede cruzar por nombre —SECOP publica el NIT inservible en más de la
+   * mitad de los casos— y marcar como perdido un proceso ganado ensuciaría la tasa de éxito.
+   *
+   * El evento que queda es RESOLUCION_ADJUDICACION en ambos casos: el proceso se adjudicó,
+   * lo que cambia es a quién. DECLARATORIA_DESIERTA sería otra cosa y no se deduce de aquí.
+   */
+  aplicarResultado(nuevoEstado: 'ADJUDICADO' | 'NO_ADJUDICADO'): void {
+    const id = this.cuadroId();
+    const estado = this.estadoProceso();
+    if (!id || !estado || this.aplicandoResultado()) return;
+
+    this.aplicandoResultado.set(true);
+    this.cuadroService.actualizarEstado(id, nuevoEstado).subscribe({
+      next: (actualizado) => {
+        this.cuadro.set(actualizado);
+        this.seguimientoService
+          .registrarEvento(id, {
+            tipo: 'RESOLUCION_ADJUDICACION',
+            fechaEvento: this.fechaDeAdjudicacion(estado),
+            descripcion: this.descripcionDelResultado(estado, nuevoEstado),
+          })
+          .subscribe({
+            next: () => {
+              this.aplicandoResultado.set(false);
+              this.refrescarSeguimiento();
+              this.alertService.success('Resultado aplicado y evento registrado.');
+            },
+            error: () => {
+              // El estado del cuadro sí quedó guardado: se avisa para no dejarlo a medias.
+              this.aplicandoResultado.set(false);
+              this.alertService.warning(
+                'El estado del cuadro se actualizó, pero no se pudo registrar el evento.'
+              );
+            },
+          });
+      },
+      error: () => {
+        this.aplicandoResultado.set(false);
+        this.alertService.error('No se pudo actualizar el estado del cuadro.');
+      },
+    });
+  }
+
+  /** Fecha en que SECOP adjudicó; si no la publica, se registra el evento con la de hoy. */
+  private fechaDeAdjudicacion(estado: EstadoProceso): string {
+    const fecha = estado.adjudicaciones.find((a) => a.fecha)?.fecha;
+    return fecha ? `${fecha}T00:00:00` : new Date().toISOString().slice(0, 19);
+  }
+
+  private descripcionDelResultado(
+    estado: EstadoProceso,
+    nuevoEstado: 'ADJUDICADO' | 'NO_ADJUDICADO'
+  ): string {
+    const ganadores = estado.adjudicaciones.map((a) => a.proveedor).join(', ');
+    const cabeza =
+      nuevoEstado === 'ADJUDICADO'
+        ? 'Proceso adjudicado a nuestra propuesta.'
+        : 'Proceso adjudicado a otro proponente.';
+    const detalle = ganadores ? ` Según SECOP II: ${ganadores}.` : '';
+    const competencia =
+      estado.numeroDeOferentes && estado.numeroDeOferentes > 0
+        ? ` Se presentaron ${estado.numeroDeOferentes} oferentes.`
+        : '';
+    return `${cabeza}${detalle}${competencia}`;
   }
 
   refrescarSeguimiento(): void {
